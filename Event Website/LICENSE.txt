@@ -1,0 +1,4 @@
+Copyright © 2025 Jacob Erickson. All rights reserved.
+
+This repository and the website it powers are proprietary.  
+You may view and interact with the website at its published URL, but you may not copy, reproduce, distribute, or reuse the code, design, or content without prior written permission.
