@@ -127,6 +127,27 @@ header h1{margin:0; font-size:20px}
 
     // ----- Date helpers -----
     function isoLocal(d){ const off=d.getTimezoneOffset()*60000; return new Date(d.getTime()-off).toISOString().slice(0,10); }
+    
+    function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
+function monthKey(d){ return d.getFullYear()*12 + d.getMonth(); } // for incrementing months
+
+function weekdayOrdinalInMonth(d){
+  // e.g., d = 2025-10-14 (Tue) → returns 2 (2nd Tuesday)
+  const day = d.getDate();
+  return Math.floor((day - 1) / 7) + 1; // 1..5
+}
+
+function nthWeekdayOfMonth(year, monthIndex, weekday, nth){
+  // weekday: 0=Sun … 6=Sat, nth: 1..5 (5 may not exist every month)
+  const firstOfMonth = new Date(year, monthIndex, 1);
+  const delta = (weekday - firstOfMonth.getDay() + 7) % 7;
+  const firstTarget = 1 + delta;      // date of first desired weekday
+  const date = firstTarget + (nth - 1) * 7;
+  const result = new Date(year, monthIndex, date);
+  if (result.getMonth() !== monthIndex) return null; // overflow → no such nth this month
+  return result;
+}
+    
     function normalizeDate(str){
       if(!str) return '';
       const s=String(str).trim();
@@ -230,16 +251,7 @@ function cleanWeekly(r){
                     .split(',').map(s=>normalizeDate(s.trim())).filter(Boolean);
 
   const coordsField = r["Coords"] || r["Coordinates"] || r["Lat/Lng"] || r["Location"] || '';
-  let lat = parseFloat(r["Lat"]);
-  let lng = parseFloat(r["Lng"]);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    const c = parseCoordsToLatLng(coordsField);
-    if (Number.isFinite(c.lat) && Number.isFinite(c.lng)) {
-      lat = c.lat; lng = c.lng;
-    } else {
-      lat = null; lng = null;
-    }
-  }
+  let { lat, lng } = parseCoordsToLatLng(coordsField);
 
   return {
     name: (r["Event name"] || r.name || '').trim(),
@@ -254,40 +266,109 @@ function cleanWeekly(r){
     start: startRaw,
     end: endRaw,
     excludes,
+    repeat: (r["Repeat"] || r["Frequency"] || 'weekly').toLowerCase().trim(),
     __source: 'weekly'
   };
 }
 
     // Expand weekly rows into dated event instances within [rangeStart, rangeEnd]
-    function expandWeekly(row, rangeStart, rangeEnd){
-      const out = [];
-      if(row.day==null) return out;
+function expandWeekly(row, rangeStart, rangeEnd){
+  const out = [];
+  if (row.day == null) return out;
 
-      const rs = row.start ? new Date(row.start) : rangeStart;
-      const re = row.end   ? new Date(row.end)   : rangeEnd;
+  const hardStart = row.start ? startOfDay(new Date(row.start)) : null;
+  const hardEnd   = row.end   ? startOfDay(new Date(row.end))   : null;
 
-      // clip to requested range
-      const start = new Date(Math.max(rs, rangeStart));
-      const end   = new Date(Math.min(re, rangeEnd));
+  // Effective bounds (clip to user range and optional hard bounds)
+  let effStart = startOfDay(rangeStart);
+  let effEnd   = startOfDay(rangeEnd);
+  if (hardStart && hardStart > effStart) effStart = hardStart;
+  if (hardEnd && hardEnd < effEnd)       effEnd   = hardEnd;
 
-      // find first occurrence on/after start for this weekday
-      const first = new Date(start);
-      const delta = (row.day - first.getDay() + 7) % 7;
-      first.setDate(first.getDate() + delta);
+  const excludes = new Set((row.excludes || []).filter(Boolean));
 
-      for(let d = new Date(first); d <= end; d = addDays(d, 7)){
-        const iso = isoLocal(d);
-        if(row.excludes && row.excludes.includes(iso)) continue;
+  // ----- WEEKLY / BIWEEKLY -----
+  if (row.repeat === 'weekly' || row.repeat === 'biweekly' || row.repeat === '2w'){
+    // Anchor: first matching weekday on/after (hardStart || effStart)
+    const anchorBase = hardStart || effStart;
+    const first = new Date(anchorBase);
+    const delta = (row.day - first.getDay() + 7) % 7;
+    first.setDate(first.getDate() + delta);
+
+    // Move forward to >= effStart while preserving the 14-day "phase" if biweekly
+    const step = (row.repeat === 'biweekly' || row.repeat === '2w') ? 14 : 7;
+
+    let d = new Date(first);
+    while (d < effStart) d = addDays(d, step);
+
+    for (; d <= effEnd; d = addDays(d, step)){
+      const iso = isoLocal(d);
+      if (excludes.has(iso)) continue;
+      out.push({
+        name: row.name, venue: row.venue, date: iso, time: row.time,
+        category: row.category, link: row.link, address: row.address,
+        photo: row.photo, lat: row.lat, lng: row.lng, __source: 'weekly'
+      });
+    }
+    return out;
+  }
+
+  // ----- MONTHLY (nth weekday, anchored by Start) -----
+  if (row.repeat === 'monthly'){
+    // We need an anchor date to know which "nth weekday" to use.
+    // 1) If Start given, use the first matching weekday on/after Start as the anchor.
+    // 2) Else, derive an anchor from the first matching weekday on/after effStart.
+    const base = hardStart || effStart;
+
+    // Find first matching weekday on/after base
+    const first = new Date(base);
+    const delta = (row.day - first.getDay() + 7) % 7;
+    first.setDate(first.getDate() + delta);
+
+    // Determine the ordinal (1..5) of that weekday in its month
+    const nth = weekdayOrdinalInMonth(first); // e.g., 2nd Tuesday
+
+    // Iterate months from max(base, effStart) to effEnd
+    // Start from the month that contains the first occurrence 'first'
+    let y = first.getFullYear();
+    let m = first.getMonth();
+
+    // Advance months until the produced date >= effStart
+    while (true){
+      const candidate = nthWeekdayOfMonth(y, m, row.day, nth);
+      if (candidate && candidate >= effStart) break;
+      m += 1; if (m > 11){ m = 0; y += 1; }
+      if (new Date(y, m, 1) > effEnd) return out;
+    }
+
+    // Collect each month's nth weekday
+    while (true){
+      const d = nthWeekdayOfMonth(y, m, row.day, nth);
+      if (!d) { // this month doesn't have nth (e.g., 5th weekday)
+        m += 1; if (m > 11){ m = 0; y += 1; }
+        if (new Date(y, m, 1) > effEnd) break;
+        continue;
+      }
+      if (d > effEnd) break;
+      const iso = isoLocal(d);
+      if (!excludes.has(iso)){
         out.push({
-          name: row.name, venue: row.venue,
-          date: iso, time: row.time, category: row.category,
-          link: row.link, address: row.address, photo: row.photo,
-          lat: row.lat, lng: row.lng,
-          __source: 'weekly'
+          name: row.name, venue: row.venue, date: iso, time: row.time,
+          category: row.category, link: row.link, address: row.address,
+          photo: row.photo, lat: row.lat, lng: row.lng, __source: 'weekly'
         });
       }
-      return out;
+      // next month
+      m += 1; if (m > 11){ m = 0; y += 1; }
     }
+    return out;
+  }
+
+  // Fallback: treat unknown repeat as weekly
+  return expandWeekly({...row, repeat:'weekly'}, rangeStart, rangeEnd);
+}
+
+
 
     // Load both sheets, expand weekly, merge, then render
     async function loadAll(){
