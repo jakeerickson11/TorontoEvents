@@ -565,11 +565,19 @@ function expandWeekly(row, rangeStart, rangeEnd){
     }
 
     function highlightCard(index){
-      const cards = [...document.querySelectorAll('.item')];
-      const el = cards[index]; if(!el) return;
-      el.scrollIntoView({behavior:'smooth', block:'center'});
-      el.animate([{background:'#0b1320'},{background:'transparent'}],{duration:900});
-    }
+  const cards = [...document.querySelectorAll('.item')];
+  const el = cards[index];
+  if(!el) return;
+
+  // Smoothly scroll inside the list container only
+  const parent = listEl; // #eventsList
+  const target = el.offsetTop - (parent.clientHeight / 2) + (el.clientHeight / 2);
+  parent.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+
+  // Pulse highlight so it stands out
+  el.animate([{ background: '#0b1320' }, { background: 'transparent' }], { duration: 900 });
+}
+
     function safe(s){ return (s||'').toString().replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 
     datePicker.addEventListener('change', render);
