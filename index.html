@@ -172,6 +172,21 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .pinnedClear:hover{ background:#f5f7fb; }
 .pinnedClear:focus{ outline:2px solid var(--accent); outline-offset:2px; }
 
+/* Slimmer list items on phones */
+@media (max-width: 960px){
+  .item{
+    /* text left (1fr) + small image right (auto) */
+    grid-template-columns: 1fr 56px;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .item .leftStripe{ display:none; }        /* hide the side stripe to save space */
+  .thumb{ width:56px; height:56px; }        /* smaller image */
+  .meta{ gap: 2px; }                        /* tighter spacing between lines */
+  .title{ font-size:14px; line-height:1.2; }
+  .sub{ font-size:11px; line-height:1.2; }
+  /*.badge{ display:none; }                   /* optional: hide category pill to reduce height */
+}
 
 
 
@@ -679,11 +694,23 @@ function expandWeekly(row, rangeStart, rangeEnd){
           <div><span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span></div>
         `;
         const thumbWrap = document.createElement('div');
-        thumbWrap.appendChild(img);
-        const rowWrap = document.createElement('div');
-        rowWrap.style.display='contents';
-        rowWrap.appendChild(thumbWrap);
-        rowWrap.appendChild(meta);
+thumbWrap.appendChild(img);
+
+const rowWrap = document.createElement('div');
+rowWrap.style.display='contents';
+
+if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
+  // On phones: text first (left), image second (right)
+  rowWrap.appendChild(meta);
+  rowWrap.appendChild(thumbWrap);
+} else {
+  // Desktop: keep original order (image left, text right)
+  rowWrap.appendChild(thumbWrap);
+  rowWrap.appendChild(meta);
+}
+
+
+
         row.appendChild(stripe);
         row.appendChild(rowWrap);
         listEl.appendChild(row);
