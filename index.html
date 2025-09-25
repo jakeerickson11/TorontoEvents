@@ -436,7 +436,7 @@ header .headerControls input[type="date"]{
 </header>
 <div id="headerSpacer" aria-hidden="true"></div>
 <!-- keep your pinnedEvent below -->
-<div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div>
+<!-- <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div> -->
 
 
 
@@ -605,24 +605,6 @@ window.addEventListener('resize', setHeaderHeightVar);
 let lastY = window.scrollY, ticking = false;
 const MIN_DELTA = 4;  // smaller = quicker reaction
 
-// window.addEventListener('scroll', () => {
-//  const y = Math.max(0, window.scrollY);
-//  if (!ticking) {
-//    requestAnimationFrame(() => {
-//      const delta = y - lastY;
-//      if (delta > MIN_DELTA) {
-//        document.body.classList.add('header-hidden');     // hide quickly
-//      } else if (delta < -MIN_DELTA || y === 0) {
-//        document.body.classList.remove('header-hidden');  // show on slight up or top
-//      }
-//      lastY = y;
-//      ticking = false;
-//    });
-//    ticking = true;
-//  }
-//}, { passive: true });
-
-
 window.addEventListener('scroll', () => {
   const y = Math.max(0, window.scrollY);
   const delta = y - lastY;
@@ -676,7 +658,7 @@ map.getPane('labels').style.filter = 'brightness(1.0)';
     const catChips  = document.getElementById('catChips');
     const listEl    = document.getElementById('eventsList');
     const countEl   = document.getElementById('count');
-    const searchEl  = document.getElementById('searchInput');
+    
 
     const pinnedEl  = document.getElementById('pinnedEvent');
 let pinnedEvent = null;
@@ -1042,23 +1024,23 @@ function expandWeekly(row, rangeStart, rangeEnd){
 
     buildCategoryChips();
 
-    // Build calendar bounds from merged dates
-    const dates = Array.from(new Set(allEvents.map(r => r.date))).sort();
-    const todayStr = isoLocal(new Date());
-
-    // Ensure we have a global selectedDate to fall back on
-    if (typeof selectedDate === 'undefined') { window.selectedDate = ''; }
-
-   let selectedDate = '';                         // near your other globals
-const datePicker = document.getElementById('datePicker');
+// Build calendar bounds from merged dates and pick a safe default date
+const dates = Array.from(new Set(allEvents.map(r => r.date))).sort();
+const todayStr = isoLocal(new Date());
 
 if (datePicker) {
-  datePicker.addEventListener('change', () => {
-    selectedDate = datePicker.value || '';
-    if (typeof setHeaderHeightVar === 'function') setHeaderHeightVar(); // if using fixed header
-    render();
-  });
-}
+  if (dates.length) {
+    datePicker.min   = dates[0];
+    datePicker.max   = dates[dates.length - 1];
+    datePicker.value = dates.includes(todayStr) ? todayStr : dates[0];
+  } else {
+    datePicker.min = todayStr;
+    datePicker.max = todayStr;
+    datePicker.value = todayStr;
+  }
+} // if there’s no datePicker for some reason, we just show all dates
+
+render();
 
     render();
   } catch(err){
@@ -1094,16 +1076,15 @@ function gmapsDirectionsURLFallback(oLat, oLng, ev){
 let selectedEventKey = null; // tracks the currently-selected list item
 
 
-    function render(){
-      const q = (searchEl.value||'').trim().toLowerCase();
-      const chosenDate = datePicker.value;
-      const filtered = allEvents.filter(e => {
-        const matchDate = chosenDate ? e.date === chosenDate : true;
-        const matchCat = activeCats.has((e.category || 'Other').trim());
-        const hay = `${e.name} ${e.venue} ${e.address}`.toLowerCase();
-        const matchText = !q || hay.includes(q);
-        return matchDate && matchCat && matchText;
-      });
+  function render(){
+  // Read date from the picker (or leave blank = show all dates)
+  const chosenDate = (datePicker && datePicker.value) ? datePicker.value : '';
+
+  const filtered = allEvents.filter(e => {
+    const matchDate = chosenDate ? e.date === chosenDate : true;
+    const matchCat  = activeCats.has((e.category || 'Other').trim());
+    return matchDate && matchCat; // (search removed)
+  });
 
       markersLayer.clearLayers();
       const pts = [];
