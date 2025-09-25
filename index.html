@@ -135,10 +135,54 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 
 /* Keep the header subtle on off-black; optional: */
 /* header { background: linear-gradient(180deg, rgba(14,17,20,0.95), rgba(14,17,20,0.85)); } */
+
+/* Pinned event bar (shows under header on phones) */
+.pinned{ margin:8px 16px 0 16px; }
+.pinned.hidden{ display:none; }
+.pinnedCard{
+  display:grid; grid-template-columns:64px 1fr; gap:12px; align-items:center;
+  background:var(--card); color:var(--text);
+  border:1px solid #e5eaf1; border-radius:12px; padding:10px;
+}
+.pinnedCard .thumb{
+  width:64px; height:64px; border-radius:10px; object-fit:cover; border:1px solid #e5eaf1;
+}
+.pinnedTitle{ font-weight:600; }
+.pinnedMeta{ font-size:12px; color:var(--muted); }
+.pinnedBadge{
+  display:inline-flex; align-items:center; gap:6px; font-size:11px;
+  padding:4px 8px; border-radius:999px; border:1px solid #d0d7e2; background:#ffffff;
+}
+.pinned .dot{ width:10px; height:10px; border-radius:999px; display:inline-block; }
+
+/* Hide the pinned bar on desktop/tablet; only show on phones */
+@media (min-width: 961px){
+  .pinned{ display:none; }
+}
+
+/* Clear (×) button on pinned card */
+.pinnedCard { position: relative; }
+.pinnedClear{
+  position:absolute; top:6px; right:6px;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:8px;
+  border:1px solid #d0d7e2; background:#ffffff; color:#475569;
+  cursor:pointer; line-height:1; font-size:16px;
+}
+.pinnedClear:hover{ background:#f5f7fb; }
+.pinnedClear:focus{ outline:2px solid var(--accent); outline-offset:2px; }
+
+
+
+
   </style>
 </head>
 <body>
   <header><h1>Time and Place</h1></header>
+
+<!-- Pinned event (mobile only) -->
+<div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div>
+
 
   <div class="container">
     <div id="map" aria-label="Events map"></div>
@@ -215,6 +259,55 @@ map.getPane('labels').style.filter = 'brightness(1.0)';
     const listEl    = document.getElementById('eventsList');
     const countEl   = document.getElementById('count');
     const searchEl  = document.getElementById('searchInput');
+
+    const pinnedEl  = document.getElementById('pinnedEvent');
+let pinnedEvent = null;
+
+function isMobile(){ return window.matchMedia('(max-width: 960px)').matches; }
+
+function setPinned(ev){
+  pinnedEvent = ev;
+  renderPinned();
+}
+
+function renderPinned(){
+  if(!pinnedEl) return;
+  if(pinnedEvent && isMobile()){
+    const color = CATEGORY_COLORS[pinnedEvent.category] || '#888';
+    pinnedEl.classList.remove('hidden');
+    pinnedEl.innerHTML = `
+      <div class="pinnedCard">
+        <button id="pinnedClear" class="pinnedClear" aria-label="Clear pinned event" title="Clear">×</button>
+        <img class="thumb" src="${pinnedEvent.photo || 'https://placehold.co/200x200?text=Photo'}" alt="${safe(pinnedEvent.name||'event')}">
+        <div>
+          <div class="pinnedTitle">${safe(pinnedEvent.name)}</div>
+          <div class="pinnedMeta">${safe(pinnedEvent.venue || pinnedEvent.address || '')}</div>
+          <div class="pinnedMeta">${safe(pinnedEvent.date)} ${pinnedEvent.time?`• ${safe(pinnedEvent.time)}`:''}</div>
+          <div class="pinnedMeta"><a href="${pinnedEvent.link}" target="_blank" rel="noopener">Event page</a></div>
+          <div style="margin-top:6px">
+            <span class="pinnedBadge"><span class="dot" style="background:${color}"></span>${safe(pinnedEvent.category||'')}</span>
+          </div>
+        </div>
+      </div>`;
+    // Wire up the clear button each render
+    const btn = document.getElementById('pinnedClear');
+    if (btn) btn.addEventListener('click', clearPinned);
+  }else{
+    pinnedEl.classList.add('hidden');
+    pinnedEl.innerHTML = '';
+  }
+}
+
+
+function clearPinned(){
+  pinnedEvent = null;
+  renderPinned();
+}
+
+window.addEventListener('resize', renderPinned); // keep it correct on rotate/resize
+
+
+
 
     // ----- Date helpers -----
     function isoLocal(d){ const off=d.getTimezoneOffset()*60000; return new Date(d.getTime()-off).toISOString().slice(0,10); }
@@ -544,7 +637,14 @@ function expandWeekly(row, rangeStart, rangeEnd){
           marker.bindPopup(
             `<strong>${safe(e.name)}</strong><br>${safe(e.venue||'')}${e.time?` • ${safe(e.time)}`:''}<br>${safe(e.date)}<br><a href="${e.link}" target="_blank" rel="noopener">Event page</a>`
           );
-          marker.on('click', () => highlightCard(i));
+          marker.on('click', () => {
+  if (isMobile()) {
+    setPinned(e);        // show pinned card on phones
+  } else {
+    highlightCard(i);    // keep existing behavior on desktop
+  }
+});
+
           pts.push([e.lat,e.lng]);
         }
       });
