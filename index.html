@@ -376,6 +376,17 @@ header{
   }
 }
 
+/* Locate (current position) button */
+.leaflet-bar.locate-btn{
+  background:#fff; border:1px solid #e5eaf1; border-radius:4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+.leaflet-bar.locate-btn button{
+  display:block; width:32px; height:32px; line-height:32px; text-align:center;
+  background:#fff; border:0; cursor:pointer; font-size:18px;
+}
+.leaflet-bar.locate-btn button:hover{ background:#f5f7fb; }
+
 
   </style>
 </head>
@@ -431,6 +442,82 @@ header{
     map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
+
+
+// --- Current location pin (+ accuracy circle) ---
+let userMarker = null;
+let userAccuracy = null;
+let geoWatchId = null;
+
+// Leaflet control (top-left) to toggle geolocation
+const locateControl = L.control({ position: 'topleft' });
+locateControl.onAdd = function(map){
+  const div = L.DomUtil.create('div', 'leaflet-bar locate-btn');
+  const btn = L.DomUtil.create('button', '', div);
+  btn.type = 'button';
+  btn.title = 'Show my location';
+  btn.setAttribute('aria-label', 'Show my location');
+  btn.textContent = '📍';
+  // prevent map from dragging when clicking the control
+  L.DomEvent.disableClickPropagation(div);
+  btn.onclick = () => toggleGeolocation();
+  return div;
+};
+locateControl.addTo(map);
+
+function toggleGeolocation(){
+  if (!('geolocation' in navigator)) {
+    alert('Geolocation is not supported on this device/browser.');
+    return;
+  }
+  // If already watching, turn it off (acts like a toggle)
+  if (geoWatchId){
+    navigator.geolocation.clearWatch(geoWatchId);
+    geoWatchId = null;
+    if (userMarker) { markersLayer.removeLayer(userMarker); userMarker = null; }
+    if (userAccuracy){ markersLayer.removeLayer(userAccuracy); userAccuracy = null; }
+    return;
+  }
+  geoWatchId = navigator.geolocation.watchPosition(onGeoSuccess, onGeoError, {
+    enableHighAccuracy: true,
+    maximumAge: 10000,
+    timeout: 10000
+  });
+}
+
+function onGeoSuccess(pos){
+  const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+
+  if (!userMarker){
+    userMarker = L.circleMarker([lat, lng], {
+      radius: 7, weight: 2,
+      color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.6
+    }).addTo(markersLayer).bindPopup('You are here');
+  } else {
+    userMarker.setLatLng([lat, lng]);
+  }
+
+  if (!userAccuracy){
+    userAccuracy = L.circle([lat, lng], {
+      radius: accuracy, color: '#0ea5e9', weight: 1,
+      opacity: 0.5, fillOpacity: 0.08
+    }).addTo(markersLayer);
+  } else {
+    userAccuracy.setLatLng([lat, lng]);
+    userAccuracy.setRadius(accuracy);
+  }
+
+  // Center on the user the first time (or anytime you like)
+  map.setView([lat, lng], Math.max(map.getZoom(), 13), { animate: true });
+}
+
+function onGeoError(err){
+  console.warn('Geolocation error:', err);
+  alert('Could not get your location: ' + (err && err.message ? err.message : 'unknown error'));
+}
+
+
+
 
 window.addEventListener('resize', () => map.invalidateSize());
     
