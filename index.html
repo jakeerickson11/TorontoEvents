@@ -387,6 +387,19 @@ header{
 }
 .leaflet-bar.locate-btn button:hover{ background:#f5f7fb; }
 
+/* Directions button */
+.dirBtn{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:12px; padding:6px 10px; border-radius:10px;
+  border:1px solid #d0d7e2; background:#ffffff; color:#0f172a;
+  text-decoration:none; cursor:pointer;
+}
+.dirBtn:hover{ background:#f5f7fb; }
+
+/* Pinned card: actions row (for Directions button) */
+.pinnedActions{
+  display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;
+}
 
   </style>
 </head>
@@ -445,11 +458,13 @@ header{
 
 
 // --- Current location pin (+ accuracy circle) ---
+// --- Current location pin (+ accuracy circle) with auto-refresh of UI ---
+const userLayer = L.layerGroup().addTo(map);
 let userMarker = null;
 let userAccuracy = null;
 let geoWatchId = null;
 
-// Leaflet control (top-left) to toggle geolocation
+// Small button in top-left to toggle geolocation
 const locateControl = L.control({ position: 'topleft' });
 locateControl.onAdd = function(map){
   const div = L.DomUtil.create('div', 'leaflet-bar locate-btn');
@@ -458,7 +473,6 @@ locateControl.onAdd = function(map){
   btn.title = 'Show my location';
   btn.setAttribute('aria-label', 'Show my location');
   btn.textContent = '📍';
-  // prevent map from dragging when clicking the control
   L.DomEvent.disableClickPropagation(div);
   btn.onclick = () => toggleGeolocation();
   return div;
@@ -470,14 +484,23 @@ function toggleGeolocation(){
     alert('Geolocation is not supported on this device/browser.');
     return;
   }
-  // If already watching, turn it off (acts like a toggle)
+
+  // If already watching → turn OFF and clear
   if (geoWatchId){
     navigator.geolocation.clearWatch(geoWatchId);
     geoWatchId = null;
-    if (userMarker) { markersLayer.removeLayer(userMarker); userMarker = null; }
-    if (userAccuracy){ markersLayer.removeLayer(userAccuracy); userAccuracy = null; }
+
+    if (userMarker)   { userLayer.removeLayer(userMarker);   userMarker = null; }
+    if (userAccuracy) { userLayer.removeLayer(userAccuracy); userAccuracy = null; }
+
+    // 🔁 update list + pinned card immediately
+    if (typeof render === 'function') render();
+    if (typeof renderPinned === 'function') renderPinned();
+
     return;
   }
+
+  // Turn ON (start watching)
   geoWatchId = navigator.geolocation.watchPosition(onGeoSuccess, onGeoError, {
     enableHighAccuracy: true,
     maximumAge: 10000,
@@ -492,7 +515,7 @@ function onGeoSuccess(pos){
     userMarker = L.circleMarker([lat, lng], {
       radius: 7, weight: 2,
       color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.6
-    }).addTo(markersLayer).bindPopup('You are here');
+    }).addTo(userLayer).bindPopup('You are here');
   } else {
     userMarker.setLatLng([lat, lng]);
   }
@@ -501,19 +524,27 @@ function onGeoSuccess(pos){
     userAccuracy = L.circle([lat, lng], {
       radius: accuracy, color: '#0ea5e9', weight: 1,
       opacity: 0.5, fillOpacity: 0.08
-    }).addTo(markersLayer);
+    }).addTo(userLayer);
   } else {
     userAccuracy.setLatLng([lat, lng]);
     userAccuracy.setRadius(accuracy);
   }
 
-  // Center on the user the first time (or anytime you like)
-  map.setView([lat, lng], Math.max(map.getZoom(), 13), { animate: true });
+  // Center the first time (optional)
+  if (map.getZoom() < 13) map.setView([lat, lng], 13, { animate: true });
+
+  // 🔁 update list + pinned card so "Directions" buttons appear
+  if (typeof render === 'function') render();
+  if (typeof renderPinned === 'function') renderPinned();
 }
 
 function onGeoError(err){
   console.warn('Geolocation error:', err);
   alert('Could not get your location: ' + (err && err.message ? err.message : 'unknown error'));
+
+  // If there was an error after turning on, refresh UI to hide buttons
+  if (typeof render === 'function') render();
+  if (typeof renderPinned === 'function') renderPinned();
 }
 
 
@@ -623,8 +654,30 @@ function setPinned(ev){
 
 function renderPinned(){
   if(!pinnedEl) return;
+
   if(pinnedEvent && isMobile()){
     const color = CATEGORY_COLORS[pinnedEvent.category] || '#888';
+
+    // Build a Google Maps directions URL if user location is active
+    let dirUrl = '';
+    try {
+      if (typeof userMarker !== 'undefined' && userMarker && userMarker.getLatLng){
+        const u = userMarker.getLatLng();
+        if (Number.isFinite(pinnedEvent.lat) && Number.isFinite(pinnedEvent.lng)) {
+          // Use lat/lng if available
+          dirUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(`${u.lat},${u.lng}`)}&destination=${encodeURIComponent(`${pinnedEvent.lat},${pinnedEvent.lng}`)}&travelmode=driving`;
+        } else {
+          // Fallback to address/venue/name
+          const destText = pinnedEvent.address || pinnedEvent.venue || pinnedEvent.name || '';
+          if (destText){
+            dirUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(`${u.lat},${u.lng}`)}&destination=${encodeURIComponent(destText)}&travelmode=driving`;
+          }
+        }
+      }
+    } catch(_) {}
+
+    const directionsBtn = dirUrl ? `<a class="dirBtn" href="${dirUrl}" target="_blank" rel="noopener">Directions</a>` : '';
+
     pinnedEl.classList.remove('hidden');
     pinnedEl.innerHTML = `
       <div class="pinnedCard">
@@ -638,16 +691,21 @@ function renderPinned(){
           <div style="margin-top:6px">
             <span class="pinnedBadge"><span class="dot" style="background:${color}"></span>${safe(pinnedEvent.category||'')}</span>
           </div>
+          ${directionsBtn ? `<div class="pinnedActions">${directionsBtn}</div>` : ``}
         </div>
-      </div>`;
-    // Wire up the clear button each render
+      </div>
+    `;
+
+    // Wire the clear (×) button
     const btn = document.getElementById('pinnedClear');
     if (btn) btn.addEventListener('click', clearPinned);
-  }else{
+
+  } else {
     pinnedEl.classList.add('hidden');
     pinnedEl.innerHTML = '';
   }
 }
+
 
 
 function clearPinned(){
@@ -966,6 +1024,29 @@ function expandWeekly(row, rangeStart, rangeEnd){
       }
     }
 
+    // userMarker must be the one you create in your geolocation code
+function hasUserLocation(){
+  return typeof userMarker !== 'undefined' && userMarker && userMarker.getLatLng;
+}
+
+function gmapsDirectionsURL(oLat, oLng, dLat, dLng, mode='driving'){
+  const origin = `${oLat},${oLng}`;
+  const dest   = `${dLat},${dLng}`;
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=${encodeURIComponent(mode)}`;
+}
+
+// Fallback if an event is missing lat/lng: use address/venue/name
+function gmapsDirectionsURLFallback(oLat, oLng, ev){
+  if (Number.isFinite(ev.lat) && Number.isFinite(ev.lng)){
+    return gmapsDirectionsURL(oLat, oLng, ev.lat, ev.lng);
+  }
+  const destText = ev.address || ev.venue || ev.name || '';
+  if (!destText) return '';
+  const origin = `${oLat},${oLng}`;
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destText)}`;
+}
+
+
     function render(){
       const q = (searchEl.value||'').trim().toLowerCase();
       const chosenDate = datePicker.value;
@@ -1029,6 +1110,22 @@ img.alt = e.name || 'event photo';
 const meta = document.createElement('div');
 meta.className = 'meta';
 
+// Build a Google Maps directions link if user location is available
+let dirUrl = '';
+if (hasUserLocation()){
+  const u = userMarker.getLatLng();
+  dirUrl = gmapsDirectionsURLFallback(u.lat, u.lng, e);
+}
+const dirLink = dirUrl
+  ? `<div class="sub"><a class="dirBtn" href="${dirUrl}" target="_blank" rel="noopener">Directions</a></div>`
+  : '';
+
+
+
+
+
+
+
 // Mobile: title + badge on one line; Desktop: original layout
 if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
   meta.innerHTML = `
@@ -1039,6 +1136,7 @@ if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width:
     <div class="sub">${safe(e.venue || e.address || '')}</div>
     <div class="sub">${safe(e.date)} ${e.time?`• ${safe(e.time)}`:''}</div>
     <div class="sub"><a href="${e.link}" target="_blank" rel="noopener">Event page</a></div>
+     ${dirLink}
   `;
 } else {
   meta.innerHTML = `
@@ -1047,7 +1145,8 @@ if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width:
     <div class="sub">${safe(e.date)} ${e.time?`• ${safe(e.time)}`:''}</div>
     <div class="sub"><a href="${e.link}" target="_blank" rel="noopener">Event page</a></div>
     <div><span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span></div>
-  `;
+     ${dirLink}  
+    `;
 }
 
 // Order content: on phones -> text left, image right; desktop -> image left, text right
