@@ -401,6 +401,14 @@ header{
   display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;
 }
 
+/* Selected list item highlight */
+.item.selected{
+  background: #eef2ff;                 /* subtle highlight */
+  border-color: var(--accent);         /* optional, if your .item has a border */
+}
+
+
+
   </style>
 </head>
 <body>
@@ -1059,6 +1067,8 @@ function gmapsDirectionsURLFallback(oLat, oLng, ev){
   return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destText)}`;
 }
 
+let selectedEventKey = null; // tracks the currently-selected list item
+
 
     function render(){
       const q = (searchEl.value||'').trim().toLowerCase();
@@ -1099,11 +1109,35 @@ function gmapsDirectionsURLFallback(oLat, oLng, ev){
       filtered.forEach((e,i) => {
         const row = document.createElement('div');
         row.className='item';
+        // stable key for this event (works across filters)
+const key = `${e.name || ''}|${e.date || ''}|${e.venue || ''}|${e.address || ''}`;
+row.dataset.key = key;
+if (selectedEventKey === key) row.classList.add('selected');
+
         row.onclick = () => {
-          if(Number.isFinite(e.lat) && Number.isFinite(e.lng)){
-            map.flyTo([e.lat, e.lng], 15, {duration:0.6});
-          }
-        };
+  const myKey = row.dataset.key;
+
+  // If already selected → treat as "open link"
+  if (selectedEventKey === myKey) {
+    if (e.link) window.open(e.link, '_blank', 'noopener');
+    return;
+  }
+
+  // First click: select + existing behaviors
+  selectedEventKey = myKey;
+
+  // highlight in-place (no full re-render needed)
+  document.querySelectorAll('.item.selected').forEach(el => el.classList.remove('selected'));
+  row.classList.add('selected');
+
+  if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
+    map.flyTo([e.lat, e.lng], 15, { duration: 0.6 });
+  }
+  if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
+    if (typeof setPinned === 'function') setPinned(e);
+  }
+};
+
 
         
         // --- build one list row ---
@@ -1148,7 +1182,6 @@ if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width:
     </div>
     <div class="sub">${safe(e.venue || e.address || '')}</div>
     <div class="sub">${safe(e.date)} ${e.time?`• ${safe(e.time)}`:''}</div>
-    <div class="sub"><a href="${e.link}" target="_blank" rel="noopener">Event page</a></div>
      ${dirLink}
   `;
 } else {
