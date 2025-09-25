@@ -223,6 +223,55 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   .badge .dot{ width:8px; height:8px; }
 }
 
+/* No horizontal scroll in the events list */
+#eventsList { overflow-x: hidden; }
+
+/* Mobile text wrapping & clamping */
+@media (max-width: 960px){
+  /* Let grid children shrink on small screens */
+  .item > * { min-width: 0; }
+  .meta     { min-width: 0; }
+
+  /* Title on one line with badge… OR clamp to 2 lines (pick ONE style below) */
+
+  /* A) Clamp title to 2 lines with ellipsis (recommended: fixed height, tidy) */
+  .title{
+    white-space: normal;              /* override any nowrap */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;            /* show up to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.2;
+    font-size: 14px;
+    overflow-wrap: anywhere;          /* break very long words if needed */
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* If you prefer full wrapping (variable height), comment out the block above
+     and use this instead:
+  .title{
+    white-space: normal;
+    line-height: 1.2;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+  } */
+
+  /* Sub-lines (venue, date/time, link) kept to 1 line with ellipsis */
+  .sub{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Make sure the row itself can't create horizontal scroll */
+  .item{
+    overflow: hidden;     /* hide any accidental overflow */
+  }
+}
+
 
   </style>
 </head>
