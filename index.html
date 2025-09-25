@@ -410,16 +410,29 @@ header{
 .item { cursor: pointer; }
 .item.selected { background:#eef2ff; border-color: var(--accent); }
 
+/* Header layout with inline date picker */
+header{
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:12px; flex-wrap:wrap; z-index:9999; /* stays above map */
+}
+.headerControls{ display:flex; align-items:center; gap:10px; }
+
+header .headerControls input[type="date"]{
+  padding:8px 10px; border:1px solid #d0d7e2; border-radius:10px;
+  background:#ffffff; color:#0f172a; font:inherit;
+}
+
+
+
 
   </style>
 </head>
 <body>
   <header>
-    
     <h1>Time and Place</h1>
-  
-  </header>
-
+      <div class="headerControls">
+    <input type="date" id="datePicker" aria-label="Select date">
+  </div>
 </header>
 <div id="headerSpacer" aria-hidden="true"></div>
 <!-- keep your pinnedEvent below -->
@@ -434,13 +447,13 @@ header{
   <div class="container">
     <div id="map" aria-label="Events map"></div>
     <aside class="panel" aria-label="Events list panel">
-      <div class="filters">
-        <label>Date
-          <input id="datePicker" type="date" />
-        </label>
-        <label>Search
-          <input id="searchInput" type="text" placeholder="Event or venue" />
-        </label>
+      <div class="filters"> 
+        <!-- <label>Date
+        //  <input id="datePicker" type="date" />
+        //</label>
+        //<label>Search
+        //  <input id="searchInput" type="text" placeholder="Event or venue" />
+        //</label> -->
         <div class="cats" id="catChips"></div>
       </div>
       <div class="list" id="eventsList" role="list"></div>
@@ -1278,7 +1291,10 @@ listEl.appendChild(row);
 
     function safe(s){ return (s||'').toString().replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 
-    datePicker.addEventListener('change', render);
+    datePicker.addEventListener('change', () => {
+  if (typeof setHeaderHeightVar === 'function') setHeaderHeightVar();
+  render(); });
+
     searchEl.addEventListener('input', () => { window.clearTimeout(window.__t); window.__t=setTimeout(render,200); });
 
     loadAll();
