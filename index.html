@@ -283,11 +283,115 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   border-color: #d0d7e2;       /* subtle border */
 }
 
+/* ===== Fast sliding header (fixed) ===== */
+:root{ --header-h: 64px; }              /* JS will set real height */
+
+/* Make header fixed so content never scrolls over it */
+header{
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 1000;
+  transition: transform .12s ease;      /* faster animation */
+  will-change: transform;
+}
+
+/* Spacer reserves header height to avoid layout jump */
+#headerSpacer{
+  height: var(--header-h);
+  transition: height .12s ease;
+}
+
+/* Hide header & collapse spacer */
+.header-hidden header{ transform: translateY(-100%); }
+.header-hidden #headerSpacer{ height: 0; }
+
+/* ===== Stack order hardening: keep header on top of map layers ===== */
+
+/* Make header the top-most thing */
+header{
+  position: fixed;        /* you already have this from the slide-up setup */
+  top: 0; left: 0; right: 0;
+  z-index: 9999;          /* higher than any Leaflet pane/control */
+  will-change: transform;
+  backface-visibility: hidden; /* reduces flicker on iOS during fast scroll */
+}
+
+/* Keep the spacer + pinned card above the map but below the header */
+#headerSpacer,
+#pinnedEvent{
+  position: relative;
+  z-index: 9998;
+}
+
+/* Ensure the map never competes with the header */
+#map, .leaflet-container{ position: relative; z-index: 1; }
+
+/* Lower Leaflet UI layers so they can't pop over the header during momentum scroll */
+.leaflet-top,
+.leaflet-bottom{ z-index: 1000 !important; }   /* zoom controls, attribution */
+.leaflet-popup-pane,
+.leaflet-tooltip-pane,
+.leaflet-marker-pane{ z-index: 900 !important; } /* popups, tooltips, markers */
+
+
+/* Desktop: stripe | text | image */
+@media (min-width: 961px){
+  .item{
+    display: grid;
+    grid-template-columns: 6px 1fr 64px;  /* stripe | text | image */
+    gap: 10px;
+    padding: 10px 12px;
+    align-items: center;
+  }
+  .leftStripe{
+    grid-column: 1;
+    grid-row: 1 / -1;       /* run full height of the row */
+    display: block;         /* make sure it’s visible */
+  }
+  .meta{
+    grid-column: 2;         /* text on the left side */
+    min-width: 0;           /* allow ellipsis/wrap */
+    gap: 4px;
+  }
+  .thumb{
+    grid-column: 3;         /* image on the right side */
+    width: 64px;
+    height: 64px;
+    justify-self: end;
+  }
+
+  /* Make items thinner vertically */
+  .title{
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;      /* up to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.2;
+    font-size: 15px;
+  }
+  .sub{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 
   </style>
 </head>
 <body>
-  <header><h1>Time and Place</h1></header>
+  <header>
+    
+    <h1>Time and Place</h1>
+  
+  </header>
+
+</header>
+<div id="headerSpacer" aria-hidden="true"></div>
+<!-- keep your pinnedEvent below -->
+<div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div>
+
+
 
 <!-- Pinned event (mobile only) -->
 <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div>
@@ -330,6 +434,57 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 
 window.addEventListener('resize', () => map.invalidateSize());
     
+// ===== Fast auto-hide header =====
+const headerEl = document.querySelector('header');
+const spacerEl = document.getElementById('headerSpacer');
+
+function setHeaderHeightVar(){
+  if (!headerEl || !spacerEl) return;
+  const h = headerEl.offsetHeight || 64;
+  document.documentElement.style.setProperty('--header-h', h + 'px');
+  spacerEl.style.height = h + 'px';
+}
+window.addEventListener('load', setHeaderHeightVar);
+window.addEventListener('resize', setHeaderHeightVar);
+
+// Hide on scroll down, show on scroll up (more sensitive + rAF for smoothness)
+let lastY = window.scrollY, ticking = false;
+const MIN_DELTA = 4;  // smaller = quicker reaction
+
+window.addEventListener('scroll', () => {
+  const y = Math.max(0, window.scrollY);
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      const delta = y - lastY;
+      if (delta > MIN_DELTA) {
+        document.body.classList.add('header-hidden');     // hide quickly
+      } else if (delta < -MIN_DELTA || y === 0) {
+        document.body.classList.remove('header-hidden');  // show on slight up or top
+      }
+      lastY = y;
+      ticking = false;
+    });
+    ticking = true;
+  }
+}, { passive: true });
+
+
+window.addEventListener('scroll', () => {
+  const y = Math.max(0, window.scrollY);
+  const delta = y - lastY;
+
+  if (y <= SHOW_AT_TOP || delta < -MIN_DELTA) {
+    // scrolling up (or at top): show header
+    document.body.classList.remove('header-hidden');
+  } else if (delta > MIN_DELTA && y > HIDE_AFTER) {
+    // scrolling down: hide header
+    document.body.classList.add('header-hidden');
+  }
+
+  lastY = y;
+}, { passive: true });
+
+
 // Darken + add color to base tiles
 map.getPane('tilePane').style.filter =
   'grayscale(0%) hue-rotate(348deg) saturate(800%) brightness(0.85) contrast(1.38)';
@@ -815,13 +970,10 @@ thumbWrap.appendChild(img);
 const rowWrap = document.createElement('div');
 rowWrap.style.display = 'contents';
 
-if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
-  rowWrap.appendChild(meta);
-  rowWrap.appendChild(thumbWrap);
-} else {
-  rowWrap.appendChild(thumbWrap);
-  rowWrap.appendChild(meta);
-}
+// Text/links left, image right (mobile AND desktop)
+rowWrap.appendChild(meta);
+rowWrap.appendChild(thumbWrap);
+
 
 row.appendChild(stripe);
 row.appendChild(rowWrap);
@@ -851,6 +1003,8 @@ listEl.appendChild(row);
     searchEl.addEventListener('input', () => { window.clearTimeout(window.__t); window.__t=setTimeout(render,200); });
 
     loadAll();
+
+    
   </script>
 </body>
 </html>
