@@ -188,6 +188,40 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   /*.badge{ display:none; }                   /* optional: hide category pill to reduce height */
 }
 
+/* Slimmer list items on phones */
+@media (max-width: 960px){
+  .item{
+    /* text left (1fr) + small image right (auto) */
+    grid-template-columns: 1fr 56px;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .item .leftStripe{ display:none; }        /* hide the side stripe to save space */
+  .thumb{ width:56px; height:56px; }        /* smaller image */
+  .meta{ gap: 2px; }                        /* tighter spacing between lines */
+  .title{ font-size:14px; line-height:1.2; }
+  .sub{ font-size:11px; line-height:1.2; }
+  .badge{ display:none; }                   /* optional: hide category pill to reduce height */
+}
+/* Title row with inline badge on phones */
+@media (max-width: 960px){
+  .titleRow{
+    display:flex; align-items:center; gap:6px;
+    min-width:0; /* lets ellipsis work */
+  }
+  .title{
+    font-size:14px; line-height:1.2;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    flex:1 1 auto; /* title can shrink */
+  }
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:10px; padding:2px 6px; border-radius:999px;
+    border:1px solid #d0d7e2; background:#ffffff;
+    white-space:nowrap; flex:0 0 auto; /* badge stays compact */
+  }
+  .badge .dot{ width:8px; height:8px; }
+}
 
 
   </style>
@@ -674,46 +708,65 @@ function expandWeekly(row, rangeStart, rangeEnd){
             map.flyTo([e.lat, e.lng], 15, {duration:0.6});
           }
         };
-        const color = CATEGORY_COLORS[e.category] || '#888';
-        const stripe = document.createElement('div');
-        stripe.className='leftStripe';
-        stripe.style.background = color;
-        stripe.style.gridRow='1 / span 2';
-        stripe.style.alignSelf='stretch';
-        const img = document.createElement('img');
-        img.className='thumb';
-        img.src = e.photo || 'https://placehold.co/200x200?text=Photo';
-        img.alt = e.name || 'event photo';
-        const meta = document.createElement('div');
-        meta.className='meta';
-        meta.innerHTML = `
-          <div class="title">${safe(e.name)}</div>
-          <div class="sub">${safe(e.venue || e.address || '')}</div>
-          <div class="sub">${safe(e.date)} ${e.time?`• ${safe(e.time)}`:''}</div>
-          <div class="sub"><a href="${e.link}" target="_blank" rel="noopener">Event page</a></div>
-          <div><span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span></div>
-        `;
-        const thumbWrap = document.createElement('div');
+
+        
+        // --- build one list row ---
+const color = CATEGORY_COLORS[e.category] || '#888';
+
+const stripe = document.createElement('div');
+stripe.className = 'leftStripe';
+stripe.style.background = color;
+stripe.style.gridRow = '1 / span 2';
+stripe.style.alignSelf = 'stretch';
+
+const img = document.createElement('img');
+img.className = 'thumb';
+img.src = e.photo || 'https://placehold.co/200x200?text=Photo';
+img.alt = e.name || 'event photo';
+
+const meta = document.createElement('div');
+meta.className = 'meta';
+
+// Mobile: title + badge on one line; Desktop: original layout
+if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
+  meta.innerHTML = `
+    <div class="titleRow">
+      <div class="title">${safe(e.name)}</div>
+      <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
+    </div>
+    <div class="sub">${safe(e.venue || e.address || '')}</div>
+    <div class="sub">${safe(e.date)} ${e.time?`• ${safe(e.time)}`:''}</div>
+    <div class="sub"><a href="${e.link}" target="_blank" rel="noopener">Event page</a></div>
+  `;
+} else {
+  meta.innerHTML = `
+    <div class="title">${safe(e.name)}</div>
+    <div class="sub">${safe(e.venue || e.address || '')}</div>
+    <div class="sub">${safe(e.date)} ${e.time?`• ${safe(e.time)}`:''}</div>
+    <div class="sub"><a href="${e.link}" target="_blank" rel="noopener">Event page</a></div>
+    <div><span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span></div>
+  `;
+}
+
+// Order content: on phones -> text left, image right; desktop -> image left, text right
+const thumbWrap = document.createElement('div');
 thumbWrap.appendChild(img);
 
 const rowWrap = document.createElement('div');
-rowWrap.style.display='contents';
+rowWrap.style.display = 'contents';
 
 if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
-  // On phones: text first (left), image second (right)
   rowWrap.appendChild(meta);
   rowWrap.appendChild(thumbWrap);
 } else {
-  // Desktop: keep original order (image left, text right)
   rowWrap.appendChild(thumbWrap);
   rowWrap.appendChild(meta);
 }
 
+row.appendChild(stripe);
+row.appendChild(rowWrap);
+listEl.appendChild(row);
 
-
-        row.appendChild(stripe);
-        row.appendChild(rowWrap);
-        listEl.appendChild(row);
       });
       countEl.textContent = `${filtered.length} event${filtered.length===1?'':'s'} shown`;
     }
