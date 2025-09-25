@@ -1019,46 +1019,55 @@ function expandWeekly(row, rangeStart, rangeEnd){
 
     // Load both sheets, expand weekly, merge, then render
     async function loadAll(){
-      try{
-        const [oneOffRaw, weeklyRaw] = await Promise.all([
-          loadCSV(GOOGLE_SHEET_CSV_URL),
-          loadCSV(WEEKLY_SHEET_CSV_URL)
-        ]);
+  try{
+    const [oneOffRaw, weeklyRaw] = await Promise.all([
+      loadCSV(GOOGLE_SHEET_CSV_URL),
+      loadCSV(WEEKLY_SHEET_CSV_URL)
+    ]);
 
-        const oneOff = (oneOffRaw||[]).map(cleanOneOff).filter(r => r.name && r.date);
-        const weekly = (weeklyRaw||[]).map(cleanWeekly).filter(r => r.name && r.day!=null);
+    const oneOff = (oneOffRaw || []).map(cleanOneOff).filter(r => r.name && r.date);
+    const weekly = (weeklyRaw || []).map(cleanWeekly).filter(r => r.name && r.day != null);
 
-        // Determine expansion window (today → today+RECUR_WINDOW_DAYS)
-        const today = new Date();
-        const rangeStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()); // midnight local
-        const rangeEnd   = addDays(rangeStart, RECUR_WINDOW_DAYS);
+    // Determine expansion window (today → today+RECUR_WINDOW_DAYS)
+    const today = new Date();
+    const rangeStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()); // midnight local
+    const rangeEnd   = addDays(rangeStart, RECUR_WINDOW_DAYS);
 
-        const weeklyExpanded = weekly.flatMap(r => expandWeekly(r, rangeStart, rangeEnd));
+    const weeklyExpanded = weekly.flatMap(r => expandWeekly(r, rangeStart, rangeEnd));
 
-        // Merge and sort by date/time for cleaner list default
-        allEvents = [...oneOff, ...weeklyExpanded]
-          .map(e => ({...e, date: normalizeDate(e.date)}))
-          .filter(e => e.date); // safety
+    // Merge and normalize dates
+    allEvents = [...oneOff, ...weeklyExpanded]
+      .map(e => ({ ...e, date: normalizeDate(e.date) }))
+      .filter(e => e.date);
 
-        buildCategoryChips();
+    buildCategoryChips();
 
-        // Build calendar bounds from merged dates
-        const dates = Array.from(new Set(allEvents.map(r=>r.date))).sort();
-        if(dates.length){
-          datePicker.min = dates[0];
-          datePicker.max = dates[dates.length-1];
-          const todayStr = isoLocal(new Date());
-          datePicker.value = dates.includes(todayStr) ? todayStr : dates[0];
-        } else {
-          const t = isoLocal(new Date());
-          datePicker.min = t; datePicker.max = t; datePicker.value = t;
-        }
-        render();
-      } catch(err){
-        console.error('CSV load error', err);
-        alert('Could not load one or both CSVs. Please make sure both sheets are published to the web as CSV.');
-      }
-    }
+    // Build calendar bounds from merged dates
+    const dates = Array.from(new Set(allEvents.map(r => r.date))).sort();
+    const todayStr = isoLocal(new Date());
+
+    // Ensure we have a global selectedDate to fall back on
+    if (typeof selectedDate === 'undefined') { window.selectedDate = ''; }
+
+   let selectedDate = '';                         // near your other globals
+const datePicker = document.getElementById('datePicker');
+
+if (datePicker) {
+  datePicker.addEventListener('change', () => {
+    selectedDate = datePicker.value || '';
+    if (typeof setHeaderHeightVar === 'function') setHeaderHeightVar(); // if using fixed header
+    render();
+  });
+}
+
+    render();
+  } catch(err){
+    console.error('CSV load error', err);
+    alert('Could not load one or both CSVs. Please make sure both sheets are published to the web as CSV.');
+  }
+}
+
+
 
     // userMarker must be the one you create in your geolocation code
 function hasUserLocation(){
@@ -1291,11 +1300,15 @@ listEl.appendChild(row);
 
     function safe(s){ return (s||'').toString().replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 
-    datePicker.addEventListener('change', () => {
-  if (typeof setHeaderHeightVar === 'function') setHeaderHeightVar();
-  render(); });
+if (datePicker) {
+  datePicker.addEventListener('change', () => {
+    selectedDate = datePicker.value || '';           // keep fallback in sync
+    if (typeof setHeaderHeightVar === 'function') setHeaderHeightVar();
+    render();
+  });
+}
 
-    searchEl.addEventListener('input', () => { window.clearTimeout(window.__t); window.__t=setTimeout(render,200); });
+    //searchEl.addEventListener('input', () => { window.clearTimeout(window.__t); window.__t=setTimeout(render,200); });
 
     loadAll();
 
