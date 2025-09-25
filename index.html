@@ -175,6 +175,8 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
 
+window.addEventListener('resize', () => map.invalidateSize());
+    
 // Darken + add color to base tiles
 map.getPane('tilePane').style.filter =
   'grayscale(0%) hue-rotate(348deg) saturate(800%) brightness(0.85) contrast(1.38)';
