@@ -1116,7 +1116,10 @@ const key = `${e.name || ''}|${e.date || ''}|${e.venue || ''}|${e.address || ''}
 row.dataset.key = key;
 if (selectedEventKey === key) row.classList.add('selected');
 
-row.onclick = () => {
+row.onclick = (ev) => {
+  // If the click was on (or inside) the Directions button, do nothing here
+  if (ev.target.closest('.dirBtn')) return;
+
   const myKey = row.dataset.key;
   const onMobile = (typeof isMobile === 'function')
     ? isMobile()
@@ -1145,13 +1148,18 @@ row.onclick = () => {
 };
 
 row.ondblclick = (ev) => {
+  // Ignore double-clicks on the Directions button
+  if (ev.target.closest('.dirBtn')) return;
+
   const onMobile = (typeof isMobile === 'function')
     ? isMobile()
     : window.matchMedia('(max-width: 960px)').matches;
-  if (onMobile) return;           // ignore dblclick on phones
+  if (onMobile) return;
+
   ev.preventDefault();
   if (e.link) window.open(e.link, '_blank', 'noopener');
 };
+
 
 
 
@@ -1211,9 +1219,28 @@ meta.innerHTML = `
   ${dirLink || ``}
 
 
-`;
 
+  
+`;}
+
+// Prevent row handlers from firing when clicking Directions
+const dirBtnEl = meta.querySelector('.dirBtn');
+if (dirBtnEl) {
+  dirBtnEl.addEventListener('click', (ev) => {
+    ev.stopPropagation();     // don't bubble to the row
+    // open explicitly so we can also preventDefault (avoids odd behaviors)
+    ev.preventDefault();
+    window.open(dirBtnEl.href, '_blank', 'noopener');
+  });
+  // Also suppress dblclick bubbling from the button
+  dirBtnEl.addEventListener('dblclick', (ev) => {
+    ev.stopPropagation();
+    ev.preventDefault();
+  });
 }
+
+
+
 
 // Order content: on phones -> text left, image right; desktop -> image left, text right
 const thumbWrap = document.createElement('div');
