@@ -457,14 +457,17 @@ header{
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
 
 
-// --- Current location pin (+ accuracy circle) ---
-// --- Current location pin (+ accuracy circle) with auto-refresh of UI ---
+// --- Current location pin (+ accuracy circle), no zoom/snap ---
 const userLayer = L.layerGroup().addTo(map);
 let userMarker = null;
 let userAccuracy = null;
 let geoWatchId = null;
 
-// Small button in top-left to toggle geolocation
+// NEW: track first pan + first UI refresh
+let userCenteredOnce = false;
+let userFirstFixNotified = false;
+
+// 📍 control
 const locateControl = L.control({ position: 'topleft' });
 locateControl.onAdd = function(map){
   const div = L.DomUtil.create('div', 'leaflet-bar locate-btn');
@@ -485,7 +488,7 @@ function toggleGeolocation(){
     return;
   }
 
-  // If already watching → turn OFF and clear
+  // Turn OFF if already watching
   if (geoWatchId){
     navigator.geolocation.clearWatch(geoWatchId);
     geoWatchId = null;
@@ -493,14 +496,20 @@ function toggleGeolocation(){
     if (userMarker)   { userLayer.removeLayer(userMarker);   userMarker = null; }
     if (userAccuracy) { userLayer.removeLayer(userAccuracy); userAccuracy = null; }
 
-    // 🔁 update list + pinned card immediately
+    // reset first-time flags
+    userCenteredOnce = false;
+    userFirstFixNotified = false;
+
+    // refresh UI to hide Directions buttons
     if (typeof render === 'function') render();
     if (typeof renderPinned === 'function') renderPinned();
-
     return;
   }
 
   // Turn ON (start watching)
+  userCenteredOnce = false;
+  userFirstFixNotified = false;
+
   geoWatchId = navigator.geolocation.watchPosition(onGeoSuccess, onGeoError, {
     enableHighAccuracy: true,
     maximumAge: 10000,
@@ -522,20 +531,27 @@ function onGeoSuccess(pos){
 
   if (!userAccuracy){
     userAccuracy = L.circle([lat, lng], {
-      radius: accuracy, color: '#0ea5e9', weight: 1,
-      opacity: 0.5, fillOpacity: 0.08
+      radius: accuracy, color: '#0ea5e9', weight: 1, opacity: 0.5, fillOpacity: 0.08
     }).addTo(userLayer);
   } else {
     userAccuracy.setLatLng([lat, lng]);
     userAccuracy.setRadius(accuracy);
   }
 
-  // Center the first time (optional)
-  if (map.getZoom() < 13) map.setView([lat, lng], 13, { animate: true });
+  // 🔒 Do NOT change zoom. Only pan once on the first fix, and only if off-screen.
+  if (!userCenteredOnce) {
+    if (!map.getBounds().contains([lat, lng])) {
+      map.panTo([lat, lng], { animate: true, duration: 0.5 }); // no zoom change
+    }
+    userCenteredOnce = true;
+  }
 
-  // 🔁 update list + pinned card so "Directions" buttons appear
-  if (typeof render === 'function') render();
-  if (typeof renderPinned === 'function') renderPinned();
+  // Refresh UI once so Directions buttons appear, then stop re-rendering on each GPS tick
+  if (!userFirstFixNotified) {
+    if (typeof render === 'function') render();
+    if (typeof renderPinned === 'function') renderPinned();
+    userFirstFixNotified = true;
+  }
 }
 
 function onGeoError(err){
@@ -546,9 +562,6 @@ function onGeoError(err){
   if (typeof render === 'function') render();
   if (typeof renderPinned === 'function') renderPinned();
 }
-
-
-
 
 window.addEventListener('resize', () => map.invalidateSize());
     
