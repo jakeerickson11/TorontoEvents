@@ -422,6 +422,10 @@ header .headerControls input[type="date"]{
   background:#ffffff; color:#0f172a; font:inherit;
 }
 
+/* Hide Leaflet zoom buttons on mobile */
+@media (max-width: 960px){
+  .leaflet-control-zoom { display: none !important; }
+}
 
 
 
@@ -478,6 +482,21 @@ header .headerControls input[type="date"]{
     map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
+
+function applyZoomCtrlVisibility(){
+  const isMobile = window.matchMedia('(max-width: 960px)').matches;
+  const hasZoomEl = !!document.querySelector('.leaflet-control-zoom');
+
+  if (isMobile) {
+    if (map.zoomControl) map.zoomControl.remove();      // remove if present
+  } else {
+    if (!hasZoomEl) L.control.zoom({ position: 'topleft' }).addTo(map); // re-add on desktop
+  }
+}
+applyZoomCtrlVisibility();
+window.addEventListener('resize', applyZoomCtrlVisibility);
+
+
 
 
 // --- Current location pin (+ accuracy circle), no zoom/snap ---
