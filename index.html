@@ -413,59 +413,25 @@ header .headerControls input[type="date"]{
 <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/pmtiles@latest/dist/pmtiles.js"></script>
 
-
-<!-- Pinned event (mobile only) -->
-<div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div>
-
-
-  <div class="container">
-    <div id="map" aria-label="Events map"></div>
-    <aside class="panel" aria-label="Events list panel">
-      <div class="filters"> 
-        <!-- <label>Date
-        //  <input id="datePicker" type="date" />
-        //</label>
-        //<label>Search
-        //  <input id="searchInput" type="text" placeholder="Event or venue" />
-        //</label> -->
-        <div class="cats" id="catChips"></div>
-      </div>
-      <div class="list" id="eventsList" role="list"></div>
-      <div class="footer">
-  <span id="count"></span>
-  <br>
-  © 2025 Jake Erickson — No reuse permitted
-</div>
-    </aside>
-  </div>
-
 <div id="map" style="position:fixed; inset:0;"></div>
 <script>
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol("pmtiles", protocol.tile);
 
-  fetch("/style.json") // adjust path if needed
+  fetch("./style.json")   // style.json in the repo root (project page)
     .then(r => r.json())
     .then(style => {
       const map = new maplibregl.Map({
         container: "map",
         style,
         center: [-79.3832, 43.6532],
-        zoom: 11,
-        attributionControl: true
+        zoom: 11
       });
-
-      // OSM attribution (required)
-      map.addControl(new maplibregl.AttributionControl({ compact: true }));
-      const attr = document.createElement("div");
-      attr.className = "maplibregl-ctrl maplibregl-ctrl-attrib";
-      attr.style.font = "12px/1.2 system-ui, sans-serif";
-      attr.textContent = "© OpenStreetMap contributors";
-      // If you already see "© OpenStreetMap contributors" automatically, you can skip adding this.
-
+      map.addControl(new maplibregl.NavigationControl(), "top-right");
       window.map = map;
     });
 </script>
+
 
 
 
@@ -490,42 +456,42 @@ function applyZoomCtrlVisibility(){
   const isMobile = window.matchMedia('(max-width: 960px)').matches;
   const hasZoomEl = !!document.querySelector('.leaflet-control-zoom');
 
-  if (isMobile) {
-    if (map.zoomControl) map.zoomControl.remove();      // remove if present
-  } else {
-    if (!hasZoomEl) L.control.zoom({ position: 'topleft' }).addTo(map); // re-add on desktop
-  }
-}
-applyZoomCtrlVisibility();
-window.addEventListener('resize', applyZoomCtrlVisibility);
+ // if (isMobile) {
+ //   if (map.zoomControl) map.zoomControl.remove();      // remove if present
+ // } else {
+ //   if (!hasZoomEl) L.control.zoom({ position: 'topleft' }).addTo(map); // re-add on desktop
+ // }
+//}
+//applyZoomCtrlVisibility();
+//window.addEventListener('resize', applyZoomCtrlVisibility);
 
 
 
 
 // --- Current location pin (+ accuracy circle), no zoom/snap ---
-const userLayer = L.layerGroup().addTo(map);
-let userMarker = null;
-let userAccuracy = null;
-let geoWatchId = null;
+//const userLayer = L.layerGroup().addTo(map);
+//let userMarker = null;
+//let userAccuracy = null;
+//let geoWatchId = null;
 
 // NEW: track first pan + first UI refresh
 let userCenteredOnce = false;
 let userFirstFixNotified = false;
 
 // 📍 control
-const locateControl = L.control({ position: 'topleft' });
-locateControl.onAdd = function(map){
-  const div = L.DomUtil.create('div', 'leaflet-bar locate-btn');
-  const btn = L.DomUtil.create('button', '', div);
-  btn.type = 'button';
-  btn.title = 'Show my location';
-  btn.setAttribute('aria-label', 'Show my location');
-  btn.textContent = '📍';
-  L.DomEvent.disableClickPropagation(div);
-  btn.onclick = () => toggleGeolocation();
-  return div;
-};
-locateControl.addTo(map);
+//const locateControl = L.control({ position: 'topleft' });
+//locateControl.onAdd = function(map){
+//  const div = L.DomUtil.create('div', 'leaflet-bar locate-btn');
+//  const btn = L.DomUtil.create('button', '', div);
+//  btn.type = 'button';
+//  btn.title = 'Show my location';
+//  btn.setAttribute('aria-label', 'Show my location');
+//  btn.textContent = '📍';
+//  L.DomEvent.disableClickPropagation(div);
+//  btn.onclick = () => toggleGeolocation();
+//  return div;
+//};
+//locateControl.addTo(map);
 
 function toggleGeolocation(){
   if (!('geolocation' in navigator)) {
@@ -565,23 +531,23 @@ function toggleGeolocation(){
 function onGeoSuccess(pos){
   const { latitude: lat, longitude: lng, accuracy } = pos.coords;
 
-  if (!userMarker){
-    userMarker = L.circleMarker([lat, lng], {
-      radius: 7, weight: 2,
-      color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.6
-    }).addTo(userLayer).bindPopup('You are here');
-  } else {
-    userMarker.setLatLng([lat, lng]);
-  }
+ // if (!userMarker){
+ //   userMarker = L.circleMarker([lat, lng], {
+ //     radius: 7, weight: 2,
+ //     color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.6
+ //   }).addTo(userLayer).bindPopup('You are here');
+ // } else {
+ //   userMarker.setLatLng([lat, lng]);
+ // }
 
-  if (!userAccuracy){
-    userAccuracy = L.circle([lat, lng], {
-      radius: accuracy, color: '#0ea5e9', weight: 1, opacity: 0.5, fillOpacity: 0.08
-    }).addTo(userLayer);
-  } else {
-    userAccuracy.setLatLng([lat, lng]);
-    userAccuracy.setRadius(accuracy);
-  }
+  //if (!userAccuracy){
+  //  userAccuracy = L.circle([lat, lng], {
+  //    radius: accuracy, color: '#0ea5e9', weight: 1, opacity: 0.5, fillOpacity: 0.08
+  //  }).addTo(userLayer);
+  //} else {
+  //  userAccuracy.setLatLng([lat, lng]);
+  //  userAccuracy.setRadius(accuracy);
+  //}
 
   // 🔒 Do NOT change zoom. Only pan once on the first fix, and only if off-screen.
   if (!userCenteredOnce) {
@@ -675,7 +641,7 @@ map.getPane('labels').style.filter = 'brightness(1.0)';
 
     function getCSS(varName){ return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
 
-    const markersLayer = L.layerGroup().addTo(map);
+    //const markersLayer = L.layerGroup().addTo(map);
     const datePicker = document.getElementById('datePicker');
     const catChips  = document.getElementById('catChips');
     const listEl    = document.getElementById('eventsList');
@@ -1113,7 +1079,7 @@ let selectedEventKey = null; // tracks the currently-selected list item
       filtered.forEach((e,i) => {
         if(Number.isFinite(e.lat) && Number.isFinite(e.lng)){
           const color = CATEGORY_COLORS[e.category] || '#888';
-          const marker = L.circleMarker([e.lat, e.lng], {
+          //const marker = L.circleMarker([e.lat, e.lng], {
             radius: 8, weight:2, color: color, fillColor: color, fillOpacity:0.2
           }).addTo(markersLayer);
           marker.bindPopup(
