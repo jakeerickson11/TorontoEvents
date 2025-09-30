@@ -4,15 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>City Events Map</title>
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-
-    
-  />
+ 
+  
   <style>
 /* ----- (same styles as your file, unchanged) ----- */
 :root{
@@ -172,21 +165,6 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .pinnedClear:hover{ background:#f5f7fb; }
 .pinnedClear:focus{ outline:2px solid var(--accent); outline-offset:2px; }
 
-/* Slimmer list items on phones */
-@media (max-width: 960px){
-  .item{
-    /* text left (1fr) + small image right (auto) */
-    grid-template-columns: 1fr 56px;
-    gap: 8px;
-    padding: 8px 10px;
-  }
-  .item .leftStripe{ display:none; }        /* hide the side stripe to save space */
-  .thumb{ width:56px; height:56px; }        /* smaller image */
-  .meta{ gap: 2px; }                        /* tighter spacing between lines */
-  .title{ font-size:14px; line-height:1.2; }
-  .sub{ font-size:11px; line-height:1.2; }
-  /*.badge{ display:none; }                   /* optional: hide category pill to reduce height */
-}
 
 /* Slimmer list items on phones */
 @media (max-width: 960px){
@@ -247,17 +225,6 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
     word-break: break-word;
     hyphens: auto;
   }
-
-  /* If you prefer full wrapping (variable height), comment out the block above
-     and use this instead:
-  .title{
-    white-space: normal;
-    line-height: 1.2;
-    font-size: 14px;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    hyphens: auto;
-  } */
 
   /* Sub-lines (venue, date/time, link) kept to 1 line with ellipsis */
   .sub{
@@ -322,12 +289,12 @@ header{
   z-index: 9998;
 }
 
-/* Ensure the map never competes with the header */
-#map, .leaflet-container{ position: relative; z-index: 1; }
+/* Ensure the map never competes with the header 
+#map, .leaflet-container{ position: relative; z-index: 1; } */
 
-/* Lower Leaflet UI layers so they can't pop over the header during momentum scroll */
+/* Lower Leaflet UI layers so they can't pop over the header during momentum scroll 
 .leaflet-top,
-.leaflet-bottom{ z-index: 1000 !important; }   /* zoom controls, attribution */
+.leaflet-bottom{ z-index: 1000 !important; }   /* zoom controls, attribution 
 .leaflet-popup-pane,
 .leaflet-tooltip-pane,
 .leaflet-marker-pane{ z-index: 900 !important; } /* popups, tooltips, markers */
@@ -377,7 +344,7 @@ header{
 }
 
 /* Locate (current position) button */
-.leaflet-bar.locate-btn{
+/*.leaflet-bar.locate-btn{
   background:#fff; border:1px solid #e5eaf1; border-radius:4px;
   box-shadow: 0 1px 3px rgba(0,0,0,.08);
 }
@@ -385,7 +352,7 @@ header{
   display:block; width:32px; height:32px; line-height:32px; text-align:center;
   background:#fff; border:0; cursor:pointer; font-size:18px;
 }
-.leaflet-bar.locate-btn button:hover{ background:#f5f7fb; }
+.leaflet-bar.locate-btn button:hover{ background:#f5f7fb; } */
 
 /* Directions button */
 .dirBtn{
@@ -442,6 +409,9 @@ header .headerControls input[type="date"]{
 <!-- keep your pinnedEvent below -->
 <!-- <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div> -->
 
+<link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@latest/dist/pmtiles.js"></script>
 
 
 <!-- Pinned event (mobile only) -->
@@ -469,20 +439,53 @@ header .headerControls input[type="date"]{
     </aside>
   </div>
 
+<div id="map" style="position:fixed; inset:0;"></div>
+<script>
+  const protocol = new pmtiles.Protocol();
+  maplibregl.addProtocol("pmtiles", protocol.tile);
+
+  fetch("/style.json") // adjust path if needed
+    .then(r => r.json())
+    .then(style => {
+      const map = new maplibregl.Map({
+        container: "map",
+        style,
+        center: [-79.3832, 43.6532],
+        zoom: 11,
+        attributionControl: true
+      });
+
+      // OSM attribution (required)
+      map.addControl(new maplibregl.AttributionControl({ compact: true }));
+      const attr = document.createElement("div");
+      attr.className = "maplibregl-ctrl maplibregl-ctrl-attrib";
+      attr.style.font = "12px/1.2 system-ui, sans-serif";
+      attr.textContent = "© OpenStreetMap contributors";
+      // If you already see "© OpenStreetMap contributors" automatically, you can skip adding this.
+
+      window.map = map;
+    });
+</script>
+
+
+
   <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- PapaParse for CSV -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!--<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  PapaParse for CSV -->
+  <!--<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script> -->
 
   <script>
     // Toronto-only view + monochrome basemap (Carto Positron)
-    const TORONTO_BOUNDS = L.latLngBounds([[43.58, -79.65], [43.80, -79.12]]);
-    const map = L.map('map', { minZoom: 10, maxZoom: 19, maxBounds: TORONTO_BOUNDS, maxBoundsViscosity: 0.9, zoomControl: true, zoomSnap: 0.5 });
-    map.fitBounds(TORONTO_BOUNDS, { padding: [20, 20] });
-    map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
+    //const TORONTO_BOUNDS = L.latLngBounds([[43.58, -79.65], [43.80, -79.12]]);
+    //const map = L.map('map', { minZoom: 10, maxZoom: 19, maxBounds: TORONTO_BOUNDS, maxBoundsViscosity: 0.9, zoomControl: true, zoomSnap: 0.5 });
+    //map.fitBounds(TORONTO_BOUNDS, { padding: [20, 20] });
+    //map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
+    //L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
+    //L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
 
+
+
+    
 function applyZoomCtrlVisibility(){
   const isMobile = window.matchMedia('(max-width: 960px)').matches;
   const hasZoomEl = !!document.querySelector('.leaflet-control-zoom');
