@@ -441,13 +441,13 @@ header .headerControls input[type="date"]{
   <!--<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script> -->
 
   <script>
-    // Toronto-only view + monochrome basemap (Carto Positron)
-    //const TORONTO_BOUNDS = L.latLngBounds([[43.58, -79.65], [43.80, -79.12]]);
-    //const map = L.map('map', { minZoom: 10, maxZoom: 19, maxBounds: TORONTO_BOUNDS, maxBoundsViscosity: 0.9, zoomControl: true, zoomSnap: 0.5 });
-    //map.fitBounds(TORONTO_BOUNDS, { padding: [20, 20] });
-    //map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
-    //L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
-    //L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
+     Toronto-only view + monochrome basemap (Carto Positron)
+    const TORONTO_BOUNDS = L.latLngBounds([[43.58, -79.65], [43.80, -79.12]]);
+    const map = L.map('map', { minZoom: 10, maxZoom: 19, maxBounds: TORONTO_BOUNDS, maxBoundsViscosity: 0.9, zoomControl: true, zoomSnap: 0.5 });
+    map.fitBounds(TORONTO_BOUNDS, { padding: [20, 20] });
+    map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
 
 
 
@@ -456,42 +456,42 @@ function applyZoomCtrlVisibility(){
   const isMobile = window.matchMedia('(max-width: 960px)').matches;
   const hasZoomEl = !!document.querySelector('.leaflet-control-zoom');
 
- // if (isMobile) {
- //   if (map.zoomControl) map.zoomControl.remove();      // remove if present
- // } else {
- //   if (!hasZoomEl) L.control.zoom({ position: 'topleft' }).addTo(map); // re-add on desktop
- // }
-//}
-//applyZoomCtrlVisibility();
-//window.addEventListener('resize', applyZoomCtrlVisibility);
+  if (isMobile) {
+    if (map.zoomControl) map.zoomControl.remove();      // remove if present
+  } else {
+    if (!hasZoomEl) L.control.zoom({ position: 'topleft' }).addTo(map); // re-add on desktop
+  }
+}
+applyZoomCtrlVisibility();
+window.addEventListener('resize', applyZoomCtrlVisibility);
 
 
 
 
 // --- Current location pin (+ accuracy circle), no zoom/snap ---
-//const userLayer = L.layerGroup().addTo(map);
-//let userMarker = null;
-//let userAccuracy = null;
-//let geoWatchId = null;
+const userLayer = L.layerGroup().addTo(map);
+let userMarker = null;
+let userAccuracy = null;
+let geoWatchId = null;
 
 // NEW: track first pan + first UI refresh
 let userCenteredOnce = false;
 let userFirstFixNotified = false;
 
 // 📍 control
-//const locateControl = L.control({ position: 'topleft' });
-//locateControl.onAdd = function(map){
-//  const div = L.DomUtil.create('div', 'leaflet-bar locate-btn');
-//  const btn = L.DomUtil.create('button', '', div);
-//  btn.type = 'button';
-//  btn.title = 'Show my location';
-//  btn.setAttribute('aria-label', 'Show my location');
-//  btn.textContent = '📍';
-//  L.DomEvent.disableClickPropagation(div);
-//  btn.onclick = () => toggleGeolocation();
-//  return div;
-//};
-//locateControl.addTo(map);
+const locateControl = L.control({ position: 'topleft' });
+locateControl.onAdd = function(map){
+  const div = L.DomUtil.create('div', 'leaflet-bar locate-btn');
+  const btn = L.DomUtil.create('button', '', div);
+  btn.type = 'button';
+  btn.title = 'Show my location';
+  btn.setAttribute('aria-label', 'Show my location');
+  btn.textContent = '📍';
+  L.DomEvent.disableClickPropagation(div);
+  btn.onclick = () => toggleGeolocation();
+  return div;
+};
+locateControl.addTo(map);
 
 function toggleGeolocation(){
   if (!('geolocation' in navigator)) {
@@ -531,23 +531,23 @@ function toggleGeolocation(){
 function onGeoSuccess(pos){
   const { latitude: lat, longitude: lng, accuracy } = pos.coords;
 
- // if (!userMarker){
- //   userMarker = L.circleMarker([lat, lng], {
- //     radius: 7, weight: 2,
- //     color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.6
- //   }).addTo(userLayer).bindPopup('You are here');
- // } else {
- //   userMarker.setLatLng([lat, lng]);
- // }
+  if (!userMarker){
+    userMarker = L.circleMarker([lat, lng], {
+      radius: 7, weight: 2,
+      color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.6
+    }).addTo(userLayer).bindPopup('You are here');
+  } else {
+    userMarker.setLatLng([lat, lng]);
+  }
 
-  //if (!userAccuracy){
-  //  userAccuracy = L.circle([lat, lng], {
-  //    radius: accuracy, color: '#0ea5e9', weight: 1, opacity: 0.5, fillOpacity: 0.08
-  //  }).addTo(userLayer);
-  //} else {
-  //  userAccuracy.setLatLng([lat, lng]);
-  //  userAccuracy.setRadius(accuracy);
-  //}
+  if (!userAccuracy){
+    userAccuracy = L.circle([lat, lng], {
+      radius: accuracy, color: '#0ea5e9', weight: 1, opacity: 0.5, fillOpacity: 0.08
+    }).addTo(userLayer);
+  } else {
+    userAccuracy.setLatLng([lat, lng]);
+    userAccuracy.setRadius(accuracy);
+  }
 
   // 🔒 Do NOT change zoom. Only pan once on the first fix, and only if off-screen.
   if (!userCenteredOnce) {
