@@ -5,141 +5,51 @@
   "sources": {
     "toronto": {
       "type": "vector",
-      "url": "pmtiles://https://Jakeerickson11.github.io/TorontoEvents/toronto.pmtiles"
+      "url": "pmtiles://https://jakeerickson11.github.io/TorontoEvents/toronto.pmtiles"
     }
   },
   "layers": [
     { "id": "background", "type": "background", "paint": { "background-color": "#f6f7f9" } },
 
-    { "id": "water",
-      "type": "fill",
-      "source": "toronto",
-      "source-layer": "water",
-      "paint": { "fill-color": "#aadaff" }
-    },
+    { "id": "water", "type": "fill", "source": "toronto", "source-layer": "water",
+      "paint": { "fill-color": "#aadaff" } },
 
-    { "id": "park",
-      "type": "fill",
-      "source": "toronto",
-      "source-layer": "park",
-      "paint": { "fill-color": "#d9f0d3" }
-    },
+    { "id": "park", "type": "fill", "source": "toronto", "source-layer": "park",
+      "paint": { "fill-color": "#d9f0d3" } },
 
-    { "id": "landuse",
-      "type": "fill",
-      "source": "toronto",
-      "source-layer": "landuse",
+    { "id": "landuse", "type": "fill", "source": "toronto", "source-layer": "landuse",
       "filter": ["in", "class", "residential", "suburban", "rural", "farmland", "meadow", "grass"],
-      "paint": { "fill-color": "#eef3ea" }
-    },
+      "paint": { "fill-color": "#eef3ea" } },
 
-    { "id": "building",
-      "type": "fill",
-      "source": "toronto",
-      "source-layer": "building",
-      "paint": {
-        "fill-color": "#d7d9dd",
-        "fill-outline-color": "#c7c9cd"
-      }
-    },
+    { "id": "building", "type": "fill", "source": "toronto", "source-layer": "building",
+      "paint": { "fill-color": "#d7d9dd", "fill-outline-color": "#c7c9cd" } },
 
-    { "id": "road-casing",
-      "type": "line",
-      "source": "toronto",
-      "source-layer": "transportation",
-      "paint": {
-        "line-color": "#bbb",
-        "line-width": [
-          "interpolate", ["linear"], ["zoom"],
-          8, 0.5,
-          12, 2,
-          15, 5
-        ]
-      }
-    },
+    { "id": "road-casing", "type": "line", "source": "toronto", "source-layer": "transportation",
+      "paint": { "line-color": "#bbb",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 12, 2, 15, 5] } },
 
-    { "id": "road",
-      "type": "line",
-      "source": "toronto",
-      "source-layer": "transportation",
-      "paint": {
-        "line-color": "#ffffff",
-        "line-width": [
-          "interpolate", ["linear"], ["zoom"],
-          8, 0.25,
-          12, 1.5,
-          15, 4
-        ]
-      }
-    },
+    { "id": "road", "type": "line", "source": "toronto", "source-layer": "transportation",
+      "paint": { "line-color": "#ffffff",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.25, 12, 1.5, 15, 4] } },
 
-    { "id": "road-major",
-      "type": "line",
-      "source": "toronto",
-      "source-layer": "transportation",
+    { "id": "road-major", "type": "line", "source": "toronto", "source-layer": "transportation",
       "filter": ["in", "class", "primary", "secondary", "tertiary", "trunk", "motorway"],
-      "paint": {
-        "line-color": "#f2d28f",
-        "line-width": [
-          "interpolate", ["linear"], ["zoom"],
-          8, 0.6,
-          12, 2.5,
-          15, 6
-        ]
-      }
-    },
+      "paint": { "line-color": "#f2d28f",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.6, 12, 2.5, 15, 6] } },
 
-    { "id": "road-label",
-      "type": "symbol",
-      "source": "toronto",
-      "source-layer": "transportation_name",
-      "layout": {
-        "symbol-placement": "line",
-        "text-field": ["get", "name"],
+    { "id": "road-label", "type": "symbol", "source": "toronto", "source-layer": "transportation_name",
+      "layout": { "symbol-placement": "line", "text-field": ["get", "name"],
         "text-font": ["Noto Sans Regular"],
-        "text-size": [
-          "interpolate", ["linear"], ["zoom"],
-          10, 10,
-          14, 12
-        ]
-      },
-      "paint": {
-        "text-color": "#5a5f66",
-        "text-halo-color": "#ffffff",
-        "text-halo-width": 1
-      }
-    },
+        "text-size": ["interpolate", ["linear"], ["zoom"], 10, 10, 14, 12] },
+      "paint": { "text-color": "#5a5f66", "text-halo-color": "#ffffff", "text-halo-width": 1 } },
 
-    { "id": "place-labels",
-      "type": "symbol",
-      "source": "toronto",
-      "source-layer": "place",
-      "minzoom": 5,
-      "layout": {
-        "text-field": ["get", "name"],
-        "text-font": ["Noto Sans Regular"],
-        "text-size": [
-          "interpolate", ["linear"], ["zoom"],
-          6, 11,
-          12, 16
-        ]
-      },
-      "paint": {
-        "text-color": "#444",
-        "text-halo-color": "#ffffff",
-        "text-halo-width": 1.2
-      }
-    },
+    { "id": "place-labels", "type": "symbol", "source": "toronto", "source-layer": "place", "minzoom": 5,
+      "layout": { "text-field": ["get", "name"], "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 6, 11, 12, 16] },
+      "paint": { "text-color": "#444", "text-halo-color": "#ffffff", "text-halo-width": 1.2 } },
 
-    { "id": "boundary",
-      "type": "line",
-      "source": "toronto",
-      "source-layer": "boundary",
-      "paint": {
-        "line-color": "#8a8f96",
-        "line-dasharray": [2, 2],
-        "line-width": 1
-      }
-    }
+    { "id": "boundary", "type": "line", "source": "toronto", "source-layer": "boundary",
+      "paint": { "line-color": "#8a8f96", "line-dasharray": [2, 2], "line-width": 1 } }
   ]
 }
+
