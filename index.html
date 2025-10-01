@@ -429,6 +429,35 @@ header .headerControls input[type="date"]{
   .maplibregl-ctrl-zoom{ display:none !important; }
 }
 
+/* Dark navy attribution box so light text stays readable */
+.maplibregl-ctrl-attrib {
+  background: #0b1320 !important;   /* dark navy */
+  color: #e5e7eb !important;        /* light grey text */
+  border: 1px solid #0f1b33 !important;
+  border-radius: 10px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+
+/* Make links match the light text, with a brighter hover */
+.maplibregl-ctrl-attrib a {
+  color: #cbd5e1 !important;
+  text-decoration: none;
+}
+.maplibregl-ctrl-attrib a:hover {
+  color: #ffffff !important;
+  text-decoration: underline;
+}
+
+/* If you’re using compact mode (the little “ⓘ” toggle), style its button too */
+.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button,
+.mapboxgl-ctrl-attrib .mapboxgl-ctrl-attrib-button { /* fallback selector */
+  background: #0b1320 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #0f1b33 !important;
+  border-radius: 8px;
+}
+
   </style>
 </head>
 <body>
@@ -522,6 +551,12 @@ map.on('load', () => {
     }
   });
 });
+
+map.addControl(new maplibregl.AttributionControl({
+  compact: true,
+  customAttribution: '© OpenMapTiles © OpenStreetMap contributors'
+}), 'bottom-right');
+
 
 // Darken/de-emphasize minor roads & paths so they blend with the basemap
 map.on('load', () => {
