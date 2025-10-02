@@ -487,6 +487,33 @@ header .headerControls input[type="date"]{
   color: #0b1320 !important;
 }
 
+/* Dark, readable popup text */
+.maplibregl-popup .maplibregl-popup-content,
+.mapboxgl-popup   .mapboxgl-popup-content{
+  color: #0b1320 !important;   /* dark navy/near-black text */
+  background: #ffffff !important;
+}
+
+/* Links inside the popup (optional: make them darker too) */
+.maplibregl-popup .maplibregl-popup-content a,
+.mapboxgl-popup   .mapboxgl-popup-content a{
+  color: #0b1320 !important;
+  text-decoration: underline;
+}
+
+/* Close “×” button color */
+.maplibregl-popup .maplibregl-popup-close-button,
+.mapboxgl-popup   .mapboxgl-popup-close-button{
+  color: #0b1320 !important;
+}
+
+/* (Optional) stronger font weight for the title if you use <strong> */
+.maplibregl-popup .maplibregl-popup-content strong,
+.mapboxgl-popup   .mapboxgl-popup-content strong{
+  color: #0b1320 !important;
+}
+
+
   </style>
 </head>
 <body>
@@ -500,8 +527,6 @@ header .headerControls input[type="date"]{
 <!-- keep your pinnedEvent below -->
 <!-- <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div> -->
 
-
-
 <!-- Pinned event (mobile only) -->
 <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div>
 
@@ -510,12 +535,6 @@ header .headerControls input[type="date"]{
     <div id="map" aria-label="Events map"></div>
     <aside class="panel" aria-label="Events list panel">
       <div class="filters"> 
-        <!-- <label>Date
-        //  <input id="datePicker" type="date" />
-        //</label>
-        //<label>Search
-        //  <input id="searchInput" type="text" placeholder="Event or venue" />
-        //</label> -->
         <div class="cats" id="catChips"></div>
       </div>
       <div class="list" id="eventsList" role="list"></div>
@@ -652,19 +671,6 @@ map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'top-lef
 
 // Keep map responsive
 window.addEventListener('resize', () => map.resize());
-
-    // Toronto-only view + monochrome basemap (Carto Positron)
-    //const TORONTO_BOUNDS = L.latLngBounds([[43.58, -79.65], [43.80, -79.12]]);
-    //const map = L.map('map', { minZoom: 10, maxZoom: 19, maxBounds: TORONTO_BOUNDS, maxBoundsViscosity: 0.9, zoomControl: true, zoomSnap: 0.5 });
-    //map.fitBounds(TORONTO_BOUNDS, { padding: [20, 20] });
-    //if (fit) map.fitBounds(fit, { padding: 30 });
-    
-    //map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
-   // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
-   // L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
-
-
-
 
 // 📍 control
 let geoWatchId = null;
@@ -849,22 +855,15 @@ window.addEventListener('scroll', () => {
 
   lastY = y;
 }, { passive: true });
-
-
-// Darken + add color to base tiles
-// map.getPane('tilePane').style.filter =
-//  'grayscale(0%) hue-rotate(348deg) saturate(800%) brightness(0.85) contrast(1.38)';
-// Invert labels so they stay light on dark
-// map.getPane('labels').style.filter = 'brightness(1.0)';
                     
 
     // One-off events (existing sheet)
     const GOOGLE_SHEET_CSV_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9IWLxL_UnRLjmKdpwkFdVeC9scZfML65HyqbdppY7DC54RPv0Q3bkRa5-scyNON9pVkjwsoTcTWX-/pub?gid=811741087&single=true&output=csv";
+      "https://bitter-sun-0e27.jakeerickson11.workers.dev/events";
 
     // NEW: weekly/recurring events (publish this sheet to CSV and paste the link)
     const WEEKLY_SHEET_CSV_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRKFzStHyi9c8o4WQCIIJfCMsexEDTuMTjkmZn1oZcDT9npyqTyp7f5IT0pyuShm5ADhUIYY86kOqLm/pub?gid=811741087&single=true&output=csv";
+      "https://bitter-sun-0e27.jakeerickson11.workers.dev/weekly";
 
     // How far to expand weekly events (today → today+N days)
     const RECUR_WINDOW_DAYS = 90;
