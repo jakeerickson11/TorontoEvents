@@ -769,13 +769,13 @@ window.addEventListener('resize', () => map.resize());
     
 // Apply a dark, monotone palette to the current MapLibre style.
 // Hides non-road labels; keeps only road names.
-/* map.on('load', () => {
+ map.on('load', () => {
   const layers = (map.getStyle() && map.getStyle().layers) || [];
 
   const safePaint = (id, prop, val) => { try { map.setPaintProperty(id, prop, val); } catch(_){} };
   const safeLayout = (id, prop, val) => { try { map.setLayoutProperty(id, prop, val); } catch(_){} };
 
-  layers.forEach(l => {
+ /* layers.forEach(l => {
     const id = (l.id || '').toLowerCase();
     const t  = l.type;
 
@@ -808,7 +808,7 @@ window.addEventListener('resize', () => map.resize());
       safePaint(l.id, 'fill-extrusion-color', '#111827'); // building 3D, if present
       return;
     }
-
+*/
     if (t === 'symbol') {
       // Keep only road names; hide POI/place/transit/etc.
       const isRoadLabel = id.includes('road') || id.includes('highway') || id.includes('street') || id.includes('transport');
