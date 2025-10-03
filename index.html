@@ -769,7 +769,7 @@ window.addEventListener('resize', () => map.resize());
     
 // Apply a dark, monotone palette to the current MapLibre style.
 // Hides non-road labels; keeps only road names.
-map.on('load', () => {
+/* map.on('load', () => {
   const layers = (map.getStyle() && map.getStyle().layers) || [];
 
   const safePaint = (id, prop, val) => { try { map.setPaintProperty(id, prop, val); } catch(_){} };
@@ -823,6 +823,8 @@ map.on('load', () => {
     }
   });
 });
+
+*/
 
 // ===== Fast auto-hide header =====
 const headerEl = document.querySelector('header');
