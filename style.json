@@ -27,7 +27,7 @@
 
     { "id": "building", "type": "fill", "source": "toronto", "source-layer": "building",
       "paint": {
-        "fill-color": "#8C8C8B",
+        "fill-color": "#d9cfbd",
         "fill-outline-color": "rgba(0,0,0,0)"     
       }
     },
