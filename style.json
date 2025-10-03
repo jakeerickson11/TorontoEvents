@@ -23,11 +23,11 @@
 
     { "id": "landuse", "type": "fill", "source": "toronto", "source-layer": "landuse",
       "filter": ["in","class","residential","suburban","rural","farmland","meadow","grass"],
-      "paint": { "fill-color": "#d9cfbd" } },
+      "paint": { "fill-color": "#e8dcc8" } },
 
     { "id": "building", "type": "fill", "source": "toronto", "source-layer": "building",
       "paint": {
-        "fill-color": "#d9cfbd",
+        "fill-color": "#e8dcc8",
         "fill-outline-color": "rgba(0,0,0,0)"     
       }
     },
