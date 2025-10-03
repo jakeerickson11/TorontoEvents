@@ -60,11 +60,11 @@
         ],
         "line-opacity": [
           "interpolate", ["linear"], ["zoom"],
-          10, 0.45,
-          13, 0.28,
+          10, 0.00,
+          13, 0.08,
           15, 0.16,
-          16, 0.08,
-          17, 0.00                                  
+          16, 0.28,
+          17, 0.45                                  
         ],
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.25, 12, 1.1, 15, 2.2],
         "line-gap-width": 0
@@ -80,7 +80,7 @@
       "filter": ["in","class","primary","secondary","tertiary","trunk","motorway"],
       "layout": { "line-join": "round", "line-cap": "round" },
       "paint": {
-        "line-color": "#353935",                   
+        "line-color": "#3d3d3d",                   
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.6, 12, 2.2, 15, 5.5],
         "line-gap-width": 0
       }
