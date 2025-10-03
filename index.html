@@ -775,10 +775,10 @@ window.addEventListener('resize', () => map.resize());
   const safePaint = (id, prop, val) => { try { map.setPaintProperty(id, prop, val); } catch(_){} };
   const safeLayout = (id, prop, val) => { try { map.setLayoutProperty(id, prop, val); } catch(_){} };
 
- /* layers.forEach(l => {
+  layers.forEach(l => {
     const id = (l.id || '').toLowerCase();
     const t  = l.type;
-
+/*
     if (t === 'background') {
       safePaint(l.id, 'background-color', '#0b1320'); // deep navy
       return;
