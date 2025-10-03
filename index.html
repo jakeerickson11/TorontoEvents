@@ -578,7 +578,7 @@ const map = new maplibregl.Map({
   attributionControl: true
 });
 
-map.on('load', () => {
+/* map.on('load', () => {
   const layers = (map.getStyle() && map.getStyle().layers) || [];
   const setLayout = (id,p,v)=>{ try{ map.setLayoutProperty(id,p,v); }catch{} };
   const setPaint  = (id,p,v)=>{ try{ map.setPaintProperty(id,p,v); }catch{} };
@@ -662,7 +662,7 @@ map.on('load', () => {
     }
   });
 });
-
+*/
 
 let markers = []; // replaces Leaflet markersLayer
 
