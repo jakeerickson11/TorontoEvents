@@ -12,7 +12,7 @@
     {
       "id": "background",
       "type": "background",
-      "paint": { "background-color": "#e5e8e7" }
+      "paint": { "background-color": "#F2DCC2" }
     },
 
     { "id": "water", "type": "fill", "source": "toronto", "source-layer": "water",
