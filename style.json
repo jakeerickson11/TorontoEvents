@@ -67,7 +67,7 @@
           17, 0.45                                  
         ],
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.25, 12, 1.1, 15, 2.2],
-        "line-gap-width": 1
+        "line-gap-width": 0
       }
     },
 
