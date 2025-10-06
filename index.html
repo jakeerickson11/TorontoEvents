@@ -243,17 +243,6 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
     hyphens: auto;
   }
 
-  /* If you prefer full wrapping (variable height), comment out the block above
-     and use this instead:
-  .title{
-    white-space: normal;
-    line-height: 1.2;
-    font-size: 14px;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    hyphens: auto;
-  } */
-
   /* Sub-lines (venue, date/time, link) kept to 1 line with ellipsis */
   .sub{
     white-space: nowrap;
@@ -316,16 +305,6 @@ header{
   position: relative;
   z-index: 9998;
 }
-
-/* Ensure the map never competes with the header */
-/* #map, .leaflet-container{ position: relative; z-index: 1; }
-
-/* Lower Leaflet UI layers so they can't pop over the header during momentum scroll */
-/* .leaflet-top,
-.leaflet-bottom{ z-index: 1000 !important; }   /* zoom controls, attribution */
-/* .leaflet-popup-pane,
-/* .leaflet-tooltip-pane,
-/* .leaflet-marker-pane{ z-index: 900 !important; } /* popups, tooltips, markers */
 
 /* Desktop: stripe | text | image */
 @media (min-width: 961px){
@@ -577,92 +556,6 @@ const map = new maplibregl.Map({
   maxZoom: 19,
   attributionControl: true
 });
-
-/* map.on('load', () => {
-  const layers = (map.getStyle() && map.getStyle().layers) || [];
-  const setLayout = (id,p,v)=>{ try{ map.setLayoutProperty(id,p,v); }catch{} };
-  const setPaint  = (id,p,v)=>{ try{ map.setPaintProperty(id,p,v); }catch{} };
-
-  layers.forEach(l => {
-    const id = (l.id||'').toLowerCase();
-    const srcL = (l['source-layer']||'').toLowerCase();
-    const isBuilding = id.includes('building') || srcL === 'building';
-
-    // Many styles draw outlines as separate line layers:
-    if (isBuilding && l.type === 'line') {
-      setLayout(l.id, 'visibility', 'none');     // hide entire outline layer
-    }
-
-    // Some styles use fill-outline-color on a fill layer:
-    if (isBuilding && l.type === 'fill') {
-      setPaint(l.id, 'fill-outline-color', 'rgba(0,0,0,0)'); // transparent outline
-    }
-  });
-});
-
-map.addControl(new maplibregl.AttributionControl({
-  compact: true,
-  customAttribution: '© OpenMapTiles © OpenStreetMap contributors'
-}), 'bottom-right');
-
-
-// Darken/de-emphasize minor roads & paths so they blend with the basemap
-map.on('load', () => {
-  const layers = (map.getStyle() && map.getStyle().layers) || [];
-  const minorClasses = ['minor','service','residential','path','track','cycleway','footway','pedestrian'];
-
-  const setPaint = (id, prop, val) => { try { map.setPaintProperty(id, prop, val); } catch(_){} };
-
-  layers.forEach(l => {
-    if (l.type !== 'line') return;
-
-    const id  = (l.id || '').toLowerCase();
-    const src = (l['source-layer'] || '').toLowerCase();
-
-    // Heuristic: road layers usually live in "transportation" or have road-like ids
-    const looksLikeRoad =
-      src.includes('transport') || id.includes('road') || id.includes('highway') ||
-      id.includes('street') || id.includes('path');
-
-    if (!looksLikeRoad) return;
-
-    // Base color currently used for this layer (fallback if not set)
-    const currentColor = map.getPaintProperty(l.id, 'line-color') ?? '#3f4a5a';
-    const currentWidth = map.getPaintProperty(l.id, 'line-width') ?? ['interpolate',['linear'],['zoom'],10,0.6,16,2];
-
-    // 1) Darker color for minor classes; keep existing color for others
-    setPaint(l.id, 'line-color', [
-      'case',
-      ['match',['get','class'], minorClasses, true, false],
-      '#0f1624',                 // darker, blends into dark background
-      currentColor               // original for primary/secondary roads
-    ]);
-
-    // 2) Lower opacity on minor/paths
-    const currentOpacity = map.getPaintProperty(l.id, 'line-opacity') ?? 1;
-    setPaint(l.id, 'line-opacity', [
-      'case',
-      ['match',['get','class'], minorClasses, true, false],
-      0.25,                      // faint
-      currentOpacity
-    ]);
-
-    // 3) Thinner widths for minor/paths (scale with zoom but stay subtle)
-    setPaint(l.id, 'line-width', [
-      'case',
-      ['match',['get','class'], minorClasses, true, false],
-      ['interpolate',['linear'],['zoom'], 10, 0.15, 16, 0.35, 20, 0.6],
-      currentWidth
-    ]);
-
-    // Optional: if the style uses "casing"/"outline" layers, dim those too
-    if (id.includes('casing') || id.includes('outline')) {
-      setPaint(l.id, 'line-color', '#0b1320');
-      setPaint(l.id, 'line-opacity', 0.15);
-    }
-  });
-});
-*/
 
 let markers = []; // replaces Leaflet markersLayer
 
@@ -1410,12 +1303,7 @@ row.ondblclick = (ev) => {
 
   ev.preventDefault();
   if (e.link) window.open(e.link, '_blank', 'noopener');
-};
-
-
-
-
-        
+};        
         // --- build one list row ---
 const color = CATEGORY_COLORS[e.category] || '#888';
 
@@ -1464,10 +1352,6 @@ meta.innerHTML = `
   ${e.time ? `<div class="sub">${safe(e.time)}</div>` : ``}
   <div><span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span></div>
   ${dirLink || ``}
-
-
-
-  
 `;}
 
 // Prevent row handlers from firing when clicking Directions
@@ -1485,9 +1369,6 @@ if (dirBtnEl) {
     ev.preventDefault();
   });
 }
-
-
-
 
 // Order content: on phones -> text left, image right; desktop -> image left, text right
 const thumbWrap = document.createElement('div');
