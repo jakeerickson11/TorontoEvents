@@ -408,6 +408,32 @@ header .headerControls input[type="date"]{
   .maplibregl-ctrl-zoom{ display:none !important; }
 }
 
+/* Dark, readable popup text */
+.maplibregl-popup .maplibregl-popup-content,
+.mapboxgl-popup   .mapboxgl-popup-content{
+  color: #0b1320 !important;   /* dark navy/near-black text */
+  background: #ffffff !important;
+}
+
+/* Links inside the popup (optional: make them darker too) */
+.maplibregl-popup .maplibregl-popup-content a,
+.mapboxgl-popup   .mapboxgl-popup-content a{
+  color: #0b1320 !important;
+  text-decoration: underline;
+}
+
+/* Close “×” button color */
+.maplibregl-popup .maplibregl-popup-close-button,
+.mapboxgl-popup   .mapboxgl-popup-close-button{
+  color: #0b1320 !important;
+}
+
+/* (Optional) stronger font weight for the title if you use <strong> */
+.maplibregl-popup .maplibregl-popup-content strong,
+.mapboxgl-popup   .mapboxgl-popup-content strong{
+  color: #0b1320 !important;
+}
+
 /* Dark navy attribution box so light text stays readable */
 .maplibregl-ctrl-attrib {
   background: #0b1320 !important;   /* dark navy */
@@ -465,33 +491,6 @@ header .headerControls input[type="date"]{
   background: #e5e7eb !important;
   color: #0b1320 !important;
 }
-
-/* Dark, readable popup text */
-.maplibregl-popup .maplibregl-popup-content,
-.mapboxgl-popup   .mapboxgl-popup-content{
-  color: #0b1320 !important;   /* dark navy/near-black text */
-  background: #ffffff !important;
-}
-
-/* Links inside the popup (optional: make them darker too) */
-.maplibregl-popup .maplibregl-popup-content a,
-.mapboxgl-popup   .mapboxgl-popup-content a{
-  color: #0b1320 !important;
-  text-decoration: underline;
-}
-
-/* Close “×” button color */
-.maplibregl-popup .maplibregl-popup-close-button,
-.mapboxgl-popup   .mapboxgl-popup-close-button{
-  color: #0b1320 !important;
-}
-
-/* (Optional) stronger font weight for the title if you use <strong> */
-.maplibregl-popup .maplibregl-popup-content strong,
-.mapboxgl-popup   .mapboxgl-popup-content strong{
-  color: #0b1320 !important;
-}
-
 
   </style>
 </head>
