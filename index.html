@@ -1317,7 +1317,7 @@ filtered.forEach((e, i) => {
       //
   'eventMarker--round',
   'eventMarker--ghost',
-  'eventMarker--glow',   // pick sizes/shapes/effects you like
+  'eventMarker--thin',   // pick sizes/shapes/effects you like
 ].join(' ');
     //
     el.style.background = color;   // your CSS already gives it size/shape
@@ -1347,6 +1347,21 @@ filtered.forEach((e, i) => {
   }
 });
 
+    /////////////// drive color by data-attribute (CSS above handles fill)
+if (e.category) el.dataset.category = e.category;
+
+// optional: mark selected when popup opens
+const marker = new maplibregl.Marker({ element: el })
+  .setLngLat([e.lng, e.lat])
+  .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(/* ... */))
+  .addTo(map);
+
+marker.getPopup()
+  .on('open', ()=> el.classList.add('is-selected'))
+  .on('close', ()=> el.classList.remove('is-selected'));
+
+///////////////////////////////////////
+    
 // Fit nicely (don’t over-zoom)
 if (havePts) {
   map.fitBounds(bounds, { padding: 30, maxZoom: 16 });
