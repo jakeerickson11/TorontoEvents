@@ -389,10 +389,26 @@ header .headerControls input[type="date"]{
   /* .leaflet-control-zoom { display: none !important; }*/
 }
 
-/* round colored event markers */
+/* Base marker — keep yours as-is */
 .eventMarker{
   width:18px;height:18px;border-radius:999px;
-  border:2px solid #080808; box-shadow:0 1px 3px rgba(0,0,0,.25);
+  border:2px solid #080808;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);
+  background:#888;            /* overwritten per category */
+  position:relative;          /* for pseudo-elements */
+}
+
+/* —— Size */
+.eventMarker--sm{ width:12px; height:12px; }
+.eventMarker--md{ width:18px; height:18px; }   /* default */
+.eventMarker--lg{ width:24px; height:24px; }
+.eventMarker--xl{ width:32px; height:32px; }
+
+/* —— Shape */
+.eventMarker--round{ border-radius:999px; }     /* default */
+.eventMarker--square{ border-radius:6px; }
+.eventMarker--diamond{
+  transform:rotate(45deg); border-radius:4px;
 }
 
 /* —— Opacity/“ghost” style (slightly transparent like your Leaflet look) */
@@ -410,8 +426,19 @@ header .headerControls input[type="date"]{
 /* —— Glow (category-colored outer glow) */
 .eventMarker--glow{
   filter: drop-shadow(0 0 6px currentColor);
+}
+/* if you want the glow to match the fill, set color via CSS var or inline style */
 
+/* —— Inner bevel / “button” look */
+.eventMarker--bevel{
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.25),
+    0 1px 3px rgba(0,0,0,.25);
+}
+
+/* —— Stroke variants */
 .eventMarker--thin { border-width:1px; }
+.eventMarker--thick{ border-width:3px; }
 
 /* —— Hover + Selected states */
 .eventMarker:hover{
@@ -423,6 +450,34 @@ header .headerControls input[type="date"]{
   box-shadow:0 0 0 3px #fff, 0 1px 6px rgba(0,0,0,.4);
   outline: 2px solid #111;               /* extra contrast */
   outline-offset: 2px;
+}
+
+/* —— Pulse (attention grabber) */
+@keyframes markerPulse{
+  0%{ box-shadow:0 0 0 0 rgba(0,0,0,.25); }
+  70%{ box-shadow:0 0 0 8px rgba(0,0,0,0); }
+  100%{ box-shadow:0 0 0 0 rgba(0,0,0,0); }
+}
+.eventMarker--pulse{ animation: markerPulse 1.5s ease-out infinite; }
+@media (prefers-reduced-motion: reduce){
+  .eventMarker--pulse{ animation: none; }
+}
+
+/* —— High-DPI crisp border */
+@supports (outline:1px solid transparent){
+  .eventMarker--crisp{ outline:1px solid rgba(0,0,0,.4); outline-offset:-1px; }
+}
+
+/* —— Category colors via data-attribute (no extra classes needed) */
+.eventMarker[data-category="Active"]{ background:#16a34a; }
+.eventMarker[data-category="Creative"]{ background:#a855f7; }
+.eventMarker[data-category="Entertainment"]{ background:#eab308; }
+.eventMarker[data-category="Competitive"]{ background:#f97316; }
+.eventMarker[data-category="Relaxing"]{ background:#3b82f6; }
+
+/* —— Focus ring (keyboard accessibility) */
+.eventMarker:focus-visible{
+  box-shadow:0 0 0 3px #fff, 0 0 0 5px #2563eb;
 }
 
     
