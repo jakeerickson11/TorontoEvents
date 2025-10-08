@@ -1347,20 +1347,22 @@ filtered.forEach((e, i) => {
   }
 });
 
-    /////////////// drive color by data-attribute (CSS above handles fill)
+    /////////////// drive color by data-attribute (CSS above handles fill) 
+    ////////BREAKS GOOGLE SHEETS 
 if (e.category) el.dataset.category = e.category;
-
+    
+////////BREAKS GOOGLE SHEETS/////////////////////////////////////////////////
 // optional: mark selected when popup opens
-const marker = new maplibregl.Marker({ element: el })
-  .setLngLat([e.lng, e.lat])
-  .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(/* ... */))
-  .addTo(map);
+//const marker = new maplibregl.Marker({ element: el })
+//  .setLngLat([e.lng, e.lat])
+//  .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(/* ... */))
+//  .addTo(map);
 
-marker.getPopup()
-  .on('open', ()=> el.classList.add('is-selected'))
-  .on('close', ()=> el.classList.remove('is-selected'));
+//marker.getPopup()
+ // .on('open', ()=> el.classList.add('is-selected'))
+ // .on('close', ()=> el.classList.remove('is-selected'));
 
-///////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
     
 // Fit nicely (don’t over-zoom)
 if (havePts) {
