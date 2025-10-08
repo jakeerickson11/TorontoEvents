@@ -19,7 +19,7 @@
       "paint": { "fill-color": "#C2E2F2" } },
 
     { "id": "park", "type": "fill", "source": "toronto", "source-layer": "park",
-      "paint": { "fill-color": "#79A86F" } },
+      "paint": { "fill-color": "#D7F2C2" } },
 
     { "id": "landuse", "type": "fill", "source": "toronto", "source-layer": "landuse",
       "filter": ["in","class","residential","suburban","rural","farmland","meadow","grass"],
