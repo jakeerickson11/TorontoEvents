@@ -411,6 +411,19 @@ header .headerControls input[type="date"]{
 .eventMarker--glow{
   filter: drop-shadow(0 0 6px currentColor);
 
+.eventMarker--thin { border-width:1px; }
+
+/* —— Hover + Selected states */
+.eventMarker:hover{
+  transform: translateY(-1px) scale(1.05);
+  transition: transform .12s ease, box-shadow .12s ease;
+  z-index: 2;
+}
+.eventMarker.is-selected{
+  box-shadow:0 0 0 3px #fff, 0 1px 6px rgba(0,0,0,.4);
+  outline: 2px solid #111;               /* extra contrast */
+  outline-offset: 2px;
+}
 
     
 /* Blue circular "me" control (MapLibre control) */
