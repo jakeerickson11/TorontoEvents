@@ -16,10 +16,10 @@
     },
 
     { "id": "water", "type": "fill", "source": "toronto", "source-layer": "water",
-      "paint": { "fill-color": "#C2E2F2" } },
+      "paint": { "fill-color": "#394E73" } },
 
     { "id": "park", "type": "fill", "source": "toronto", "source-layer": "park",
-      "paint": { "fill-color": "#D7F2C2" } },
+      "paint": { "fill-color": "#397273" } },
 
     { "id": "landuse", "type": "fill", "source": "toronto", "source-layer": "landuse",
       "filter": ["in","class","residential","suburban","rural","farmland","meadow","grass"],
