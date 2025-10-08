@@ -1260,9 +1260,9 @@ filtered.forEach((e, i) => {
   //
     //
     // tiny colored dot for category
-    const el = document.createElement('div');
-    el.className = [
-      'eventMarker',
+const el = document.createElement('div');
+el.className = [
+  'eventMarker',
   'eventMarker--round',
   'eventMarker--ghost',
   'eventMarker--glow',
@@ -1281,7 +1281,7 @@ const marker = new maplibregl.Marker({ element: el })
 marker.getPopup()
   .on('open', ()=> el.classList.add('is-selected'))
   .on('close', ()=> el.classList.remove('is-selected'));
-    el.style.background = color;   // your CSS already gives it size/shape
+// your CSS already gives it size/shape
     // 
     // 
 
