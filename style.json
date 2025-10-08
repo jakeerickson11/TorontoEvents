@@ -125,7 +125,13 @@
       }
     },
 
-    
+    "sources": {
+  "toronto": {
+    "type": "vector",
+    "url": "pmtiles://https://YOUR-SITE/toronto.pmtiles",
+    "attribution": "© OpenMapTiles © OpenStreetMap contributors"
+  }
+}
     {
       "id": "boundary",
       "type": "line",
