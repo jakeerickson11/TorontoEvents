@@ -433,7 +433,7 @@ header .headerControls input[type="date"]{
 .mapboxgl-popup   .mapboxgl-popup-content strong{
   color: #0b1320 !important;
 }
-
+    
 /* Dark navy attribution box so light text stays readable */
 .maplibregl-ctrl-attrib {
   background: #0b1320 !important;   /* dark navy */
@@ -559,11 +559,20 @@ const map = new maplibregl.Map({
 let markers = []; // replaces Leaflet markersLayer
 
 // (optional) zoom control; we'll hide it on mobile via CSS
-map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'top-left');
+//map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'top-left');
 
 // Keep map responsive
 window.addEventListener('resize', () => map.resize());
 
+// Force a visible attribution line with your credits
+map.addControl(
+  new maplibregl.AttributionControl({
+    compact: false, // always show the text (no tiny "ⓘ" only)
+    customAttribution: '© OpenMapTiles © OpenStreetMap contributors'
+  }),
+  'bottom-right'
+);
+    
 // 📍 control
 let geoWatchId = null;
 let userCenteredOnce = false;
