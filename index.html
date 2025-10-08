@@ -395,6 +395,24 @@ header .headerControls input[type="date"]{
   border:2px solid #080808; box-shadow:0 1px 3px rgba(0,0,0,.25);
 }
 
+/* —— Opacity/“ghost” style (slightly transparent like your Leaflet look) */
+.eventMarker--ghost{ opacity:.8; backdrop-filter: blur(0.5px); }
+
+/* —— Halo (readable on dark/light basemaps) */
+.eventMarker--halo::after{
+  content:"";
+  position:absolute; inset:-5px;
+  border-radius:inherit;
+  box-shadow:0 0 0 5px rgba(255,255,255,.55);
+  z-index:-1;
+}
+
+/* —— Glow (category-colored outer glow) */
+.eventMarker--glow{
+  filter: drop-shadow(0 0 6px currentColor);
+
+
+    
 /* Blue circular "me" control (MapLibre control) */
 .maplibregl-ctrl .meCtrl{
   width:36px;height:36px;border-radius:999px;
@@ -1212,7 +1230,7 @@ let selectedEventKey = null; // tracks the currently-selected list item
     return matchDate && matchCat; // (search removed)
   });
 
-      // remove old markers
+// remove old markers
 // remove old markers
 markers.forEach(m => m.remove());
 markers = [];
@@ -1225,11 +1243,38 @@ filtered.forEach((e, i) => {
   if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
     const color = CATEGORY_COLORS[e.category] || '#888';
 
+  //
+  //
+    //
     // tiny colored dot for category
     const el = document.createElement('div');
-    el.className = 'eventMarker';
-    el.style.background = color;   // your CSS already gives it size/shape
+    el.className = [
+      'eventMarker',
+  'eventMarker--round',
+  'eventMarker--ghost',
+  'eventMarker--glow',
+  // pick sizes/shapes/effects you like
+].join(' ');
 
+// drive color by data-attribute (CSS above handles fill)
+if (e.category) el.dataset.category = e.category;
+
+// optional: mark selected when popup opens
+const marker = new maplibregl.Marker({ element: el })
+  .setLngLat([e.lng, e.lat])
+  .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(/* ... */))
+  .addTo(map);
+
+marker.getPopup()
+  .on('open', ()=> el.classList.add('is-selected'))
+  .on('close', ()=> el.classList.remove('is-selected'));
+    el.style.background = color;   // your CSS already gives it size/shape
+    // 
+    // 
+
+
+
+    
     // create marker + popup
     const marker = new maplibregl.Marker({ element: el })
       .setLngLat([e.lng, e.lat])   // MapLibre = [lng, lat]
