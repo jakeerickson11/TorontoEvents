@@ -1353,15 +1353,15 @@ filtered.forEach((e, i) => {
 //if (e.category) el.dataset.category = e.category;
     
 ////////BREAKS GOOGLE SHEETS/////////////////////////////////////////////////
-// optional: mark selected when popup opens
-//const marker = new maplibregl.Marker({ element: el })
-//  .setLngLat([e.lng, e.lat])
-//  .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(/* ... */))
-//  .addTo(map);
+ optional: mark selected when popup opens
+const marker = new maplibregl.Marker({ element: el })
+  .setLngLat([e.lng, e.lat])
+  .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(/* ... */))
+  .addTo(map);
 
-//marker.getPopup()
- // .on('open', ()=> el.classList.add('is-selected'))
- // .on('close', ()=> el.classList.remove('is-selected'));
+marker.getPopup()
+  .on('open', ()=> el.classList.add('is-selected'))
+  .on('close', ()=> el.classList.remove('is-selected'));
 
 /////////////////////////////////////////////////////////////////////////////
     
