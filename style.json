@@ -125,12 +125,6 @@
       }
     },
 
-    "sources": {
-  "toronto": {
-    "type": "vector",
-    "url": "pmtiles://https://jakeerickson11.github.io/TorontoEvents/toronto.pmtiles",
-    "attribution": "© OpenMapTiles © OpenStreetMap contributors"
-  }
 }
     {
       "id": "boundary",
@@ -141,3 +135,5 @@
     }
   ]
 }
+
+
