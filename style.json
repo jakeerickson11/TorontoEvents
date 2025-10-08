@@ -128,7 +128,7 @@
     "sources": {
   "toronto": {
     "type": "vector",
-    "url": "pmtiles://https://YOUR-SITE/toronto.pmtiles",
+    "url": "pmtiles://https://jakeerickson11.github.io/TorontoEvents/toronto.pmtiles",
     "attribution": "© OpenMapTiles © OpenStreetMap contributors"
   }
 }
