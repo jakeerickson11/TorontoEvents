@@ -923,12 +923,12 @@ window.addEventListener('resize', () => map.resize());
  // 3) on first paint, animate to your exact home view
     map.on('load', () => {
   // use jumpTo first to avoid the "double pan then rotate" look (optional)
-  map.jumpTo({ center: HOME.center, zoom: HOME.zoom, bearing: -15, pitch: 20 });
+  map.jumpTo({ center: HOME.center, zoom: 5, bearing: 0, pitch: 20 });
 
   // then do a smooth, deliberate rotate/zoom if you like
   map.easeTo({
     center: HOME.center,
-    zoom: 15,
+    zoom: 10,
     bearing: -15,
     pitch: 10,
     //offset: OPENING_OFFSET,   // remove if you don't have a sidebar
