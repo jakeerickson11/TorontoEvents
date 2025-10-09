@@ -16,18 +16,18 @@
     },
 
     { "id": "water", "type": "fill", "source": "toronto", "source-layer": "water",
-      "paint": { "fill-color": "#99BFBF" } },
+      "paint": { "fill-color": "#3066be" } },
 
     { "id": "park", "type": "fill", "source": "toronto", "source-layer": "park",
       "paint": { "fill-color": "#79A86F" } },
 
     { "id": "landuse", "type": "fill", "source": "toronto", "source-layer": "landuse",
       "filter": ["in","class","residential","suburban","rural","farmland","meadow","grass"],
-      "paint": { "fill-color": "#F2DCC2" } },
+      "paint": { "fill-color": "#fbfff1" } },
 
     { "id": "building", "type": "fill", "source": "toronto", "source-layer": "building",
       "paint": {
-        "fill-color": "#F2DCC2",
+        "fill-color": "#fbfff1",
         "fill-outline-color": "rgba(0,0,0,0)"     
       }
     },
@@ -80,7 +80,7 @@
       "filter": ["in","class","primary","secondary","tertiary","trunk","motorway"],
       "layout": { "line-join": "round", "line-cap": "round" },
       "paint": {
-        "line-color": "#ffffff",                   
+        "line-color": "#b4c5e4",                   
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.6, 12, 2.2, 15, 5.5],
         "line-gap-width": 0
       }
