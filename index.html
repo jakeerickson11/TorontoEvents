@@ -760,6 +760,26 @@ maplibregl.addProtocol('pmtiles', protocol.tile);
 // (use your real GitHub Pages URL for toronto.pmtiles)
 protocol.add(new pmtiles.PMTiles('https://Jakeerickson11.github.io/TorontoEvents/toronto.pmtiles'));
 
+// 1) set your target "home" view
+const HOME = {
+  center: [-79.39246303205854, 43.66447814738001], // [lng, lat] Queens Park
+  zoom: 13.2,      // tweak to taste
+  bearing: 10,     // your clockwise tilt
+  pitch: 0
+};
+
+    // 2) make sure the map doesn't restore last state from the URL
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://Jakeerickson11.github.io/TorontoEvents/style.json',
+  hash: false,              // important: don't read/write #zoom/center in URL
+  interactive: true,        // normal interactions after load
+  // start anywhere; we’ll animate to HOME on 'load'
+  center: [-79.38, 43.65],
+  zoom: 12
+});
+
+    /*
 // Build the map from your MapLibre style.json (hosted in GitHub too)
 const map = new maplibregl.Map({
   container: 'map',
@@ -771,7 +791,24 @@ const map = new maplibregl.Map({
   attributionControl: true,
   bearing: 0
 });
+*/
+    // 3) on first paint, animate to your exact home view
+    map.once('load', () => {
+  // use jumpTo first to avoid the "double pan then rotate" look (optional)
+  map.jumpTo({ center: HOME.center, zoom: HOME.zoom, bearing: 0, pitch: 0 });
 
+  // then do a smooth, deliberate rotate/zoom if you like
+  map.easeTo({
+    center: HOME.center,
+    zoom: HOME.zoom,
+    bearing: HOME.bearing,
+    pitch: HOME.pitch,
+    offset: OPENING_OFFSET,   // remove if you don't have a sidebar
+    duration: 1200,           // 1.2s feels nice
+    essential: true
+  });
+});
+    
 let markers = []; // replaces Leaflet markersLayer
 
 // (optional) zoom control; we'll hide it on mobile via CSS
