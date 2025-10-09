@@ -928,10 +928,10 @@ window.addEventListener('resize', () => map.resize());
   // then do a smooth, deliberate rotate/zoom if you like
   map.easeTo({
     center: HOME.center,
-    zoom: HOME.zoom,
+    zoom: 15,
     bearing: -15,
     pitch: 10,
-    offset: OPENING_OFFSET,   // remove if you don't have a sidebar
+    //offset: OPENING_OFFSET,   // remove if you don't have a sidebar
     duration: 1200,           // 1.2s feels nice
     essential: true
   });
