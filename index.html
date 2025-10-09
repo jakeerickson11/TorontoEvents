@@ -801,8 +801,8 @@ const map = new maplibregl.Map({
   map.easeTo({
     center: HOME.center,
     zoom: HOME.zoom,
-    bearing: HOME.bearing,
-    pitch: HOME.pitch,
+    bearing: -15,
+    pitch: 10,
     offset: OPENING_OFFSET,   // remove if you don't have a sidebar
     duration: 1200,           // 1.2s feels nice
     essential: true
@@ -936,7 +936,7 @@ window.addEventListener('resize', () => map.resize());
 // Apply a dark, monotone palette to the current MapLibre style.
 // Hides non-road labels; keeps only road names.
  map.on('load', () => {
-   map.fitBounds(TORONTO_BOUNDS, {
+   /* map.fitBounds(TORONTO_BOUNDS, {
     padding: { top: 80, right: 80, bottom: 80, left: 320 },
     duration: 0 // instant fit so the next animation feels deliberate
   });
@@ -946,7 +946,7 @@ window.addEventListener('resize', () => map.resize());
     //zoom: map.getZoom(), // keep current zoom
     duration: 1200       // 1.2s feels nice
   });
-
+*/
   const layers = (map.getStyle() && map.getStyle().layers) || [];
 
   const safePaint = (id, prop, val) => { try { map.setPaintProperty(id, prop, val); } catch(_){} };
