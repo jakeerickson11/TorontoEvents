@@ -750,7 +750,7 @@ header .headerControls input[type="date"]{
   <script>
 
 // --- MapLibre + PMTiles setup ---
-const TORONTO_BOUNDS = [[-79.65,43.58],[-79.12,43.80]]; // [W,S],[E,N]
+const TORONTO_BOUNDS = [[-79.75,43.30],[-79.00,44.00]]; // [W,S],[E,N]
 
 // Register PMTiles protocol so style.json can use pmtiles:// URLs
 const protocol = new pmtiles.Protocol();
@@ -768,7 +768,8 @@ const map = new maplibregl.Map({
   maxBounds: TORONTO_BOUNDS,
   minZoom: 10,
   maxZoom: 19,
-  attributionControl: true
+  attributionControl: true,
+  bearing: 0
 });
 
 let markers = []; // replaces Leaflet markersLayer
@@ -898,6 +899,17 @@ window.addEventListener('resize', () => map.resize());
 // Apply a dark, monotone palette to the current MapLibre style.
 // Hides non-road labels; keeps only road names.
  map.on('load', () => {
+   map.fitBounds(TORONTO_BOUNDS, {
+    padding: { top: 80, right: 80, bottom: 80, left: 320 },
+    duration: 0 // instant fit so the next animation feels deliberate
+  });
+     map.easeTo({
+    bearing: 10,
+    // pitch: 20,         // uncomment if you want a bit of tilt
+    // zoom: map.getZoom(), // keep current zoom
+    duration: 1200       // 1.2s feels nice
+  });
+
   const layers = (map.getStyle() && map.getStyle().layers) || [];
 
   const safePaint = (id, prop, val) => { try { map.setPaintProperty(id, prop, val); } catch(_){} };
