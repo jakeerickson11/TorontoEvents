@@ -631,21 +631,38 @@ header .headerControls input[type="date"]{
   color: #0b1320 !important;
 }
     
-/* Dark navy attribution box so light text stays readable */
+/* Base size on desktop */
 .maplibregl-ctrl-attrib {
-  background: #0b1320 !important;   /* dark navy */
-  color: #e5e7eb !important;        /* light grey text */
-  border: 1px solid #0f1b33 !important;
-  border-radius: 10px;
-  padding: 4px 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  font-size: 12px;           /* smaller than default */
+  line-height: 1.25;
+  padding: 2px 6px;
+  background: rgba(0,0,0,.55);  /* optional: improve contrast on dark maps */
+  color: #fff;
+  border-radius: 6px;
 }
 
-/* Make links match the light text, with a brighter hover */
+/* Make links look like links but subtle */
 .maplibregl-ctrl-attrib a {
-  color: #cbd5e1 !important;
-  text-decoration: none;
+  color: inherit;                 /* match control text color */
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
+
+/* On very small screens, make it even more compact */
+@media (max-width: 640px) {
+  .maplibregl-ctrl-attrib {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+}
+
+/* Optional: always force the compact "i" button (if you prefer it everywhere) */
+/*
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  min-width: 0;
+}
+*/
+
 .maplibregl-ctrl-attrib a:hover {
   color: #ffffff !important;
   text-decoration: underline;
@@ -763,13 +780,25 @@ let markers = []; // replaces Leaflet markersLayer
 window.addEventListener('resize', () => map.resize());
 
  //Force a visible attribution line with your credits
+// Remove an existing attribution control if you already added one
+// (skip if you don't have one)
+// map._controls?.forEach(c => c instanceof maplibregl.AttributionControl && map.removeControl(c));
+
 map.addControl(
   new maplibregl.AttributionControl({
-    compact: true, // always show the text (no tiny "ⓘ" only)
-    customAttribution: '© OpenMapTiles © OpenStreetMap contributors'
+    // This makes a small "i" button on small screens that expands on tap
+    compact: true,
+    // Add your own source credit(s) as hyperlinks
+    customAttribution: [
+      '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+      '<a href="https://protomaps.com/pmtiles" target="_blank" rel="noopener">PMTiles</a>',
+      // add/remove as needed:
+      // '<a href="https://yourdomain.com/attribution" target="_blank" rel="noopener">Toronto Events Map</a>'
+    ].join(' • ')
   }),
   'bottom-right'
 );
+
     
 // 📍 control
 let geoWatchId = null;
