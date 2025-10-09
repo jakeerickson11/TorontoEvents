@@ -150,6 +150,18 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 }
 .pinned .dot{ width:10px; height:10px; border-radius:999px; display:inline-block; }
 
+/* Promoted tag used in the list */
+.promotedTag{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:3px 8px; border-radius:999px;
+  background:#ff2d9b; color:#fff; font-size:11px; font-weight:700;
+  border:1px solid rgba(0,0,0,.15);
+  box-shadow:0 1px 2px rgba(0,0,0,.12);
+  white-space:nowrap;
+}
+.promotedTag .star{ font-size:12px; line-height:1; }
+
+
 /* Hide the pinned bar on desktop/tablet; only show on phones */
 @media (min-width: 961px){
   .pinned{ display:none; }
@@ -416,7 +428,7 @@ header .headerControls input[type="date"]{
 /* —— Halo (readable on dark/light basemaps) */
 .eventMarker--halo::after{
   content:"";
-  position:absolute; inset:-5px;
+  position:absolute; inset:-1px;
   border-radius:inherit;
   box-shadow:0 0 0 5px rgba(255,255,255,.55);
   z-index:-1;
@@ -451,16 +463,49 @@ header .headerControls input[type="date"]{
   outline-offset: 2px;
 }
 
-/* —— Pulse (attention grabber) */
-@keyframes markerPulse{
-  0%{ box-shadow:0 0 0 0 rgba(0,0,0,.25); }
-  70%{ box-shadow:0 0 0 8px rgba(0,0,0,0); }
-  100%{ box-shadow:0 0 0 0 rgba(0,0,0,0); }
+/* Use a CSS var so glow matches the fill automatically */
+.eventMarker{
+  background: var(--marker-color, #888);
+  color: var(--marker-color, #888); /* used by currentColor effects */
+  position: relative;
 }
-.eventMarker--pulse{ animation: markerPulse 1.5s ease-out infinite; }
+
+/* Promoted: larger, thicker stroke, white ring, glow + gentle pulse */
+.eventMarker--promoted{
+  --marker-color: #ff2d9b; 
+  width:24px; height:24px;
+  border-width:3px;
+  box-shadow:
+    0 0 0 3px #fff,          /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.35);
+    
+  filter: drop-shadow(0 0 8px currentColor);
+  animation: promotedPulse 1.4s ease-out infinite;
+  z-index: 2;
+}
+
+/* Small star badge */
+.eventMarker__badge{
+  position:absolute; top:-6px; right:-6px;
+  width:14px; height:14px; border-radius:999px;
+  background:#111; color:#ffd600;
+  font-size:10px; line-height:14px; text-align:center; font-weight:700;
+  box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,.25);
+}
+
+/* Pulse animation (respects reduced motion) */
+@keyframes promotedPulse{
+  0%   { box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.35), 0 0 0 0 rgba(0,0,0,.18); }
+  70%  { box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.35), 0 0 0 12px rgba(0,0,0,0); }
+  100% { box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.35), 0 0 0 0 rgba(0,0,0,0); }
+}
 @media (prefers-reduced-motion: reduce){
-  .eventMarker--pulse{ animation: none; }
+  .eventMarker--promoted{ animation: none; }
 }
+
+/* Optional: always keep promoted above regular on hover stacks */
+.eventMarker.is-selected{ z-index: 3; }
+
 
 /* —— High-DPI crisp border */
 @supports (outline:1px solid transparent){
@@ -479,6 +524,73 @@ header .headerControls input[type="date"]{
   box-shadow:0 0 0 3px #fff, 0 0 0 5px #2563eb;
 }
 
+.eventMarker{
+  background: var(--marker-color, #888); /* your JS still sets background too */
+  position: absolute;
+}
+
+/* --- PROMOTED STYLE (bigger, thicker, white ring + glow + star) --- */
+.eventMarker--promoted{
+  --marker-color: #ff0000 !important;   /* red glow */
+  position:absolute;
+  width: 24px;           /* bigger than your 18px base */
+  height: 24px;
+  border-width: 3px;     /* thicker outline */
+  box-shadow:
+    0 0 0 3px #fff,      /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.35);
+  filter: drop-shadow(0 0 1px currentColor); /* color-matched glow */
+  animation: 
+   promotedRing 0.95s ease-in-out infinite,
+}
+
+/* little star badge in the corner */
+.eventMarker__badge{
+  position:absolute; 
+  top:px; 
+  right:0px;
+  width:14px; 
+  height:14px; 
+  border-radius:999px;
+  background:#11111100; 
+  color:#ffd600;  /* gold star on dark dot */
+  font-size:10px; 
+  line-height:14px; 
+  text-align:center; font-weight:700;
+  box-shadow:0 0 0 2px #ffffff00, 0 1px 2px rgba(0,0,0,.25);
+}
+
+/* Center the existing badge inside promoted markers */
+.eventMarker--promoted{ position: absolute; }  /* marker stays relative, NOT absolute */
+
+.eventMarker--promoted .eventMarker__badge{
+  position: absolute;
+  inset: 0;                           /* fill the marker box */
+  display: flex; align-items: center; justify-content: center;
+  width: auto; height: auto;          /* let font size define size */
+  margin: 0; padding: 0;
+  background: transparent; border: 0; box-shadow: none;
+  color: #fff;                        /* white star on hot pink */
+  font-size: 15px;                    /* try 12–14 for a 24px marker */
+  line-height: 1;
+  pointer-events: none;               /* clicks hit the marker, not the star */
+  text-shadow: 0 1px 2px rgba(0,0,0,.45);
+}
+
+/* animations */
+@keyframes promotedBeat{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.10)} }
+@keyframes promotedGlow{ 0%,100%{filter:drop-shadow(0 0 8px currentColor)} 50%{filter:drop-shadow(0 0 16px currentColor)} }
+@keyframes promotedRing{
+  0%{   box-shadow:0 0 0 0 rgba(255,45,155,.45); opacity:1 }
+  70%{  box-shadow:0 0 0 16px rgba(255,45,155,0); opacity:0 }
+  100%{ box-shadow:0 0 0 0 rgba(255,45,155,0); opacity:0 }
+}
+@keyframes twinkle{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.15) rotate(-12deg)} }
+@media (prefers-reduced-motion: reduce){
+  .eventMarker--promoted,
+  .eventMarker--promoted::after,
+  .eventMarker__badge{ animation:none; }
+}
 
 /* Blue circular "me" control (MapLibre control) */
 .maplibregl-ctrl .meCtrl{
@@ -589,6 +701,7 @@ header .headerControls input[type="date"]{
 <div id="headerSpacer" aria-hidden="true"></div>
 <!-- keep your pinnedEvent below -->
 <!-- <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div> -->
+
 
 <!-- Pinned event (mobile only) -->
 <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div>
@@ -825,6 +938,11 @@ function setHeaderHeightVar(){
 window.addEventListener('load', setHeaderHeightVar);
 window.addEventListener('resize', setHeaderHeightVar);
 
+
+const SHOW_AT_TOP = 0;
+const HIDE_AFTER  = 80; // px
+
+
 // Hide on scroll down, show on scroll up (more sensitive + rAF for smoothness)
 let lastY = window.scrollY, ticking = false;
 const MIN_DELTA = 4;  // smaller = quicker reaction
@@ -956,6 +1074,9 @@ window.addEventListener('resize', renderPinned); // keep it correct on rotate/re
     function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
 function monthKey(d){ return d.getFullYear()*12 + d.getMonth(); } // for incrementing months
 
+
+
+
 function weekdayOrdinalInMonth(d){
   // e.g., d = 2025-10-14 (Tue) → returns 2 (2nd Tuesday)
   const day = d.getDate();
@@ -1048,7 +1169,7 @@ function buildCategoryChips(){
     }
 
     // Cleaners for both sheets
-   function cleanOneOff(r){
+ function cleanOneOff(r){
   const coordsField = r["Coords"] || r["Coordinates"] || r["Lat/Lng"] || r["Location"] || '';
 
   let lat = parseFloat(r["Lat"]);
@@ -1056,11 +1177,8 @@ function buildCategoryChips(){
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     const c = parseCoordsToLatLng(coordsField);
-    if (Number.isFinite(c.lat) && Number.isFinite(c.lng)) {
-      lat = c.lat; lng = c.lng;
-    } else {
-      lat = null; lng = null;
-    }
+    lat = Number.isFinite(c.lat) ? c.lat : null;
+    lng = Number.isFinite(c.lng) ? c.lng : null;
   }
 
   return {
@@ -1073,9 +1191,32 @@ function buildCategoryChips(){
     address: (r["Address"] || r.address || '').trim(),
     photo: (r["Photo"] || r.photo || '').trim(),
     lat, lng,
+    promoted: truthy(getField(r, ['Promoted','promoted'])),  // ← simple & global
     __source: 'oneoff'
   };
 }
+
+// Interprets 1 / true / yes / y (case-insensitive) as true
+function truthy(v){
+  return /^(1|true|yes|y)$/i.test(String(v || '').trim());
+}
+
+// Gets a field from a row by exact key, common variants, or case/space-insensitive header
+function getField(row, candidates){
+  // fast path: exact names
+  for (var i=0;i<candidates.length;i++){
+    var k = candidates[i];
+    if (row != null && Object.prototype.hasOwnProperty.call(row, k)) return row[k];
+  }
+  // tolerant path: trim + lowercase header names (handles " Promoted ", "PROMOTED", etc.)
+  var want = candidates.map(function(n){ return String(n).replace(/\s+/g,'').toLowerCase(); });
+  for (var key in row){
+    var norm = String(key).replace(/\s+/g,'').toLowerCase();
+    if (want.indexOf(norm) !== -1) return row[key];
+  }
+  return '';
+}
+
 
 function cleanWeekly(r){
   const dowRaw = r["Day"] ?? r["Weekday"] ?? r["weekday"] ?? r["day"];
@@ -1084,7 +1225,6 @@ function cleanWeekly(r){
   const excludes = String(r["Exclude Dates"] || r["Exclude"] || '')
                     .split(',').map(s=>normalizeDate(s.trim())).filter(Boolean);
 
-  // Coords parsing fallback
   const coordsField = r["Coords"] || r["Coordinates"] || r["Lat/Lng"] || r["Location"] || '';
   let lat = parseFloat(r["Lat"]); let lng = parseFloat(r["Lng"]);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
@@ -1093,9 +1233,8 @@ function cleanWeekly(r){
     lng = Number.isFinite(c.lng) ? c.lng : null;
   }
 
-  // ---- Repeat parsing (very tolerant) ----
   const raw = (r["Repeat"] ?? r["Frequency"] ?? "").toString().toLowerCase().trim();
-  const norm = raw.replace(/[\s-_/]/g, ''); // remove spaces, hyphens, slashes, underscores
+  const norm = raw.replace(/[\s-_/]/g, '');
   let repeat = 'weekly';
   if (['biweekly','2w','fortnightly','everyotherweek','q2w'].includes(norm)) repeat = 'biweekly';
   else if (['monthly','1m','monthlynth','nthmonthly'].includes(norm)) repeat = 'monthly';
@@ -1103,7 +1242,7 @@ function cleanWeekly(r){
   return {
     name: (r["Event name"] || r.name || '').trim(),
     venue: (r["Venue"] || r.venue || '').trim(),
-    day: parseDOW(dowRaw),                 // 0=Sun … 6=Sat
+    day: parseDOW(dowRaw),
     time: (r["Time"] || r.time || '').trim(),
     category: (r["Category"] || r.category || '').trim(),
     link: (r["Link"] || r.link || '').trim(),
@@ -1113,7 +1252,8 @@ function cleanWeekly(r){
     start: startRaw,
     end: endRaw,
     excludes,
-    repeat,                                // now normalized to 'weekly' | 'biweekly' | 'monthly'
+    repeat,
+    promoted: truthy(getField(r, ['Promoted','promoted'])),  // ← simple & global
     __source: 'weekly'
   };
 }
@@ -1131,6 +1271,12 @@ function nthWeekdayOfMonth(year, monthIndex, weekday, nth){
   const res = new Date(year, monthIndex, date);
   return res.getMonth() === monthIndex ? res : null;
 }
+
+//////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////
+
+
 
 function expandWeekly(row, rangeStart, rangeEnd){
   const out = [];
@@ -1165,7 +1311,9 @@ function expandWeekly(row, rangeStart, rangeEnd){
         out.push({
           name: row.name, venue: row.venue, date: iso, time: row.time,
           category: row.category, link: row.link, address: row.address,
-          photo: row.photo, lat: row.lat, lng: row.lng, __source: 'weekly'
+          photo: row.photo, lat: row.lat, lng: row.lng,
+          promoted: row.promoted, 
+          __source: 'weekly'
         });
       }
     }
@@ -1198,7 +1346,9 @@ function expandWeekly(row, rangeStart, rangeEnd){
         out.push({
           name: row.name, venue: row.venue, date: iso, time: row.time,
           category: row.category, link: row.link, address: row.address,
-          photo: row.photo, lat: row.lat, lng: row.lng, __source: 'weekly'
+          photo: row.photo, lat: row.lat, lng: row.lng,
+          promoted: row.promoted, 
+          __source: 'weekly'
         });
       }
       m++; if (m>11){ m=0; y++; }
@@ -1252,6 +1402,7 @@ if (datePicker) {
   }
 } // if there’s no datePicker for some reason, we just show all dates
 
+
 render();
 
   } catch(err){
@@ -1297,6 +1448,14 @@ let selectedEventKey = null; // tracks the currently-selected list item
     return matchDate && matchCat; // (search removed)
   });
 
+// ——— NEW: put promoted first (stable order within each group)
+const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
+const ordered = [
+  ...filtered.filter(isPromoted),
+  ...filtered.filter(ev => !isPromoted(ev))
+];
+
+
       // remove old markers
 // remove old markers
 markers.forEach(m => m.remove());
@@ -1306,47 +1465,74 @@ markers = [];
 const bounds = new maplibregl.LngLatBounds();
 let havePts = false;
 
-filtered.forEach((e, i) => {
-  if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
-    const color = CATEGORY_COLORS[e.category] || '#888';
+ordered.forEach(function(e, i){
+  if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
 
-    // tiny colored dot for category
-    const el = document.createElement('div');
-    el.className = [
-  'eventMarker',
-      //
-  'eventMarker--round',
-  'eventMarker--ghost',
-  'eventMarker--thin',
-  'eventMarker--Halo', // pick sizes/shapes/effects you like
-].join(' ');
-    //
-    el.style.background = color;   // your CSS already gives it size/shape
+  // Guard against missing globals so we never throw
+  var color = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[e.category])
+    ? CATEGORY_COLORS[e.category]
+    : '#888';
 
-    // create marker + popup
-    const marker = new maplibregl.Marker({ element: el })
-      .setLngLat([e.lng, e.lat])   // MapLibre = [lng, lat]
-      .setPopup(
-        new maplibregl.Popup({ offset: 12 }).setHTML(
-          `<strong>${safe(e.name)}</strong><br>${safe(e.venue || '')}${e.time ? ` • ${safe(e.time)}` : ''}<br><a href="${e.link}" target="_blank" rel="noopener">Event page</a>`
-        )
-      )
-      .addTo(map);
+  var _safe = (typeof safe === 'function')
+    ? safe
+    : function(s){ return String(s||'').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); };
 
-    // click behavior (mobile pins = pin card, desktop = highlight list)
-    el.addEventListener('click', () => {
-      if (isMobile()) {
-        setPinned(e);
-      } else {
-        highlightCard(i);
-      }
-    });
+  // Promoted flag accepted from either Promoted or promoted column (TRUE/Yes/1/Y)
+ var promoted = !!e.promoted;
 
-    markers.push(marker);
-    bounds.extend([e.lng, e.lat]);
-    havePts = true;
+  var el = document.createElement('div');
+  el.className = [
+    'eventMarker',
+    'eventMarker--round',
+    'eventMarker--ghost',
+    'eventMarker--thin'      // 👈 fix casing
+  ].join(' ');
+  el.style.background = color;                 // keep your original fill
+  el.style.setProperty('--marker-color', color); // lets CSS glow match the fill
+
+  if (promoted){
+    el.className += ' eventMarker--promoted is-promoted';
+    var badge = document.createElement('span');
+    badge.className = 'eventMarker__badge';
+    badge.textContent = '★';
+    badge.setAttribute('aria-hidden','true');
+    el.appendChild(badge);
   }
+
+  // create marker + popup
+  var marker = new maplibregl.Marker({ element: el })
+    .setLngLat([e.lng, e.lat])
+    .setPopup(
+      new maplibregl.Popup({ offset: 12 }).setHTML(
+        '<strong>' + _safe(e.name) + '</strong>' +
+        (promoted ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
+        '<br>' + _safe(e.venue || '') + (e.time ? ' • ' + _safe(e.time) : '') +
+        '<br><a href="' + e.link + '" target="_blank" rel="noopener">Event page</a>'
+      )
+    )
+    .addTo(map);
+
+  // click behavior (mobile pins = pin card, desktop = highlight list)
+  el.addEventListener('click', function(){
+    if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches){
+      if (typeof setPinned === 'function') setPinned(e);
+    } else {
+      if (typeof highlightCard === 'function') highlightCard(i);
+    }
+  });
+
+  // optional selected styling, safe to keep
+  if (marker.getPopup){
+    marker.getPopup()
+      .on('open', function(){ el.classList.add('is-selected'); })
+      .on('close', function(){ el.classList.remove('is-selected'); });
+  }
+
+  markers.push(marker);
+  bounds.extend([e.lng, e.lat]);
+  havePts = true;
 });
+
 
     /////////////// drive color by data-attribute (CSS above handles fill) 
     ////////BREAKS GOOGLE SHEETS 
@@ -1371,7 +1557,7 @@ if (havePts) {
 }
 
       listEl.innerHTML='';
-      filtered.forEach((e,i) => {
+      ordered.forEach((e,i) => {
         const row = document.createElement('div');
         row.className='item';
         // stable key for this event (works across filters)
@@ -1449,12 +1635,15 @@ const dirLink = dirUrl
   ? `<div class="sub"><a class="dirBtn" href="${dirUrl}" target="_blank" rel="noopener">Directions</a></div>`
   : '';
 
+const promoted = !!e.promoted || /^(1|true|yes|y)$/i.test(String(e.Promoted||'').trim());
+const promotedTag = promoted ? `<span class="promotedTag" aria-label="Promoted"><span class="star">★</span> Promoted</span>` : '';
 
 // Mobile: title + badge on one line; Desktop: original layout
 if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
-  meta.innerHTML = `
+ meta.innerHTML = `
   <div class="titleRow">
     <div class="title">${safe(e.name)}</div>
+    ${promotedTag}
     <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
   </div>
   <div class="sub">${safe(e.venue || e.address || '')}</div>
@@ -1462,15 +1651,20 @@ if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width:
   ${dirLink || ``}
 `;
 
+
 } else {
   // DESKTOP (no "Event page" link here)
 meta.innerHTML = `
   <div class="title">${safe(e.name)}</div>
   <div class="sub">${safe(e.venue || e.address || '')}</div>
   ${e.time ? `<div class="sub">${safe(e.time)}</div>` : ``}
-  <div><span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span></div>
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    ${promotedTag}
+    <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
+  </div>
   ${dirLink || ``}
-`;}
+`;
+}
 
 // Prevent row handlers from firing when clicking Directions
 const dirBtnEl = meta.querySelector('.dirBtn');
@@ -1505,7 +1699,7 @@ row.appendChild(rowWrap);
 listEl.appendChild(row);
 
       });
-      countEl.textContent = `${filtered.length} event${filtered.length===1?'':'s'} shown`;
+      countEl.textContent = `${ordered.length} event${ordered.length===1?'':'s'} shown`;
     }
 
     function highlightCard(index){
