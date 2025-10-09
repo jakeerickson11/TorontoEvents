@@ -776,7 +776,11 @@ const map = new maplibregl.Map({
   interactive: true,        // normal interactions after load
   // start anywhere; we’ll animate to HOME on 'load'
   center: [-79.38, 43.65],
-  zoom: 12
+  zoom: 12,
+  minZoom: 9,
+  maxZoom:20,
+  bounds: TORONTO_BOUNDS,
+  maxBounds: TORONTO_BOUNDS
 });
 
     /*
