@@ -763,7 +763,7 @@ protocol.add(new pmtiles.PMTiles('https://Jakeerickson11.github.io/TorontoEvents
 // 1) set your target "home" view
 const HOME = {
   center: [-79.39246303205854, 43.66447814738001], // [lng, lat] Queens Park
-  zoom: 15,      // tweak to taste
+  zoom: 5,      // tweak to taste
   bearing: -15,     // your clockwise tilt
   pitch: 20
 };
@@ -923,7 +923,7 @@ window.addEventListener('resize', () => map.resize());
  // 3) on first paint, animate to your exact home view
     map.on('load', () => {
   // use jumpTo first to avoid the "double pan then rotate" look (optional)
-  map.jumpTo({ center: HOME.center, zoom: HOME.zoom, bearing: 0, pitch: 20 });
+  map.jumpTo({ center: HOME.center, zoom: HOME.zoom, bearing: -15, pitch: 20 });
 
   // then do a smooth, deliberate rotate/zoom if you like
   map.easeTo({
