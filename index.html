@@ -766,7 +766,7 @@ const map = new maplibregl.Map({
   style: 'https://Jakeerickson11.github.io/TorontoEvents/style.json',
   bounds: TORONTO_BOUNDS,
   maxBounds: TORONTO_BOUNDS,
-  minZoom: 10,
+  minZoom: 10.5,
   maxZoom: 19,
   attributionControl: true,
   bearing: 0
@@ -904,9 +904,9 @@ window.addEventListener('resize', () => map.resize());
     duration: 0 // instant fit so the next animation feels deliberate
   });
      map.easeTo({
-    bearing: 10,
-    // pitch: 20,         // uncomment if you want a bit of tilt
-    // zoom: map.getZoom(), // keep current zoom
+    bearing: -10,
+    pitch: 20,         // uncomment if you want a bit of tilt
+    zoom: map.getZoom(), // keep current zoom
     duration: 1200       // 1.2s feels nice
   });
 
