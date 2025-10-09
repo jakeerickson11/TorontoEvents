@@ -800,13 +800,13 @@ let markers = []; // replaces Leaflet markersLayer
 //map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'top-left');
 
 // Keep map responsive
-window.addEventListener('resize', () => map.resize());
+//window.addEventListener('resize', () => map.resize());
 
  //Force a visible attribution line with your credits
 // Remove an existing attribution control if you already added one
 // (skip if you don't have one)
 // map._controls?.forEach(c => c instanceof maplibregl.AttributionControl && map.removeControl(c));
-
+/*
 map.addControl(
   new maplibregl.AttributionControl({
     // This makes a small "i" button on small screens that expands on tap
@@ -821,7 +821,7 @@ map.addControl(
   }),
   'bottom-right'
 );
-
+*/
     
 // 📍 control
 let geoWatchId = null;
