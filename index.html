@@ -768,7 +768,7 @@ const HOME = {
   pitch: 20
 };
 
-    // 2) make sure the map doesn't restore last state from the URL
+/*    // 2) make sure the map doesn't restore last state from the URL
 const map = new maplibregl.Map({
   container: 'map',
   style: 'https://Jakeerickson11.github.io/TorontoEvents/style.json',
@@ -778,7 +778,7 @@ const map = new maplibregl.Map({
   center: [-79.38, 43.65],
   zoom: 12
 });
-
+*/
     /*
 // Build the map from your MapLibre style.json (hosted in GitHub too)
 const map = new maplibregl.Map({
@@ -893,7 +893,7 @@ function onGeoSuccess(pos){
   } else {
     userMarker.setLngLat([lng,lat]);
   }
-
+/*
   // pan once if off-screen (no zoom snap)
   if (!userCenteredOnce){
     if (!map.getBounds().contains([lng,lat])){
@@ -901,7 +901,7 @@ function onGeoSuccess(pos){
     }
     userCenteredOnce = true;
   }
-
+*/
   if (!userFirstFixNotified){
     if (typeof render === 'function') render();
     if (typeof renderPinned === 'function') renderPinned();
@@ -1630,12 +1630,12 @@ ordered.forEach(function(e, i){
  // .on('close', ()=> el.classList.remove('is-selected'));
 
 /////////////////////////////////////////////////////////////////////////////
-    
+   /* 
 // Fit nicely (don’t over-zoom)
 if (havePts) {
   map.fitBounds(bounds, { padding: 30, maxZoom: 16 });
 }
-
+*/
       listEl.innerHTML='';
       ordered.forEach((e,i) => {
         const row = document.createElement('div');
