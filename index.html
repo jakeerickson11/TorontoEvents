@@ -26,13 +26,13 @@
 *{box-sizing:border-box}
 body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu; background:var(--bg); color:var(--text)}
 /* Dark header with bright text */
-header{
+/*header{
   padding:16px 20px;
   border-bottom:1px solid #364152; /* subtle divider */
-  position:sticky; top:0;
+/*  position:sticky; top:0;
   background:#0b0f14;            /* dark */
-  color:#f8fafc;                  /* bright text */
-  z-index:5;
+/*  color:#f8fafc;                  /* bright text */
+/*  z-index:5;
 }
 header h1{ margin:0; font-size:20px; color:#f8fafc; }
 header a{ color:#f8fafc; }        /* any header links/buttons */
@@ -705,6 +705,51 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   color: #0b1320 !important;
 }
 
+    /* Header layout: left = title, center = submit button, right = calendar */
+.siteHeader{
+  position: sticky; top: 0; z-index: 1000;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;  /* left | center | right */
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--header-bg, #ffffff);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+/* ///////////HEADER/////////////// */
+/* Place regions */
+.hdrLeft{ justify-self: start; }
+.hdrCenter{ justify-self: center; }
+.hdrRight{ justify-self: end; }
+
+/* Button style (use yours if you already have it) */
+.btnPrimary{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:36px; padding:0 14px; border-radius:10px;
+  background:#0ea5e9; color:#fff; font-weight:700; text-decoration:none;
+  border:1px solid #0aa0d1; box-shadow:0 1px 3px rgba(0,0,0,.25);
+}
+.btnPrimary:hover{ filter: brightness(0.95); }
+
+/* Make sure the spacer matches header height (if you auto-hide header, you already set this) */
+#headerSpacer, #headerSpacer{ height: var(--header-h, 64px); }
+
+/* Responsive tweak: stack on very small screens */
+@media (max-width: 520px){
+  .siteHeader{
+    grid-template-columns: 1fr auto;     /* title | right */
+    grid-template-areas:
+      "title   calendar"
+      "center  center";
+    row-gap: 8px;
+  }
+  .hdrLeft{ grid-area: title; }
+  .hdrRight{ grid-area: calendar; }
+  .hdrCenter{ grid-area: center; justify-self: center; }
+}
+
+/* ///////////////////////////////////// */
+    
   </style>
 </head>
 <body>
