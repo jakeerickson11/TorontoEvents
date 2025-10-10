@@ -128,10 +128,10 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .item:hover { background:#f5f7fb; }
 .thumb { border-color:#e5eaf1; }
 
-/* Keep the header subtle on off-black; optional: */
-/* header { background: linear-gradient(180deg, rgba(14,17,20,0.95), rgba(14,17,20,0.85)); } */
+/* Keep the  subtle on off-black; optional: */
+/*  { background: linear-gradient(180deg, rgba(14,17,20,0.95), rgba(14,17,20,0.85)); } */
 
-/* Pinned event bar (shows under header on phones) */
+/* Pinned event bar (shows under  on phones) */
 .pinned{ margin:8px 16px 0 16px; }
 .pinned.hidden{ display:none; }
 .pinnedCard{
@@ -279,31 +279,31 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   border-color: #d0d7e2;       /* subtle border */
 }
 
-/* ===== Fast sliding header (fixed) ===== */
-:root{ --header-h: 64px; }              /* JS will set real height */
+/* ===== Fast sliding  (fixed) ===== */
+:root{ ---h: 64px; }              /* JS will set real height */
 
-/* Make header fixed so content never scrolls over it */
-header{
+/* Make  fixed so content never scrolls over it */
+{
   position: fixed; top: 0; left: 0; right: 0;
   z-index: 1000;
   transition: transform .12s ease;      /* faster animation */
   will-change: transform;
 }
 
-/* Spacer reserves header height to avoid layout jump */
-#headerSpacer{
-  height: var(--header-h);
+/* Spacer reserves  height to avoid layout jump */
+#Spacer{
+  height: var(---h);
   transition: height .12s ease;
 }
 
-/* Hide header & collapse spacer */
-.header-hidden header{ transform: translateY(-100%); }
-.header-hidden #headerSpacer{ height: 0; }
+/* Hide  & collapse spacer */
+.-hidden { transform: translateY(-100%); }
+.-hidden #Spacer{ height: 0; }
 
-/* ===== Stack order hardening: keep header on top of map layers ===== */
+/* ===== Stack order hardening: keep  on top of map layers ===== */
 
-/* Make header the top-most thing */
-header{
+/* Make  the top-most thing */
+{
   position: fixed;        /* you already have this from the slide-up setup */
   top: 0; left: 0; right: 0;
   z-index: 9999;          /* higher than any Leaflet pane/control */
@@ -311,8 +311,8 @@ header{
   backface-visibility: hidden; /* reduces flicker on iOS during fast scroll */
 }
 
-/* Keep the spacer + pinned card above the map but below the header */
-#headerSpacer,
+/* Keep the spacer + pinned card above the map but below the  */
+#Spacer,
 #pinnedEvent{
   position: relative;
   z-index: 9998;
@@ -384,14 +384,14 @@ header{
 .item { cursor: pointer; }
 .item.selected { background:#eef2ff; border-color: var(--accent); }
 
-/* Header layout with inline date picker */
-header{
+/*  layout with inline date picker */
+{
   display:flex; align-items:flex-start; justify-content:space-between;
   gap:12px; flex-wrap:wrap; z-index:9999; /* stays above map */
 }
-.headerControls{ display:flex; align-items:center; gap:10px; }
+.Controls{ display:flex; align-items:center; gap:10px; }
 
-header .headerControls input[type="date"]{
+ .Controls input[type="date"]{
   padding:8px 10px; border:1px solid #d0d7e2; border-radius:10px;
   background:#ffffff; color:#0f172a; font:inherit;
 }
@@ -710,6 +710,10 @@ header .headerControls input[type="date"]{
 <body>
   <header>
     <h1>Time and Place</h1>
+    <div class="headerControls">
+    <input type="date" id="datePicker" aria-label="Select date">
+    <a class="btnPrimary" href="submit.html">Submit an event</a>
+  </div>
       <div class="headerControls">
     <input type="date" id="datePicker" aria-label="Select date">
   </div>
