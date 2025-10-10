@@ -16,7 +16,7 @@
     },
 
     { "id": "water", "type": "fill", "source": "toronto", "source-layer": "water",
-      "paint": { "fill-color": "#001734" } },
+      "paint": { "fill-color": "#183b66" } },
 
     { "id": "park", "type": "fill", "source": "toronto", "source-layer": "park",
       "paint": { "fill-color": "#171717" } },
@@ -54,7 +54,7 @@
       "paint": {
         "line-color": [
           "match", ["get","class"],
-          ["path","track","cycleway","footway","pedestrian"], "#707070",  
+          ["path","track","cycleway","footway","pedestrian"], "#000000",  
           ["service","residential","minor"], "#707070",
           "#707070"
         ],
