@@ -732,7 +732,10 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .btnPrimary:hover{ filter: brightness(0.95); }
 
 /* Make sure the spacer matches header height (if you auto-hide header, you already set this) */
-/* #headerSpacer, #headerSpacer{ height: var(--header-h, 64px); }
+ /* Kill the spacer height */
+#headerSpacer,
+#Spacer{ height: 0 !important; }
+
 
 /* Responsive tweak: stack on very small screens */
 @media (max-width: 520px){
