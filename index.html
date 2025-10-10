@@ -749,6 +749,54 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 }
 
 /* ///////////////////////////////////// */
+
+/* Big, rounded “pill” date picker */
+.datePill{
+  /* size + shape */
+  height: 44px;
+  padding: 0 16px 0 44px;        /* room for icon on the left */
+  border-radius: 999px;
+  font-size: 16px;
+  line-height: 44px;
+
+  /* colors */
+  background: #0b1320;           /* dark navy pill */
+  color: #e5e7eb;                /* light text */
+  border: 1px solid #1c2a45;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+
+  /* layout */
+  appearance: none;              /* reset default style */
+  -webkit-appearance: none;
+  outline: none;
+}
+
+/* Strong focus ring */
+.datePill:focus{
+  box-shadow: 0 0 0 3px rgba(14,165,233,.35), 0 2px 8px rgba(0,0,0,.25);
+  border-color: #0ea5e9;
+}
+
+/* Calendar icon (SVG) inside the input, left aligned */
+.datePill{
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='white' viewBox='0 0 24 24'><path d='M7 2a1 1 0 1 0 0 2h10a1 1 0 1 0 0-2H7zm14 5H3a1 1 0 0 0-1 1v12a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-1 13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9h16v11zM8 12h3v3H8v-3z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: 14px center;
+  background-size: 20px 20px;
+}
+
+/* Tidy the native picker control (WebKit) so our styling dominates */
+.datePill::-webkit-calendar-picker-indicator{
+  opacity: 0;                    /* hide default icon hit-area */
+  cursor: pointer;
+}
+
+/* Make it even more prominent in the header layout */
+.hdrRight { min-width: 320px; }  /* gives the date pill space */
+@media (max-width: 520px){
+  .hdrRight{ min-width: 0; }
+  .datePill{ width: 100%; }
+}
     
   </style>
 </head>
@@ -763,7 +811,7 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   </div>
 
   <div class="hdrRight">
-    <input type="date" id="datePicker" aria-label="Select date">
+    <input type="date" id="datePicker" class="datePill" aria-label="Select date">
   </div>
 </header>
 
