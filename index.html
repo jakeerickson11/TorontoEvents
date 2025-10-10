@@ -797,29 +797,6 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   .hdrRight{ min-width: 0; }
   .datePill{ width: 100%; }
 }
-
-/* Larger MD3 date picker in the header */
-#datePicker {
-  --md-sys-color-surface: #0b1320;
-  --md-sys-color-on-surface: #e5e7eb;
-  --md-sys-color-primary: #0ea5e9;
-  --md-sys-color-outline: #1c2a45;
-
-  width: 320px;         /* make it prominent */
-  height: 44px;         /* increase control height */
-  border-radius: 999px; /* pill look */
-}
-
-/* Make the text bigger inside */
-#datePicker {
-  font-size: 16px;
-}
-
-/* If you’re using the filled variant, you can tweak the container color: */
-md-filled-date-picker#datePicker {
-  --md-sys-color-surface-container: #0f172a;
-}
-
     
   </style>
 </head>
@@ -834,8 +811,7 @@ md-filled-date-picker#datePicker {
   </div>
 
   <div class="hdrRight">
-    <md-outlined-date-picker id="datePicker" prefered-placement="bottom">
-</md-outlined-date-picker>
+    <input type="date" id="datePicker" class="datePill" aria-label="Select date">
   </div>
 </header>
 
@@ -1636,16 +1612,7 @@ if (datePicker) {
     datePicker.value = todayStr;
   }
 } // if there’s no datePicker for some reason, we just show all dates
-// after you compute dates[] and decide the default
-datePicker.min = dates[0];
-datePicker.max = dates[dates.length - 1];
-datePicker.value = dates.includes(isoLocal(new Date())) ? isoLocal(new Date()) : dates[0];
 
-// re-render when the picker changes
-datePicker.addEventListener('change', () => {
-  // the web component sets .value to 'YYYY-MM-DD'
-  window.selectedDate = datePicker.value;
-    
 
 render();
 
@@ -1684,10 +1651,7 @@ let selectedEventKey = null; // tracks the currently-selected list item
 
   function render(){
   // Read date from the picker (or leave blank = show all dates)
-  const chosenDate = (typeof selectedDate !== 'undefined' && selectedDate)
-  ? selectedDate
-  : (window.datePicker ? datePicker.value : '');
-
+  const chosenDate = (datePicker && datePicker.value) ? datePicker.value : '';
 
   const filtered = allEvents.filter(e => {
     const matchDate = chosenDate ? e.date === chosenDate : true;
