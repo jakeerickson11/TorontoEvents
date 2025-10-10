@@ -49,7 +49,7 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .chip{display:flex; gap:6px; align-items:center; font-size:12px; border:1px solid #d0d7e2; padding:6px 8px; border-radius:999px; background:#f8fafc; color:var(--text); cursor:pointer}
 .dot{width:10px; height:10px; border-radius:999px; display:inline-block}
 .cal{border:1px solid #e5eaf1; border-radius:12px; padding:8px; background:#ffffff; min-height:260px}
-.cal-header{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+.cal-{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
 .cal-nav{display:flex; gap:6px}
 .cal-btn{padding:6px 10px; border:1px solid #d0d7e2; background:#ffffff; color:var(--text); border-radius:10px; cursor:pointer}
 .cal-btn:disabled{opacity:.45; cursor:not-allowed}
@@ -710,15 +710,15 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 <body>
   <header>
     <h1>Time and Place</h1>
-    <div class="headerControls">
+    <div class="Controls">
     <input type="date" id="datePicker" aria-label="Select date">
     <a class="btnPrimary" href="submit.html">Submit an event</a>
   </div>
-      <div class="headerControls">
+      <div class="Controls">
     <input type="date" id="datePicker" aria-label="Select date">
   </div>
 </header>
-<div id="headerSpacer" aria-hidden="true"></div>
+<div id="Spacer" aria-hidden="true"></div>
 <!-- keep your pinnedEvent below -->
 <!-- <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div> -->
 
@@ -1034,7 +1034,7 @@ function focusEvent(lng, lat){
   });
 }
 
-// ===== Fast auto-hide header =====
+// ===== Fast auto-hide  =====
 const headerEl = document.querySelector('header');
 const spacerEl = document.getElementById('headerSpacer');
 
