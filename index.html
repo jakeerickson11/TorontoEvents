@@ -802,6 +802,39 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   .hdrRight{ min-width: 0; }
   .datePill{ width: 100%; }
 }
+
+    /* Panel that wraps the pills + list */
+#listPanel{
+  background: #0b1320;                 /* panel background */
+  border: 1px solid #1c2a45;           /* panel border color */
+  border-radius: 14px;
+  overflow: hidden;                     /* keep inner corners rounded */
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+
+/* Top bar where the category pills live */
+#catChips{
+  background: #0f172a;                  /* chips bar bg */
+  border-bottom: 1px solid #1c2a45;     /* divider under pills */
+  padding: 8px;
+}
+
+/* Individual chip look (unchanged function, just color) */
+#catChips .chip{
+  background: transparent;
+  color: #e5e7eb;
+  border: 1px solid transparent;
+}
+#catChips .chip:hover{ background: #12203a; }
+#catChips .chip .dot{ box-shadow: 0 0 0 2px rgba(255,255,255,.15) inset; }
+
+/* The scrolling list area inherits the panel bg */
+#eventsList{
+  background: transparent;              /* let panel color show */
+}
+
+
+
     
   </style>
 </head>
