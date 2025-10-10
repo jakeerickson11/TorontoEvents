@@ -708,16 +708,22 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   </style>
 </head>
 <body>
-  <header>
+<header class="siteHeader">
+  <div class="hdrLeft">
     <h1>Time and Place</h1>
-    <div class="Controls">
-    <input type="date" id="datePicker" aria-label="Select date">
+  </div>
+
+  <div class="hdrCenter">
     <a class="btnPrimary" href="submit.html">Submit an event</a>
   </div>
-      <div class="Controls">
+
+  <div class="hdrRight">
     <input type="date" id="datePicker" aria-label="Select date">
   </div>
 </header>
+
+<div id="headerSpacer" aria-hidden="true"></div>
+
 <div id="Spacer" aria-hidden="true"></div>
 <!-- keep your pinnedEvent below -->
 <!-- <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div> -->
