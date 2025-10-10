@@ -732,7 +732,7 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .btnPrimary:hover{ filter: brightness(0.95); }
 
 /* Make sure the spacer matches header height (if you auto-hide header, you already set this) */
-#headerSpacer, #headerSpacer{ height: var(--header-h, 64px); }
+/* #headerSpacer, #headerSpacer{ height: var(--header-h, 64px); }
 
 /* Responsive tweak: stack on very small screens */
 @media (max-width: 520px){
@@ -1139,7 +1139,7 @@ const spacerEl = document.getElementById('headerSpacer');
 
 function setHeaderHeightVar(){
   if (!headerEl || !spacerEl) return;
-  const h = headerEl.offsetHeight || 64;
+  const h = headerEl.offsetHeight || 1;
   document.documentElement.style.setProperty('--header-h', h + 'px');
   spacerEl.style.height = h + 'px';
 }
