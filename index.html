@@ -467,6 +467,9 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .eventMarker{
   background: var(--marker-color, #888);
   color: var(--marker-color, #888); /* used by currentColor effects */
+  box-shadow:
+    0 0 0 3px #fff,          /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.35);
   position: relative;
 }
 
@@ -478,7 +481,6 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   box-shadow:
     0 0 0 3px #fff,          /* white ring for contrast */
     0 2px 8px rgba(0,0,0,.35);
-    
   filter: drop-shadow(0 0 8px currentColor);
   animation: promotedPulse 1.4s ease-out infinite;
   z-index: 2;
