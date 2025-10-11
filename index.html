@@ -5,19 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>City Events Map</title>
   <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
+ <!-- MapLibre GL + PMTiles -->
+<link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+<!-- <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script> -->
 
-    
-  />
   <style>
 /* ----- (same styles as your file, unchanged) ----- */
 :root{
-  --bg:#dde0e2;        /* off-black page background */
-  --card:#ffffff;      /* white panels for contrast */
+  --bg:#262626;        /* off-black page background */
+  --card:#f2f2f2;      /* white panels for contrast */
   --muted:#7a8aa0;
   --text:#e6eef7;
   --cat-active:#16a34a;
@@ -31,14 +28,15 @@ body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu; backg
 /* Dark header with bright text */
 header{
   padding:16px 20px;
-  border-bottom:1px solid #364152; /* subtle divider */
+  border-bottom:1px solid #000000; /* subtle divider */
   position:sticky; top:0;
-  background:#0b0f14;            /* dark */
+  background:#171717;            /* dark */
   color:#f8fafc;                  /* bright text */
   z-index:5;
 }
 header h1{ margin:0; font-size:20px; color:#f8fafc; }
 header a{ color:#f8fafc; }        /* any header links/buttons */
+
 
 .container{display:grid; grid-template-columns: 1.2fr 1fr; gap:16px; padding:16px}
 #map{height: calc(100vh - 100px); border-radius:16px; overflow:hidden; border:1px solid #e5eaf1}
@@ -51,7 +49,7 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .chip{display:flex; gap:6px; align-items:center; font-size:12px; border:1px solid #d0d7e2; padding:6px 8px; border-radius:999px; background:#f8fafc; color:var(--text); cursor:pointer}
 .dot{width:10px; height:10px; border-radius:999px; display:inline-block}
 .cal{border:1px solid #e5eaf1; border-radius:12px; padding:8px; background:#ffffff; min-height:260px}
-.cal-header{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
+.cal-{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px}
 .cal-nav{display:flex; gap:6px}
 .cal-btn{padding:6px 10px; border:1px solid #d0d7e2; background:#ffffff; color:var(--text); border-radius:10px; cursor:pointer}
 .cal-btn:disabled{opacity:.45; cursor:not-allowed}
@@ -75,6 +73,7 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .badge{display:inline-flex; align-items:center; gap:6px; font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid #d0d7e2; background:#ffffff}
 .leftStripe{width:6px; border-radius:0 6px 6px 0}
 .footer{padding:10px; font-size:12px; color:var(--muted)}
+
 @media (max-width: 960px){
   .container{grid-template-columns:1fr;}
   /* Fallback first, then better viewport units if supported */
@@ -100,11 +99,8 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
     height:32dvh;
   }
 }
-
-
     
 /* Make the right panel + controls readable on white */
-
 .list,
 .filters,
 .badge,
@@ -120,7 +116,6 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   min-height: 0;     /* new */
   overflow: auto;    /* you already had this — leave it in */
 }
-
     
 .filters input {
   background:#ffffff; color:#0f172a; border:1px solid #d0d7e2;
@@ -133,10 +128,10 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
 .item:hover { background:#f5f7fb; }
 .thumb { border-color:#e5eaf1; }
 
-/* Keep the header subtle on off-black; optional: */
-/* header { background: linear-gradient(180deg, rgba(14,17,20,0.95), rgba(14,17,20,0.85)); } */
+/* Keep the  subtle on off-black; optional: */
+/*  { background: linear-gradient(180deg, rgba(14,17,20,0.95), rgba(14,17,20,0.85)); } */
 
-/* Pinned event bar (shows under header on phones) */
+/* Pinned event bar (shows under  on phones) */
 .pinned{ margin:8px 16px 0 16px; }
 .pinned.hidden{ display:none; }
 .pinnedCard{
@@ -154,6 +149,18 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   padding:4px 8px; border-radius:999px; border:1px solid #d0d7e2; background:#ffffff;
 }
 .pinned .dot{ width:10px; height:10px; border-radius:999px; display:inline-block; }
+
+/* Promoted tag used in the list */
+.promotedTag{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:3px 8px; border-radius:999px;
+  background:#ff2d9b; color:#fff; font-size:11px; font-weight:700;
+  border:1px solid rgba(0,0,0,.15);
+  box-shadow:0 1px 2px rgba(0,0,0,.12);
+  white-space:nowrap;
+}
+.promotedTag .star{ font-size:12px; line-height:1; }
+
 
 /* Hide the pinned bar on desktop/tablet; only show on phones */
 @media (min-width: 961px){
@@ -248,17 +255,6 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
     hyphens: auto;
   }
 
-  /* If you prefer full wrapping (variable height), comment out the block above
-     and use this instead:
-  .title{
-    white-space: normal;
-    line-height: 1.2;
-    font-size: 14px;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    hyphens: auto;
-  } */
-
   /* Sub-lines (venue, date/time, link) kept to 1 line with ellipsis */
   .sub{
     white-space: nowrap;
@@ -283,31 +279,31 @@ header a{ color:#f8fafc; }        /* any header links/buttons */
   border-color: #d0d7e2;       /* subtle border */
 }
 
-/* ===== Fast sliding header (fixed) ===== */
-:root{ --header-h: 64px; }              /* JS will set real height */
+/* ===== Fast sliding  (fixed) ===== */
+:root{ ---h: 64px; }              /* JS will set real height */
 
-/* Make header fixed so content never scrolls over it */
-header{
+/* Make  fixed so content never scrolls over it */
+{
   position: fixed; top: 0; left: 0; right: 0;
   z-index: 1000;
   transition: transform .12s ease;      /* faster animation */
   will-change: transform;
 }
 
-/* Spacer reserves header height to avoid layout jump */
-#headerSpacer{
-  height: var(--header-h);
+/* Spacer reserves  height to avoid layout jump 
+#Spacer{
+  height: var(---h);
   transition: height .12s ease;
 }
 
-/* Hide header & collapse spacer */
-.header-hidden header{ transform: translateY(-100%); }
-.header-hidden #headerSpacer{ height: 0; }
+/* Hide  & collapse spacer 
+.-hidden { transform: translateY(-100%); }
+.-hidden #Spacer{ height: 0; }
 
-/* ===== Stack order hardening: keep header on top of map layers ===== */
+/* ===== Stack order hardening: keep  on top of map layers ===== */
 
-/* Make header the top-most thing */
-header{
+/* Make  the top-most thing */
+{
   position: fixed;        /* you already have this from the slide-up setup */
   top: 0; left: 0; right: 0;
   z-index: 9999;          /* higher than any Leaflet pane/control */
@@ -315,23 +311,12 @@ header{
   backface-visibility: hidden; /* reduces flicker on iOS during fast scroll */
 }
 
-/* Keep the spacer + pinned card above the map but below the header */
-#headerSpacer,
+/* Keep the spacer + pinned card above the map but below the  */
+#Spacer,
 #pinnedEvent{
   position: relative;
   z-index: 9998;
 }
-
-/* Ensure the map never competes with the header */
-#map, .leaflet-container{ position: relative; z-index: 1; }
-
-/* Lower Leaflet UI layers so they can't pop over the header during momentum scroll */
-.leaflet-top,
-.leaflet-bottom{ z-index: 1000 !important; }   /* zoom controls, attribution */
-.leaflet-popup-pane,
-.leaflet-tooltip-pane,
-.leaflet-marker-pane{ z-index: 900 !important; } /* popups, tooltips, markers */
-
 
 /* Desktop: stripe | text | image */
 @media (min-width: 961px){
@@ -376,17 +361,6 @@ header{
   }
 }
 
-/* Locate (current position) button */
-.leaflet-bar.locate-btn{
-  background:#fff; border:1px solid #e5eaf1; border-radius:4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.08);
-}
-.leaflet-bar.locate-btn button{
-  display:block; width:32px; height:32px; line-height:32px; text-align:center;
-  background:#fff; border:0; cursor:pointer; font-size:18px;
-}
-.leaflet-bar.locate-btn button:hover{ background:#f5f7fb; }
-
 /* Directions button */
 .dirBtn{
   display:inline-flex; align-items:center; gap:6px;
@@ -410,38 +384,446 @@ header{
 .item { cursor: pointer; }
 .item.selected { background:#eef2ff; border-color: var(--accent); }
 
-/* Header layout with inline date picker */
-header{
+/*  layout with inline date picker */
+{
   display:flex; align-items:flex-start; justify-content:space-between;
   gap:12px; flex-wrap:wrap; z-index:9999; /* stays above map */
 }
-.headerControls{ display:flex; align-items:center; gap:10px; }
+.Controls{ display:flex; align-items:center; gap:10px; }
 
-header .headerControls input[type="date"]{
+ .Controls input[type="date"]{
   padding:8px 10px; border:1px solid #d0d7e2; border-radius:10px;
   background:#ffffff; color:#0f172a; font:inherit;
 }
 
 /* Hide Leaflet zoom buttons on mobile */
 @media (max-width: 960px){
-  .leaflet-control-zoom { display: none !important; }
+  /* .leaflet-control-zoom { display: none !important; }*/
+}
+
+/* Base marker — keep yours as-is */
+.eventMarker{
+  width:18px;height:18px;border-radius:999px;
+  border:2px solid #080808;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);
+  background:#888;            /* overwritten per category */
+}
+
+/* —— Size */
+.eventMarker--sm{ width:12px; height:12px; }
+.eventMarker--md{ width:18px; height:18px; }   /* default */
+.eventMarker--lg{ width:24px; height:24px; }
+.eventMarker--xl{ width:32px; height:32px; }
+
+/* —— Shape */
+.eventMarker--round{ border-radius:999px; }     /* default */
+.eventMarker--square{ border-radius:6px; }
+.eventMarker--diamond{
+  transform:rotate(45deg); border-radius:4px;
+}
+
+/* —— Opacity/“ghost” style (slightly transparent like your Leaflet look) */
+.eventMarker--ghost{ opacity:.8; backdrop-filter: blur(0.5px); }
+
+/* —— Halo (readable on dark/light basemaps) */
+.eventMarker--halo::after{
+  content:"";
+  position:absolute; inset:-1px;
+  border-radius:inherit;
+  box-shadow:0 0 0 5px rgba(255,255,255,.55);
+  z-index:-1;
+}
+
+/* —— Glow (category-colored outer glow) */
+.eventMarker--glow{
+  filter: drop-shadow(0 0 6px currentColor);
+}
+/* if you want the glow to match the fill, set color via CSS var or inline style */
+
+/* —— Inner bevel / “button” look */
+.eventMarker--bevel{
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,.25),
+    0 1px 3px rgba(0,0,0,.25);
+}
+
+/* —— Stroke variants */
+.eventMarker--thin { border-width:1px; }
+.eventMarker--thick{ border-width:3px; }
+
+/* —— Hover + Selected states */
+.eventMarker:hover{
+  transform: translateY(-1px) scale(1.05);
+  transition: transform .12s ease, box-shadow .12s ease;
+  z-index: 2;
+}
+.eventMarker.is-selected{
+  box-shadow:0 0 0 3px #fff, 0 1px 6px rgba(0,0,0,.4);
+  outline: 2px solid #111;               /* extra contrast */
+  outline-offset: 2px;
+}
+
+/* Use a CSS var so glow matches the fill automatically */
+.eventMarker{
+  background: var(--marker-color, #888);
+  color: var(--marker-color, #888); /* used by currentColor effects */
+  box-shadow:
+    0 0 0 1px #fff,          /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.15);
+  position: relative;
+}
+
+/* Promoted: larger, thicker stroke, white ring, glow + gentle pulse */
+.eventMarker--promoted{
+  --marker-color: #ff2d9b; 
+  width:24px; height:24px;
+  border-width:3px;
+  box-shadow:
+    0 0 0 3px #fff,          /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.35);
+  filter: drop-shadow(0 0 8px currentColor);
+  animation: promotedPulse 1.4s ease-out infinite;
+  z-index: 2;
+}
+
+/* Small star badge */
+.eventMarker__badge{
+  position:absolute; top:-6px; right:-6px;
+  width:14px; height:14px; border-radius:999px;
+  background:#111; color:#ffd600;
+  font-size:10px; line-height:14px; text-align:center; font-weight:700;
+  box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,.25);
+}
+
+/* Pulse animation (respects reduced motion) */
+@keyframes promotedPulse{
+  0%   { box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.35), 0 0 0 0 rgba(0,0,0,.18); }
+  70%  { box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.35), 0 0 0 12px rgba(0,0,0,0); }
+  100% { box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.35), 0 0 0 0 rgba(0,0,0,0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .eventMarker--promoted{ animation: none; }
+}
+
+/* Optional: always keep promoted above regular on hover stacks */
+.eventMarker.is-selected{ z-index: 3; }
+
+
+/* —— High-DPI crisp border */
+@supports (outline:1px solid transparent){
+  .eventMarker--crisp{ outline:1px solid rgba(0,0,0,.4); outline-offset:-1px; }
+}
+
+/* —— Category colors via data-attribute (no extra classes needed) */
+.eventMarker[data-category="Active"]{ background:#16a34a; }
+.eventMarker[data-category="Creative"]{ background:#a855f7; }
+.eventMarker[data-category="Entertainment"]{ background:#eab308; }
+.eventMarker[data-category="Competitive"]{ background:#f97316; }
+.eventMarker[data-category="Relaxing"]{ background:#3b82f6; }
+
+/* —— Focus ring (keyboard accessibility) */
+.eventMarker:focus-visible{
+  box-shadow:0 0 0 3px #fff, 0 0 0 5px #2563eb;
+}
+
+.eventMarker{
+  background: var(--marker-color, #888); /* your JS still sets background too */
+  position: absolute;
+}
+
+/* --- PROMOTED STYLE (bigger, thicker, white ring + glow + star) --- */
+.eventMarker--promoted{
+  --marker-color: #ff0000 !important;   /* red glow */
+  position:absolute;
+  width: 24px;           /* bigger than your 18px base */
+  height: 24px;
+  border-width: 3px;     /* thicker outline */
+  box-shadow:
+    0 0 0 3px #fff,      /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.35);
+  filter: drop-shadow(0 0 1px currentColor); /* color-matched glow */
+  animation: 
+   promotedRing 0.95s ease-in-out infinite,
+}
+
+/* little star badge in the corner */
+.eventMarker__badge{
+  position:absolute; 
+  top:px; 
+  right:0px;
+  width:14px; 
+  height:14px; 
+  border-radius:999px;
+  background:#11111100; 
+  color:#ffd600;  /* gold star on dark dot */
+  font-size:10px; 
+  line-height:14px; 
+  text-align:center; font-weight:700;
+  box-shadow:0 0 0 2px #ffffff00, 0 1px 2px rgba(0,0,0,.25);
+}
+
+/* Center the existing badge inside promoted markers */
+.eventMarker--promoted{ position: absolute; }  /* marker stays relative, NOT absolute */
+
+.eventMarker--promoted .eventMarker__badge{
+  position: absolute;
+  inset: 0;                           /* fill the marker box */
+  display: flex; align-items: center; justify-content: center;
+  width: auto; height: auto;          /* let font size define size */
+  margin: 0; padding: 0;
+  background: transparent; border: 0; box-shadow: none;
+  color: #fff;                        /* white star on hot pink */
+  font-size: 15px;                    /* try 12–14 for a 24px marker */
+  line-height: 1;
+  pointer-events: none;               /* clicks hit the marker, not the star */
+  text-shadow: 0 1px 2px rgba(0,0,0,.45);
+}
+
+/* animations */
+@keyframes promotedBeat{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.10)} }
+@keyframes promotedGlow{ 0%,100%{filter:drop-shadow(0 0 8px currentColor)} 50%{filter:drop-shadow(0 0 16px currentColor)} }
+@keyframes promotedRing{
+  0%{   box-shadow:0 0 0 0 rgba(255,45,155,.45); opacity:1 }
+  70%{  box-shadow:0 0 0 16px rgba(255,45,155,0); opacity:0 }
+  100%{ box-shadow:0 0 0 0 rgba(255,45,155,0); opacity:0 }
+}
+@keyframes twinkle{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.15) rotate(-12deg)} }
+@media (prefers-reduced-motion: reduce){
+  .eventMarker--promoted,
+  .eventMarker--promoted::after,
+  .eventMarker__badge{ animation:none; }
+}
+
+/* Blue circular "me" control (MapLibre control) */
+.maplibregl-ctrl .meCtrl{
+  width:36px;height:36px;border-radius:999px;
+  background:#0ea5e9;color:#fff;border:2px solid #fff;
+  font-weight:700;font-size:12px;text-transform:uppercase;
+  line-height:1; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.25);
+}
+
+/* Hide zoom buttons on mobile */
+@media (max-width:960px){
+  .maplibregl-ctrl-zoom{ display:none !important; }
+}
+
+/* Dark, readable popup text */
+.maplibregl-popup .maplibregl-popup-content,
+.mapboxgl-popup   .mapboxgl-popup-content{
+  color: #0b1320 !important;   /* dark navy/near-black text */
+  background: #ffff !important;
+}
+
+/* Links inside the popup (optional: make them darker too) */
+.maplibregl-popup .maplibregl-popup-content a,
+.mapboxgl-popup   .mapboxgl-popup-content a{
+  color: #0b1320 !important;
+  text-decoration: underline;
+}
+
+/* Close “×” button color */
+.maplibregl-popup .maplibregl-popup-close-button,
+.mapboxgl-popup   .mapboxgl-popup-close-button{
+  color: #0b1320 !important;
+}
+
+/* (Optional) stronger font weight for the title if you use <strong> */
+.maplibregl-popup .maplibregl-popup-content strong,
+.mapboxgl-popup   .mapboxgl-popup-content strong{
+  color: #0b1320 !important;
+}
+    
+/* Base size on desktop */
+.maplibregl-ctrl-attrib {
+  font-size: 12px;           /* smaller than default */
+  line-height: 1.25;
+  padding: 1px 3px;
+  background: #383838;  /* optional: improve contrast on dark maps */
+  color: #383838;
+  border-radius: 3px;
+}
+
+/* Make links look like links but subtle */
+.maplibregl-ctrl-attrib a {
+  color: #000000;                 /* match control text color */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* On very small screens, make it even more compact */
+@media (max-width: 640px) {
+  .maplibregl-ctrl-attrib {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+}
+
+/* Optional: always force the compact "i" button (if you prefer it everywhere) */
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  min-width: 0;
 }
 
 
+.maplibregl-ctrl-attrib a: hover {
+  color: #ffffff !important;
+  text-decoration: underline;
+}
 
+/* If you’re using compact mode (the little “ⓘ” toggle), style its button too */
+.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button,
+.mapboxgl-ctrl-attrib .mapboxgl-ctrl-attrib-button { /* fallback selector */
+  background: #0b1320 !important;
+  color: #e5e7eb !important;
+  border: 1px solid #0f1b33 !important;
+  border-radius: 8px;
+}
+
+/* Lighter attribution toggle button on dark background */
+.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button,
+.mapboxgl-ctrl-attrib .mapboxgl-ctrl-attrib-button{
+  background: #383838 !important;   /* light slate */
+  color: #0b1320 !important;         /* dark navy text/icon */
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,.25);
+}
+
+/* Hover / focus / active states for better contrast */
+.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button:hover,
+.mapboxgl-ctrl-attrib .mapboxgl-ctrl-attrib-button:hover{
+  background: #383838 !important;
+}
+
+.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button:focus,
+.mapboxgl-ctrl-attrib .mapboxgl-ctrl-attrib-button:focus{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(229,231,235,.7), 0 2px 4px rgba(0,0,0,.25); /* light ring */
+}
+
+/* When expanded, keep the button light */
+.maplibregl-ctrl-attrib[aria-expanded="true"] .maplibregl-ctrl-attrib-button,
+.mapboxgl-ctrl-attrib[aria-expanded="true"] .mapboxgl-ctrl-attrib-button{
+  background: #0b1320 !important;
+  color: #0b1320 !important;
+}
+/* ///////////HEADER/////////////// */
+    /* Header layout: left = title, center = submit button, right = calendar */
+.siteHeader{
+  position: sticky; top: 0; z-index: 1000;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;  /* left | center | right */
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--header-bg, #0b0f14);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+/* Place regions */
+.hdrLeft{ justify-self: start; }
+.hdrCenter{ justify-self: center; }
+.hdrRight{ justify-self: end; }
+
+/* Button style (use yours if you already have it) */
+.btnPrimary{
+  display:inline-flex; align-items:center; justify-content:center;
+  height:36px; padding:0 14px; border-radius:10px;
+  background:#0ea5e9; color:#fff; font-weight:700; text-decoration:none;
+  border:1px solid #0aa0d1; box-shadow:0 1px 3px rgba(0,0,0,.25);
+}
+.btnPrimary:hover{ filter: brightness(0.95); }
+
+/* Make sure the spacer matches header height (if you auto-hide header, you already set this) */
+ /* Kill the spacer height */
+#headerSpacer,
+#Spacer{ height: 0 !important; }
+
+
+/* Responsive tweak: stack on very small screens */
+@media (max-width: 520px){
+  .siteHeader{
+    grid-template-columns: 1fr auto;     /* title | right */
+    grid-template-areas:
+      "title   calendar"
+      "center  center";
+    row-gap: 8px;
+  }
+  .hdrLeft{ grid-area: title; }
+  .hdrRight{ grid-area: calendar; }
+  .hdrCenter{ grid-area: center; justify-self: center; }
+}
+
+/* ///////////////////////////////////// */
+
+/* Big, rounded “pill” date picker */
+.datePill{
+  /* size + shape */
+  height: 44px;
+  padding: 0 16px 0 44px;        /* room for icon on the left */
+  border-radius: 999px;
+  font-size: 16px;
+  line-height: 44px;
+
+  /* colors */
+  background: #ededeb;           /* dark navy pill */
+  color: #141414;                /* light text */
+  border: 1px solid #1c2a45;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+
+  /* layout */
+  appearance: none;              /* reset default style */
+  -webkit-appearance: none;
+  outline: none;
+}
+
+/* Strong focus ring */
+.datePill:focus{
+  box-shadow: 0 0 0 3px rgba(14,165,233,.35), 0 2px 8px rgba(0,0,0,.25);
+  border-color: #0ea5e9;
+}
+
+/* Calendar icon (SVG) inside the input, left aligned */
+.datePill{
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='white' viewBox='0 0 24 24'><path d='M7 2a1 1 0 1 0 0 2h10a1 1 0 1 0 0-2H7zm14 5H3a1 1 0 0 0-1 1v12a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-1 13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9h16v11zM8 12h3v3H8v-3z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: 14px center;
+  background-size: 20px 20px;
+}
+
+/* Tidy the native picker control (WebKit) so our styling dominates */
+.datePill::-webkit-calendar-picker-indicator{
+  opacity: 0;                    /* hide default icon hit-area */
+  cursor: pointer;
+}
+
+/* Make it even more prominent in the header layout */
+.hdrRight { min-width: 400px; }  /* gives the date pill space */
+@media (max-width: 520px){
+  .hdrRight{ min-width: 0; }
+  .datePill{ width: 100%; }
+}    
   </style>
 </head>
 <body>
-  <header>
+<header class="siteHeader">
+  <div class="hdrLeft">
     <h1>Time and Place</h1>
-      <div class="headerControls">
-    <input type="date" id="datePicker" aria-label="Select date">
+  </div>
+
+  <div class="hdrCenter">
+    <a class="btnPrimary" href="submit.html">Submit an event</a>
+  </div>
+
+  <div class="hdrRight">
+    <input type="date" id="datePicker" class="datePill" aria-label="Select date">
   </div>
 </header>
+
 <div id="headerSpacer" aria-hidden="true"></div>
+
+<div id="Spacer" aria-hidden="true"></div>
 <!-- keep your pinnedEvent below -->
 <!-- <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div> -->
-
 
 
 <!-- Pinned event (mobile only) -->
@@ -452,12 +834,6 @@ header .headerControls input[type="date"]{
     <div id="map" aria-label="Events map"></div>
     <aside class="panel" aria-label="Events list panel">
       <div class="filters"> 
-        <!-- <label>Date
-        //  <input id="datePicker" type="date" />
-        //</label>
-        //<label>Search
-        //  <input id="searchInput" type="text" placeholder="Event or venue" />
-        //</label> -->
         <div class="cats" id="catChips"></div>
       </div>
       <div class="list" id="eventsList" role="list"></div>
@@ -470,126 +846,176 @@ header .headerControls input[type="date"]{
   </div>
 
   <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script> -->
   <!-- PapaParse for CSV -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script> 
+<!-- Material Web (M3) date picker web component -->
+<script type="module">
+  import 'https://esm.run/@material/web/labs/datepicker/datepicker.js'; </script>
 
+  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script>
+   
   <script>
-    // Toronto-only view + monochrome basemap (Carto Positron)
-    const TORONTO_BOUNDS = L.latLngBounds([[43.58, -79.65], [43.80, -79.12]]);
-    const map = L.map('map', { minZoom: 10, maxZoom: 19, maxBounds: TORONTO_BOUNDS, maxBoundsViscosity: 0.9, zoomControl: true, zoomSnap: 0.5 });
-    map.fitBounds(TORONTO_BOUNDS, { padding: [20, 20] });
-    map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, attribution: '&copy; OpenStreetMap contributors &copy; CARTO' }).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 20, pane: 'labels' }).addTo(map);
 
-function applyZoomCtrlVisibility(){
-  const isMobile = window.matchMedia('(max-width: 960px)').matches;
-  const hasZoomEl = !!document.querySelector('.leaflet-control-zoom');
+// --- MapLibre + PMTiles setup ---
+const TORONTO_BOUNDS = [[-80.30,42.85],[-78.75,44.36]]; // [W,S],[E,N]
 
-  if (isMobile) {
-    if (map.zoomControl) map.zoomControl.remove();      // remove if present
-  } else {
-    if (!hasZoomEl) L.control.zoom({ position: 'topleft' }).addTo(map); // re-add on desktop
-  }
-}
-applyZoomCtrlVisibility();
-window.addEventListener('resize', applyZoomCtrlVisibility);
+// Register PMTiles protocol so style.json can use pmtiles:// URLs
+const protocol = new pmtiles.Protocol();
+maplibregl.addProtocol('pmtiles', protocol.tile);
 
+// IMPORTANT: add your archive to the protocol cache so style.json can resolve it
+// (use your real GitHub Pages URL for toronto.pmtiles)
+protocol.add(new pmtiles.PMTiles('https://Jakeerickson11.github.io/TorontoEvents/toronto.pmtiles'));
 
+// 1) set your target "home" view
+const HOME = {
+  center: [-79.39246303205854, 43.66447814738001], // [lng, lat] Queens Park
+  zoom: 5,      // tweak to taste
+  bearing: -15,     // your clockwise tilt
+  pitch: 20
+};
 
+    // 2) make sure the map doesn't restore last state from the URL
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://Jakeerickson11.github.io/TorontoEvents/style.json',
+  hash: false,              // important: don't read/write #zoom/center in URL
+  interactive: true,        // normal interactions after load
+  // start anywhere; we’ll animate to HOME on 'load'
+  center: [-79.38, 43.65],
+  zoom: 12,
+  minZoom: 9,
+  maxZoom:20,
+  bounds: TORONTO_BOUNDS,
+  maxBounds: TORONTO_BOUNDS
+});
 
-// --- Current location pin (+ accuracy circle), no zoom/snap ---
-const userLayer = L.layerGroup().addTo(map);
-let userMarker = null;
-let userAccuracy = null;
+    /*
+// Build the map from your MapLibre style.json (hosted in GitHub too)
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://Jakeerickson11.github.io/TorontoEvents/style.json',
+  bounds: TORONTO_BOUNDS,
+  maxBounds: TORONTO_BOUNDS,
+  minZoom: 12,
+  maxZoom: 19,
+  attributionControl: true,
+  bearing: 0
+});
+*/
+   
+    
+let markers = []; // replaces Leaflet markersLayer
+
+// (optional) zoom control; we'll hide it on mobile via CSS
+map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'top-left');
+
+// Keep map responsive
+//window.addEventListener('resize', () => map.resize());
+
+ //Force a visible attribution line with your credits
+// Remove an existing attribution control if you already added one
+// (skip if you don't have one)
+// map._controls?.forEach(c => c instanceof maplibregl.AttributionControl && map.removeControl(c));
+
+map.addControl(
+  new maplibregl.AttributionControl({
+    // This makes a small "i" button on small screens that expands on tap
+    compact: true,
+    // Add your own source credit(s) as hyperlinks
+    customAttribution: [
+      '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+      '<a href="https://protomaps.com/pmtiles" target="_blank" rel="noopener">PMTiles</a>',
+      // add/remove as needed:
+      // '<a href="https://yourdomain.com/attribution" target="_blank" rel="noopener">Toronto Events Map</a>'
+    ].join(' • ')
+  }),
+  'bottom-right'
+);
+
+    
+// 📍 control
 let geoWatchId = null;
-
-// NEW: track first pan + first UI refresh
 let userCenteredOnce = false;
 let userFirstFixNotified = false;
+let userAccuracy = null;
 
-// 📍 control
-const locateControl = L.control({ position: 'topleft' });
-locateControl.onAdd = function(map){
-  const div = L.DomUtil.create('div', 'leaflet-bar locate-btn');
-  const btn = L.DomUtil.create('button', '', div);
-  btn.type = 'button';
-  btn.title = 'Show my location';
-  btn.setAttribute('aria-label', 'Show my location');
-  btn.textContent = '📍';
-  L.DomEvent.disableClickPropagation(div);
-  btn.onclick = () => toggleGeolocation();
-  return div;
-};
-locateControl.addTo(map);
+class LocateControl {
+  onAdd(m){
+    this._map = m;
+    const wrap = document.createElement('div');
+    wrap.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+    const btn = document.createElement('button');
+    btn.className = 'meCtrl';
+    btn.type = 'button';
+    btn.title = 'Show my location';
+    btn.textContent = 'me';
+    btn.onclick = () => toggleGeolocation(btn);
+    wrap.appendChild(btn);
+    this._btn = btn;
+    return wrap;
+  }
+  onRemove(){
+    this._btn.onclick = null;
+  }
+}
+map.addControl(new LocateControl(), 'top-left');
 
-function toggleGeolocation(){
+// user marker (DOM)
+let userMarker = null;
+function makeMeEl(){
+  const b = document.createElement('div');
+  b.style.cssText =
+    'width:20px;height:20px;border-radius:999px;background:#0ea5e9;color:#fff;' +
+    'display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;' +
+    'border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25);text-transform:uppercase;';
+  b.textContent = 'me';
+  return b;
+}
+
+function toggleGeolocation(btn){
   if (!('geolocation' in navigator)) {
     alert('Geolocation is not supported on this device/browser.');
     return;
   }
-
-  // Turn OFF if already watching
   if (geoWatchId){
     navigator.geolocation.clearWatch(geoWatchId);
     geoWatchId = null;
-
-    if (userMarker)   { userLayer.removeLayer(userMarker);   userMarker = null; }
-    if (userAccuracy) { userLayer.removeLayer(userAccuracy); userAccuracy = null; }
-
-    // reset first-time flags
-    userCenteredOnce = false;
-    userFirstFixNotified = false;
-
-    // refresh UI to hide Directions buttons
+    if (userMarker){ userMarker.remove(); userMarker = null; }
+    userCenteredOnce = false; userFirstFixNotified = false;
+    if (btn) btn.style.filter = ''; // clear active look
     if (typeof render === 'function') render();
     if (typeof renderPinned === 'function') renderPinned();
     return;
   }
-
-  // Turn ON (start watching)
-  userCenteredOnce = false;
-  userFirstFixNotified = false;
-
+  userCenteredOnce = false; userFirstFixNotified = false;
+  if (btn) btn.style.filter = 'brightness(0.95)'; // simple active state
   geoWatchId = navigator.geolocation.watchPosition(onGeoSuccess, onGeoError, {
-    enableHighAccuracy: true,
-    maximumAge: 10000,
-    timeout: 10000
+    enableHighAccuracy:true, maximumAge:10000, timeout:10000
   });
 }
 
 function onGeoSuccess(pos){
-  const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+  const { latitude:lat, longitude:lng } = pos.coords;
 
   if (!userMarker){
-    userMarker = L.circleMarker([lat, lng], {
-      radius: 7, weight: 2,
-      color: '#0ea5e9', fillColor: '#0ea5e9', fillOpacity: 0.6
-    }).addTo(userLayer).bindPopup('You are here');
+    userMarker = new maplibregl.Marker({ element: makeMeEl() })
+      .setLngLat([lng,lat]).addTo(map);
   } else {
-    userMarker.setLatLng([lat, lng]);
+    userMarker.setLngLat([lng,lat]);
   }
-
-  if (!userAccuracy){
-    userAccuracy = L.circle([lat, lng], {
-      radius: accuracy, color: '#0ea5e9', weight: 1, opacity: 0.5, fillOpacity: 0.08
-    }).addTo(userLayer);
-  } else {
-    userAccuracy.setLatLng([lat, lng]);
-    userAccuracy.setRadius(accuracy);
-  }
-
-  // 🔒 Do NOT change zoom. Only pan once on the first fix, and only if off-screen.
-  if (!userCenteredOnce) {
-    if (!map.getBounds().contains([lat, lng])) {
-      map.panTo([lat, lng], { animate: true, duration: 0.5 }); // no zoom change
+/*
+  // pan once if off-screen (no zoom snap)
+  if (!userCenteredOnce){
+    if (!map.getBounds().contains([lng,lat])){
+      map.panTo([lng,lat], { duration: 500 });
     }
     userCenteredOnce = true;
   }
-
-  // Refresh UI once so Directions buttons appear, then stop re-rendering on each GPS tick
-  if (!userFirstFixNotified) {
+*/
+  if (!userFirstFixNotified){
     if (typeof render === 'function') render();
     if (typeof renderPinned === 'function') renderPinned();
     userFirstFixNotified = true;
@@ -599,26 +1025,138 @@ function onGeoSuccess(pos){
 function onGeoError(err){
   console.warn('Geolocation error:', err);
   alert('Could not get your location: ' + (err && err.message ? err.message : 'unknown error'));
-
-  // If there was an error after turning on, refresh UI to hide buttons
   if (typeof render === 'function') render();
   if (typeof renderPinned === 'function') renderPinned();
 }
 
-window.addEventListener('resize', () => map.invalidateSize());
+    // Central spot 
+const HOME_CENTER = [43.64869864744241, -79.38556209600347]; // [lng, lat]
+// Choose zoom, bearing, pitch per device
+function homeView(){
+  if (isMobile()) {
+    return { center: HOME_CENTER, zoom: 11, bearing: 10, pitch: 0 };
+  } else {
+    return { center: HOME_CENTER, zoom: 11, bearing: 10, pitch: 0 };
+  }
+}
+
+
+window.addEventListener('resize', () => map.resize());
     
-// ===== Fast auto-hide header =====
+// Apply a dark, monotone palette to the current MapLibre style.
+// Hides non-road labels; keeps only road names.
+ // 3) on first paint, animate to your exact home view
+    map.on('load', () => {
+  // use jumpTo first to avoid the "double pan then rotate" look (optional)
+  map.jumpTo({ center: HOME.center, zoom: 9, bearing: 5, pitch: 0 });
+  const hv = homeView();
+  // then do a smooth, deliberate rotate/zoom if you like
+  map.easeTo({
+    center: HOME.center,
+    zoom: 10,
+    bearing: -15,
+    pitch: 20,
+    //offset: OPENING_OFFSET,   // remove if you don't have a sidebar
+    duration: 1200,           // 1.2s feels nice
+    essential: true
+  });
+
+    
+ //map.on('load', () => {
+   /* map.fitBounds(TORONTO_BOUNDS, {
+    padding: { top: 80, right: 80, bottom: 80, left: 320 },
+    duration: 0 // instant fit so the next animation feels deliberate
+  });
+     map.easeTo({
+    bearing: -15,
+    pitch: 10,         // uncomment if you want a bit of tilt
+    //zoom: map.getZoom(), // keep current zoom
+    duration: 1200       // 1.2s feels nice
+  });
+*/
+  const layers = (map.getStyle() && map.getStyle().layers) || [];
+
+  const safePaint = (id, prop, val) => { try { map.setPaintProperty(id, prop, val); } catch(_){} };
+  const safeLayout = (id, prop, val) => { try { map.setLayoutProperty(id, prop, val); } catch(_){} };
+
+  layers.forEach(l => {
+    const id = (l.id || '').toLowerCase();
+    const t  = l.type;
+/*
+    if (t === 'background') {
+      safePaint(l.id, 'background-color', '#0b1320'); // deep navy
+      return;
+    }
+
+    if (t === 'fill') {
+      const isWater   = id.includes('water');
+      const isPark    = id.includes('park') || id.includes('green') || id.includes('landuse');
+      const base      = isWater ? '#0a1625' : (isPark ? '#0e2139' : '#0f172a');
+      safePaint(l.id, 'fill-color', base);
+      safePaint(l.id, 'fill-opacity', 1);
+      return;
+    }
+
+    if (t === 'line') {
+      const isBoundary = id.includes('boundary');
+      const isRoad     = id.includes('road') || id.includes('highway') || id.includes('transport');
+      const col        = isBoundary ? '#22304a' : (isRoad ? '#3f4a5a' : '#1f2532');
+      safePaint(l.id, 'line-color', col);
+      safePaint(l.id, 'line-opacity', 1);
+      // optional: thinner minor roads
+      if (id.includes('minor')) safePaint(l.id, 'line-width', 0.5);
+      return;
+    }
+
+    if (t === 'fill-extrusion') {
+      safePaint(l.id, 'fill-extrusion-color', '#111827'); // building 3D, if present
+      return;
+    }
+*/
+    if (t === 'symbol') {
+      // Keep only road names; hide POI/place/transit/etc.
+      const isRoadLabel = id.includes('road') || id.includes('highway') || id.includes('street') || id.includes('transport');
+      if (!isRoadLabel) {
+        safeLayout(l.id, 'visibility', 'none');
+      } else {
+        safePaint(l.id, 'text-color',      '#e5e7eb'); // light grey
+        safePaint(l.id, 'text-halo-color', '#0b1320'); // dark halo for contrast
+        safePaint(l.id, 'text-halo-width', 1.25);
+      }
+      return;
+    }
+  });
+});
+
+// Use device-specific padding when focusing events later
+function focusEvent(lng, lat){
+  const padDesktop = { top: 60, right: 60, bottom: 60, left: 360 }; // sidebar + breathing room
+  const padMobile  = { top: 60, right: 60, bottom: 240, left: 60 }; // extra bottom room for UI
+  map.easeTo({
+    center: [lng, lat],
+    zoom: isMobile() ? 15 : Math.max(map.getZoom(), 14),
+    padding: isMobile() ? padMobile : padDesktop,
+    duration: 500
+  });
+}
+
+// ===== Fast auto-hide  =====
 const headerEl = document.querySelector('header');
 const spacerEl = document.getElementById('headerSpacer');
 
 function setHeaderHeightVar(){
   if (!headerEl || !spacerEl) return;
-  const h = headerEl.offsetHeight || 64;
+  const h = headerEl.offsetHeight || 1;
   document.documentElement.style.setProperty('--header-h', h + 'px');
   spacerEl.style.height = h + 'px';
 }
 window.addEventListener('load', setHeaderHeightVar);
 window.addEventListener('resize', setHeaderHeightVar);
+
+
+const SHOW_AT_TOP = 0;
+const HIDE_AFTER  = 80; // px
+
 
 // Hide on scroll down, show on scroll up (more sensitive + rAF for smoothness)
 let lastY = window.scrollY, ticking = false;
@@ -638,22 +1176,15 @@ window.addEventListener('scroll', () => {
 
   lastY = y;
 }, { passive: true });
-
-
-// Darken + add color to base tiles
-map.getPane('tilePane').style.filter =
-  'grayscale(0%) hue-rotate(348deg) saturate(800%) brightness(0.85) contrast(1.38)';
-
-// Invert labels so they stay light on dark
-map.getPane('labels').style.filter = 'brightness(1.0)';
+                    
 
     // One-off events (existing sheet)
     const GOOGLE_SHEET_CSV_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9IWLxL_UnRLjmKdpwkFdVeC9scZfML65HyqbdppY7DC54RPv0Q3bkRa5-scyNON9pVkjwsoTcTWX-/pub?gid=811741087&single=true&output=csv";
+      "https://bitter-sun-0e27.jakeerickson11.workers.dev/events";
 
     // NEW: weekly/recurring events (publish this sheet to CSV and paste the link)
     const WEEKLY_SHEET_CSV_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRKFzStHyi9c8o4WQCIIJfCMsexEDTuMTjkmZn1oZcDT9npyqTyp7f5IT0pyuShm5ADhUIYY86kOqLm/pub?gid=811741087&single=true&output=csv";
+      "https://bitter-sun-0e27.jakeerickson11.workers.dev/weekly";
 
     // How far to expand weekly events (today → today+N days)
     const RECUR_WINDOW_DAYS = 90;
@@ -670,9 +1201,11 @@ map.getPane('labels').style.filter = 'brightness(1.0)';
   return CATEGORY_COLORS[cat] || '#64748b'; // fallback for unknown categories
 }
 
+
+
     function getCSS(varName){ return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
 
-    const markersLayer = L.layerGroup().addTo(map);
+    // const markersLayer = L.layerGroup().addTo(map);
     const datePicker = document.getElementById('datePicker');
     const catChips  = document.getElementById('catChips');
     const listEl    = document.getElementById('eventsList');
@@ -699,7 +1232,7 @@ function renderPinned(){
     let dirUrl = '';
     try {
       if (typeof userMarker !== 'undefined' && userMarker && userMarker.getLatLng){
-        const u = userMarker.getLatLng();
+        const u = userMarker.getLngLat(); // {lng, lat}
         if (Number.isFinite(pinnedEvent.lat) && Number.isFinite(pinnedEvent.lng)) {
           // Use lat/lng if available
           dirUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(`${u.lat},${u.lng}`)}&destination=${encodeURIComponent(`${pinnedEvent.lat},${pinnedEvent.lng}`)}&travelmode=driving`;
@@ -743,8 +1276,6 @@ function renderPinned(){
   }
 }
 
-
-
 function clearPinned(){
   pinnedEvent = null;
   renderPinned();
@@ -752,14 +1283,14 @@ function clearPinned(){
 
 window.addEventListener('resize', renderPinned); // keep it correct on rotate/resize
 
-
-
-
     // ----- Date helpers -----
     function isoLocal(d){ const off=d.getTimezoneOffset()*60000; return new Date(d.getTime()-off).toISOString().slice(0,10); }
     
     function startOfDay(d){ const x=new Date(d); x.setHours(0,0,0,0); return x; }
 function monthKey(d){ return d.getFullYear()*12 + d.getMonth(); } // for incrementing months
+
+
+
 
 function weekdayOrdinalInMonth(d){
   // e.g., d = 2025-10-14 (Tue) → returns 2 (2nd Tuesday)
@@ -853,7 +1384,7 @@ function buildCategoryChips(){
     }
 
     // Cleaners for both sheets
-   function cleanOneOff(r){
+ function cleanOneOff(r){
   const coordsField = r["Coords"] || r["Coordinates"] || r["Lat/Lng"] || r["Location"] || '';
 
   let lat = parseFloat(r["Lat"]);
@@ -861,11 +1392,8 @@ function buildCategoryChips(){
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     const c = parseCoordsToLatLng(coordsField);
-    if (Number.isFinite(c.lat) && Number.isFinite(c.lng)) {
-      lat = c.lat; lng = c.lng;
-    } else {
-      lat = null; lng = null;
-    }
+    lat = Number.isFinite(c.lat) ? c.lat : null;
+    lng = Number.isFinite(c.lng) ? c.lng : null;
   }
 
   return {
@@ -878,9 +1406,32 @@ function buildCategoryChips(){
     address: (r["Address"] || r.address || '').trim(),
     photo: (r["Photo"] || r.photo || '').trim(),
     lat, lng,
+    promoted: truthy(getField(r, ['Promoted','promoted'])),  // ← simple & global
     __source: 'oneoff'
   };
 }
+
+// Interprets 1 / true / yes / y (case-insensitive) as true
+function truthy(v){
+  return /^(1|true|yes|y)$/i.test(String(v || '').trim());
+}
+
+// Gets a field from a row by exact key, common variants, or case/space-insensitive header
+function getField(row, candidates){
+  // fast path: exact names
+  for (var i=0;i<candidates.length;i++){
+    var k = candidates[i];
+    if (row != null && Object.prototype.hasOwnProperty.call(row, k)) return row[k];
+  }
+  // tolerant path: trim + lowercase header names (handles " Promoted ", "PROMOTED", etc.)
+  var want = candidates.map(function(n){ return String(n).replace(/\s+/g,'').toLowerCase(); });
+  for (var key in row){
+    var norm = String(key).replace(/\s+/g,'').toLowerCase();
+    if (want.indexOf(norm) !== -1) return row[key];
+  }
+  return '';
+}
+
 
 function cleanWeekly(r){
   const dowRaw = r["Day"] ?? r["Weekday"] ?? r["weekday"] ?? r["day"];
@@ -889,7 +1440,6 @@ function cleanWeekly(r){
   const excludes = String(r["Exclude Dates"] || r["Exclude"] || '')
                     .split(',').map(s=>normalizeDate(s.trim())).filter(Boolean);
 
-  // Coords parsing fallback
   const coordsField = r["Coords"] || r["Coordinates"] || r["Lat/Lng"] || r["Location"] || '';
   let lat = parseFloat(r["Lat"]); let lng = parseFloat(r["Lng"]);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
@@ -898,9 +1448,8 @@ function cleanWeekly(r){
     lng = Number.isFinite(c.lng) ? c.lng : null;
   }
 
-  // ---- Repeat parsing (very tolerant) ----
   const raw = (r["Repeat"] ?? r["Frequency"] ?? "").toString().toLowerCase().trim();
-  const norm = raw.replace(/[\s-_/]/g, ''); // remove spaces, hyphens, slashes, underscores
+  const norm = raw.replace(/[\s-_/]/g, '');
   let repeat = 'weekly';
   if (['biweekly','2w','fortnightly','everyotherweek','q2w'].includes(norm)) repeat = 'biweekly';
   else if (['monthly','1m','monthlynth','nthmonthly'].includes(norm)) repeat = 'monthly';
@@ -908,7 +1457,7 @@ function cleanWeekly(r){
   return {
     name: (r["Event name"] || r.name || '').trim(),
     venue: (r["Venue"] || r.venue || '').trim(),
-    day: parseDOW(dowRaw),                 // 0=Sun … 6=Sat
+    day: parseDOW(dowRaw),
     time: (r["Time"] || r.time || '').trim(),
     category: (r["Category"] || r.category || '').trim(),
     link: (r["Link"] || r.link || '').trim(),
@@ -918,7 +1467,8 @@ function cleanWeekly(r){
     start: startRaw,
     end: endRaw,
     excludes,
-    repeat,                                // now normalized to 'weekly' | 'biweekly' | 'monthly'
+    repeat,
+    promoted: truthy(getField(r, ['Promoted','promoted'])),  // ← simple & global
     __source: 'weekly'
   };
 }
@@ -936,6 +1486,12 @@ function nthWeekdayOfMonth(year, monthIndex, weekday, nth){
   const res = new Date(year, monthIndex, date);
   return res.getMonth() === monthIndex ? res : null;
 }
+
+//////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////
+
+
 
 function expandWeekly(row, rangeStart, rangeEnd){
   const out = [];
@@ -970,7 +1526,9 @@ function expandWeekly(row, rangeStart, rangeEnd){
         out.push({
           name: row.name, venue: row.venue, date: iso, time: row.time,
           category: row.category, link: row.link, address: row.address,
-          photo: row.photo, lat: row.lat, lng: row.lng, __source: 'weekly'
+          photo: row.photo, lat: row.lat, lng: row.lng,
+          promoted: row.promoted, 
+          __source: 'weekly'
         });
       }
     }
@@ -1003,7 +1561,9 @@ function expandWeekly(row, rangeStart, rangeEnd){
         out.push({
           name: row.name, venue: row.venue, date: iso, time: row.time,
           category: row.category, link: row.link, address: row.address,
-          photo: row.photo, lat: row.lat, lng: row.lng, __source: 'weekly'
+          photo: row.photo, lat: row.lat, lng: row.lng,
+          promoted: row.promoted, 
+          __source: 'weekly'
         });
       }
       m++; if (m>11){ m=0; y++; }
@@ -1014,8 +1574,6 @@ function expandWeekly(row, rangeStart, rangeEnd){
   // Fallback
   return expandWeekly({...row, repeat:'weekly'}, rangeStart, rangeEnd);
 }
-
-
 
 
     // Load both sheets, expand weekly, merge, then render
@@ -1059,9 +1617,9 @@ if (datePicker) {
   }
 } // if there’s no datePicker for some reason, we just show all dates
 
+
 render();
 
-    render();
   } catch(err){
     console.error('CSV load error', err);
     alert('Could not load one or both CSVs. Please make sure both sheets are published to the web as CSV.');
@@ -1072,8 +1630,9 @@ render();
 
     // userMarker must be the one you create in your geolocation code
 function hasUserLocation(){
-  return typeof userMarker !== 'undefined' && userMarker && userMarker.getLatLng;
+  return !!(userMarker && typeof userMarker.getLngLat === 'function');
 }
+
 
 function gmapsDirectionsURL(oLat, oLng, dLat, dLng, mode='driving'){
   const origin = `${oLat},${oLng}`;
@@ -1094,7 +1653,6 @@ function gmapsDirectionsURLFallback(oLat, oLng, ev){
 
 let selectedEventKey = null; // tracks the currently-selected list item
 
-
   function render(){
   // Read date from the picker (or leave blank = show all dates)
   const chosenDate = (datePicker && datePicker.value) ? datePicker.value : '';
@@ -1105,32 +1663,116 @@ let selectedEventKey = null; // tracks the currently-selected list item
     return matchDate && matchCat; // (search removed)
   });
 
-      markersLayer.clearLayers();
-      const pts = [];
-      filtered.forEach((e,i) => {
-        if(Number.isFinite(e.lat) && Number.isFinite(e.lng)){
-          const color = CATEGORY_COLORS[e.category] || '#888';
-          const marker = L.circleMarker([e.lat, e.lng], {
-            radius: 8, weight:2, color: color, fillColor: color, fillOpacity:0.2
-          }).addTo(markersLayer);
-          marker.bindPopup(
-            `<strong>${safe(e.name)}</strong><br>${safe(e.venue||'')}${e.time?` • ${safe(e.time)}`:''}<br>${safe(e.date)}<br><a href="${e.link}" target="_blank" rel="noopener">Event page</a>`
-          );
-          marker.on('click', () => {
-  if (isMobile()) {
-    setPinned(e);        // show pinned card on phones
-  } else {
-    highlightCard(i);    // keep existing behavior on desktop
+// ——— NEW: put promoted first (stable order within each group)
+const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
+const ordered = [
+  ...filtered.filter(isPromoted),
+  ...filtered.filter(ev => !isPromoted(ev))
+];
+
+
+      // remove old markers
+// remove old markers
+markers.forEach(m => m.remove());
+markers = [];
+
+// Build bounds
+const bounds = new maplibregl.LngLatBounds();
+let havePts = false;
+
+ordered.forEach(function(e, i){
+  if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
+
+  // Guard against missing globals so we never throw
+  var color = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[e.category])
+    ? CATEGORY_COLORS[e.category]
+    : '#888';
+
+  var _safe = (typeof safe === 'function')
+    ? safe
+    : function(s){ return String(s||'').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); };
+
+  // Promoted flag accepted from either Promoted or promoted column (TRUE/Yes/1/Y)
+ var promoted = !!e.promoted;
+
+  var el = document.createElement('div');
+  el.className = [
+    'eventMarker',
+    'eventMarker--round',
+    'eventMarker--ghost',
+    'eventMarker--thin'      // 👈 fix casing
+  ].join(' ');
+  el.style.background = color;                 // keep your original fill
+  el.style.setProperty('--marker-color', color); // lets CSS glow match the fill
+
+  if (promoted){
+    el.className += ' eventMarker--promoted is-promoted';
+    var badge = document.createElement('span');
+    badge.className = 'eventMarker__badge';
+    badge.textContent = '★';
+    badge.setAttribute('aria-hidden','true');
+    el.appendChild(badge);
   }
+
+  // create marker + popup
+  var marker = new maplibregl.Marker({ element: el })
+    .setLngLat([e.lng, e.lat])
+    .setPopup(
+      new maplibregl.Popup({ offset: 12 }).setHTML(
+        '<strong>' + _safe(e.name) + '</strong>' +
+        (promoted ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
+        '<br>' + _safe(e.venue || '') + (e.time ? ' • ' + _safe(e.time) : '') +
+        '<br><a href="' + e.link + '" target="_blank" rel="noopener">Event page</a>'
+      )
+    )
+    .addTo(map);
+
+  // click behavior (mobile pins = pin card, desktop = highlight list)
+  el.addEventListener('click', function(){
+    if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches){
+      if (typeof setPinned === 'function') setPinned(e);
+    } else {
+      if (typeof highlightCard === 'function') highlightCard(i);
+    }
+  });
+
+  // optional selected styling, safe to keep
+  if (marker.getPopup){
+    marker.getPopup()
+      .on('open', function(){ el.classList.add('is-selected'); })
+      .on('close', function(){ el.classList.remove('is-selected'); });
+  }
+
+  markers.push(marker);
+  bounds.extend([e.lng, e.lat]);
+  havePts = true;
 });
 
-          pts.push([e.lat,e.lng]);
-        }
-      });
-      if(pts.length){ map.fitBounds(pts, {padding:[30,30]}); }
 
+    /////////////// drive color by data-attribute (CSS above handles fill) 
+    ////////BREAKS GOOGLE SHEETS 
+//if (e.category) el.dataset.category = e.category;
+    
+////////BREAKS GOOGLE SHEETS/////////////////////////////////////////////////
+// optional: mark selected when popup opens
+//const marker = new maplibregl.Marker({ element: el })
+//  .setLngLat([e.lng, e.lat])
+//  .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(/* ... */))
+//  .addTo(map);
+
+//marker.getPopup()
+ // .on('open', ()=> el.classList.add('is-selected'))
+ // .on('close', ()=> el.classList.remove('is-selected'));
+
+/////////////////////////////////////////////////////////////////////////////
+   /* 
+// Fit nicely (don’t over-zoom)
+if (havePts) {
+  map.fitBounds(bounds, { padding: 30, maxZoom: 16 });
+}
+*/
       listEl.innerHTML='';
-      filtered.forEach((e,i) => {
+      ordered.forEach((e,i) => {
         const row = document.createElement('div');
         row.className='item';
         // stable key for this event (works across filters)
@@ -1164,7 +1806,7 @@ row.onclick = (ev) => {
   row.classList.add('selected');
 
   if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
-    map.flyTo([e.lat, e.lng], 15, { duration: 0.6 });
+    map.flyTo({ center:[e.lng, e.lat], zoom:15, speed:1.6, curve:1.4 });
   }
   if (onMobile && typeof setPinned === 'function') setPinned(e);
 };
@@ -1180,12 +1822,7 @@ row.ondblclick = (ev) => {
 
   ev.preventDefault();
   if (e.link) window.open(e.link, '_blank', 'noopener');
-};
-
-
-
-
-        
+};        
         // --- build one list row ---
 const color = CATEGORY_COLORS[e.category] || '#888';
 
@@ -1206,24 +1843,22 @@ meta.className = 'meta';
 // Build a Google Maps directions link if user location is available
 let dirUrl = '';
 if (hasUserLocation()){
-  const u = userMarker.getLatLng();
+  const u = userMarker.getLngLat(); // {lng, lat}
   dirUrl = gmapsDirectionsURLFallback(u.lat, u.lng, e);
 }
 const dirLink = dirUrl
   ? `<div class="sub"><a class="dirBtn" href="${dirUrl}" target="_blank" rel="noopener">Directions</a></div>`
   : '';
 
-
-
-
-
-
+const promoted = !!e.promoted || /^(1|true|yes|y)$/i.test(String(e.Promoted||'').trim());
+const promotedTag = promoted ? `<span class="promotedTag" aria-label="Promoted"><span class="star">★</span> Promoted</span>` : '';
 
 // Mobile: title + badge on one line; Desktop: original layout
 if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
-  meta.innerHTML = `
+ meta.innerHTML = `
   <div class="titleRow">
     <div class="title">${safe(e.name)}</div>
+    ${promotedTag}
     <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
   </div>
   <div class="sub">${safe(e.venue || e.address || '')}</div>
@@ -1231,19 +1866,20 @@ if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width:
   ${dirLink || ``}
 `;
 
+
 } else {
   // DESKTOP (no "Event page" link here)
 meta.innerHTML = `
   <div class="title">${safe(e.name)}</div>
   <div class="sub">${safe(e.venue || e.address || '')}</div>
   ${e.time ? `<div class="sub">${safe(e.time)}</div>` : ``}
-  <div><span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span></div>
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    ${promotedTag}
+    <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
+  </div>
   ${dirLink || ``}
-
-
-
-  
-`;}
+`;
+}
 
 // Prevent row handlers from firing when clicking Directions
 const dirBtnEl = meta.querySelector('.dirBtn');
@@ -1260,9 +1896,6 @@ if (dirBtnEl) {
     ev.preventDefault();
   });
 }
-
-
-
 
 // Order content: on phones -> text left, image right; desktop -> image left, text right
 const thumbWrap = document.createElement('div');
@@ -1281,7 +1914,7 @@ row.appendChild(rowWrap);
 listEl.appendChild(row);
 
       });
-      countEl.textContent = `${filtered.length} event${filtered.length===1?'':'s'} shown`;
+      countEl.textContent = `${ordered.length} event${ordered.length===1?'':'s'} shown`;
     }
 
     function highlightCard(index){
