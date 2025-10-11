@@ -77,7 +77,7 @@
       "type": "line",
       "source": "toronto",
       "source-layer": "transportation",
-      "filter": ["in","class","primary","secondary","tertiary"],
+      "filter": ["in","class","primary","secondary","tertiary","trunk","motorway"],
       "layout": { "line-join": "round", "line-cap": "round" },
       "paint": {
         "line-color": "#575353",                   
@@ -106,17 +106,6 @@
       }
     },
 
-    {
-  "id": "highway",
-  "type": "line",
-  "source": "openmaptiles",
-  "source-layer": "transportation",
-  "filter": ["in", "class", "motorway", "trunk"],
-  "paint": {
-    "line-color": "#ff4dd2",   // 🔥 hot pink example
-    "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.6, 12, 4]
-  }
-}
     
     {
       "id": "place-labels",
