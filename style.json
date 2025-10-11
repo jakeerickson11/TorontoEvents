@@ -83,7 +83,7 @@
       }
     },
 
-    /* === NEW: highways only (motorway + trunk) === */
+
     {
       "id": "road-highway",
       "type": "line",
