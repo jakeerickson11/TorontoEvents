@@ -92,7 +92,7 @@
       "filter": ["in","class","motorway","trunk"],
       "layout": { "line-join": "round", "line-cap": "round" },
       "paint": {
-        "line-color": "#ff4dd2",
+        "line-color": "#c4c4c4",
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.8, 12, 3.0, 15, 6.5],
         "line-gap-width": 0
       }
