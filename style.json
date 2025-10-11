@@ -16,7 +16,7 @@
     },
 
     { "id": "water", "type": "fill", "source": "toronto", "source-layer": "water",
-      "paint": { "fill-color": "#162a42" } },
+      "paint": { "fill-color": "#15394f" } },
 
     { "id": "park", "type": "fill", "source": "toronto", "source-layer": "park",
       "paint": { "fill-color": "#171717" } },
