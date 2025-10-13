@@ -920,8 +920,31 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 }
 
 /* Spacer will be managed by JS; start collapsed */
-#Spacer{ height: 0 !important; }
+/* #Spacer{ height: 0 !important; }
+*/
 
+/* --- Mobile: pinned card scrolls with the page, under the header --- */
+@media (max-width: 960px){
+  /* Make sure the page can scroll */
+  html, body { height: auto; overflow: auto; }
+
+  /* If you have a full-height wrapper that locks scrolling, relax it on mobile */
+  #app, #page, main { height: auto; overflow: visible; }
+
+  /* The pinned card should be in-flow, not overlayed */
+  #pinnedEvent{
+    position: static !important;   /* no sticky/fixed/absolute */
+    inset: auto !important;
+    z-index: auto !important;
+    display: block;
+    margin: 8px 12px 0;            /* nice spacing under header */
+  }
+}
+
+/* Desktop behavior unchanged (hide if that’s your design) */
+@media (min-width: 961px){
+  #pinnedEvent{ display: none; }
+}
 
   </style>
 </head>
