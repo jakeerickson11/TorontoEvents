@@ -291,13 +291,12 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   will-change: transform;
 }
 
-/* Spacer reserves  height to avoid layout jump 
+ Spacer reserves  height to avoid layout jump 
 #Spacer{
-  height: var(---h);
-  transition: height .12s ease;
+  height: 0px;
 }
 
-/* Hide  & collapse spacer 
+ Hide  & collapse spacer 
 .-hidden { transform: translateY(-100%); }
 .-hidden #Spacer{ height: 0; }
 
@@ -315,8 +314,8 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 /* Keep the spacer + pinned card above the map but below the  */
 #Spacer,
 #pinnedEvent{
-  position: relative;
-  z-index: 9998;
+  position: absolute;
+  z-index: 9999;
 }
 
 /* Desktop: stripe | text | image */
@@ -921,13 +920,6 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   </div>
 </header>
 
-<div id="headerSpacer" aria-hidden="true"></div>
-
-
-<div id="headerSpacer" aria-hidden="true"></div>
-
-<div id="Spacer" aria-hidden="true"></div>
-<!-- keep your pinnedEvent below -->
 <!-- <div id="pinnedEvent" class="pinned hidden" aria-live="polite"></div> -->
 
 
