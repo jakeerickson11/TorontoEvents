@@ -899,6 +899,30 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .datePicker::-webkit-inner-spin-button,
 .datePicker::-webkit-clear-button{ display: none; }
 
+/* --- FIX: Pinned event should sit under the sticky header on mobile --- */
+
+/* Stop forcing absolute positioning */
+#pinnedEvent { position: static; }   /* reset any earlier bad rules */
+
+/* Correct placement on mobile */
+@media (max-width: 960px){
+  #pinnedEvent{
+    position: sticky !important;
+    top: calc(var(--header-h, 64px) + 0px); /* just below header */
+    left: 0; right: 0;
+    z-index: 6;                               /* above map, below header button taps */
+  }
+}
+
+/* Ensure it never shows on desktop (you already had this, keep it) */
+@media (min-width: 961px){
+  #pinnedEvent{ display: none; }
+}
+
+/* Spacer will be managed by JS; start collapsed */
+#Spacer{ height: 0 !important; }
+
+
   </style>
 </head>
 <body>
@@ -1239,17 +1263,41 @@ function focusEvent(lng, lat){
 }
 
 // ===== Fast auto-hide  =====
-const headerEl = document.querySelector('header');
-const spacerEl = document.getElementById('headerSpacer');
+  // …keep your other JS…
 
-function setHeaderHeightVar(){
-  if (!headerEl || !spacerEl) return;
-  const h = headerEl.offsetHeight || 1;
-  document.documentElement.style.setProperty('--header-h', h + 'px');
-  spacerEl.style.height = h + 'px';
-}
-window.addEventListener('load', setHeaderHeightVar);
-window.addEventListener('resize', setHeaderHeightVar);
+  const headerEl  = document.querySelector('.siteHeader');
+  const spacerEl  = document.getElementById('Spacer');       // <— match DOM id
+
+  function setHeaderHeightVar(){
+    if (!headerEl) return;
+    const h = headerEl.offsetHeight || 1;
+    document.documentElement.style.setProperty('--header-h', h + 'px');
+    updateSpacer(); // keep spacer in sync when header height changes
+  }
+
+  function updateSpacer(){
+    if (!spacerEl) return;
+    // Only reserve space on mobile when the pinned card is visible
+    const onMobile = window.matchMedia('(max-width: 960px)').matches;
+    if (!onMobile || !pinnedEl || pinnedEl.classList.contains('hidden')) {
+      spacerEl.style.height = '0px';
+      return;
+    }
+    // header height + pinned card outer height + its top margin (8px in your CSS)
+    const headerH = headerEl ? headerEl.offsetHeight : 0;
+    const pinnedH = pinnedEl.offsetHeight || 0;
+    spacerEl.style.height = (headerH + pinnedH + 8) + 'px';
+  }
+
+  window.addEventListener('load',  setHeaderHeightVar);
+  window.addEventListener('resize', setHeaderHeightVar);
+
+  // After you render the pinned card, also refresh spacer height:
+  const _renderPinned = renderPinned;
+  window.renderPinned = function(){
+    _renderPinned();
+    updateSpacer();
+  };
 
 
 const SHOW_AT_TOP = 0;
