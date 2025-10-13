@@ -905,7 +905,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 <body>
 <header class="siteHeader">
   <div class="hdrLeft">
-    <h1>Toronto</h1>
+    <h1>Time and Place</h1>
   </div>
 
 <div class="hdrCenter">
@@ -1787,224 +1787,303 @@ function gmapsDirectionsURLFallback(oLat, oLng, ev){
 
 let selectedEventKey = null; // tracks the currently-selected list item
 
-function render(){
-  // 1) Filter + order
+  function render(){
+  // Read date from the picker (or leave blank = show all dates)
   const chosenDate = (datePicker && datePicker.value) ? datePicker.value : '';
+
   const filtered = allEvents.filter(e => {
     const matchDate = chosenDate ? e.date === chosenDate : true;
     const matchCat  = activeCats.has((e.category || 'Other').trim());
-    return matchDate && matchCat;
+    return matchDate && matchCat; // (search removed)
   });
 
-  const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
-  const ordered = [...filtered.filter(isPromoted), ...filtered.filter(ev => !isPromoted(ev))];
+// ——— NEW: put promoted first (stable order within each group)
+const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
+const ordered = [
+  ...filtered.filter(isPromoted),
+  ...filtered.filter(ev => !isPromoted(ev))
+];
 
-  // 2) Markers
+
+      // remove old markers
+// remove old markers
+markers.forEach(m => m.remove());
+markers = [];
+
+// Build bounds
+const bounds = new maplibregl.LngLatBounds();
+let havePts = false;
+
+ordered.forEach(function(e, i){
+  if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
+
+  // Guard against missing globals so we never throw
+  var color = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[e.category])
+    ? CATEGORY_COLORS[e.category]
+    : '#888';
+
+  var _safe = (typeof safe === 'function')
+    ? safe
+    : function(s){ return String(s||'').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); };
+
+  // Promoted flag accepted from either Promoted or promoted column (TRUE/Yes/1/Y)
+ var promoted = !!e.promoted;
+
+  var el = document.createElement('div');
+  el.className = [
+    'eventMarker',
+    'eventMarker--round',
+    'eventMarker--ghost',
+    'eventMarker--thin'      // 👈 fix casing
+  ].join(' ');
+  el.style.background = color;                 // keep your original fill
+  el.style.setProperty('--marker-color', color); // lets CSS glow match the fill
+
+  if (promoted){
+    el.className += ' eventMarker--promoted is-promoted';
+    var badge = document.createElement('span');
+    badge.className = 'eventMarker__badge';
+    badge.textContent = '★';
+    badge.setAttribute('aria-hidden','true');
+    el.appendChild(badge);
+  }
+
+  // create marker + popup
+  var marker = new maplibregl.Marker({ element: el })
+    .setLngLat([e.lng, e.lat])
+    .setPopup(
+      new maplibregl.Popup({ offset: 12 }).setHTML(
+        '<strong>' + _safe(e.name) + '</strong>' +
+        (promoted ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
+        '<br>' + _safe(e.venue || '') + (e.time ? ' • ' + _safe(e.time) : '') +
+        '<br><a href="' + e.link + '" target="_blank" rel="noopener">Event page</a>'
+      )
+    )
+    .addTo(map);
+
+  // click behavior (mobile pins = pin card, desktop = highlight list)
+  el.addEventListener('click', function(){
+    if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches){
+      if (typeof setPinned === 'function') setPinned(e);
+    } else {
+      if (typeof highlightCard === 'function') highlightCard(i);
+    }
+  });
+
+  
+  // optional selected styling, safe to keep
+  if (marker.getPopup){
+    marker.getPopup()
+      .on('open', function(){ el.classList.add('is-selected'); })
+      .on('close', function(){ el.classList.remove('is-selected'); });
+  }
+
+  markers.push(marker);
+  bounds.extend([e.lng, e.lat]);
+  havePts = true;
+});
+
+
+    /////////////// drive color by data-attribute (CSS above handles fill) 
+    ////////BREAKS GOOGLE SHEETS 
+//if (e.category) el.dataset.category = e.category;
+    
+////////BREAKS GOOGLE SHEETS/////////////////////////////////////////////////
+// optional: mark selected when popup opens
+//const marker = new maplibregl.Marker({ element: el })
+//  .setLngLat([e.lng, e.lat])
+//  .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(/* ... */))
+//  .addTo(map);
+
+//marker.getPopup()
+ // .on('open', ()=> el.classList.add('is-selected'))
+ // .on('close', ()=> el.classList.remove('is-selected'));
+
+/////////////////////////////////////////////////////////////////////////////
+   /* 
+// Fit nicely (don’t over-zoom)
+if (havePts) {
+  map.fitBounds(bounds, { padding: 30, maxZoom: 16 });
+}
+*/
+      listEl.innerHTML='';
+      ordered.forEach((e,i) => {
+        const row = document.createElement('div');
+        row.className='item';
+        // stable key for this event (works across filters)
+const key = `${e.name || ''}|${e.date || ''}|${e.venue || ''}|${e.address || ''}`;
+row.dataset.key = key;
+if (selectedEventKey === key) row.classList.add('selected');
+
+row.onclick = (ev) => {
+  // If the click was on (or inside) the Directions button, do nothing here
+  if (ev.target.closest('.dirBtn')) return;
+
+  const myKey = row.dataset.key;
   const onMobile = (typeof isMobile === 'function')
     ? isMobile()
     : window.matchMedia('(max-width: 960px)').matches;
 
-  // remove old markers
-  if (!Array.isArray(markers)) window.markers = markers = [];
-  markers.forEach(m => { try { m.remove(); } catch(_){} });
-  markers.length = 0;
-
-  // remove any leftover desktop popups when on mobile
   if (onMobile) {
-    document.querySelectorAll('.maplibregl-popup').forEach(el => el.remove());
+    // Mobile: second tap on the SAME item opens the link
+    if (selectedEventKey === myKey) {
+      if (e.link) window.open(e.link, '_blank', 'noopener');
+      return;
+    }
+  } else {
+    // Desktop: single-click never opens the link
+    if (selectedEventKey === myKey) return;
   }
 
-  const bounds = new maplibregl.LngLatBounds();
-  let havePts = false;
+  // Select + behaviors
+  selectedEventKey = myKey;
+  document.querySelectorAll('.item.selected').forEach(el => el.classList.remove('selected'));
+  row.classList.add('selected');
 
-  ordered.forEach((e, i) => {
-    if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
+  if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
+    map.flyTo({ center:[e.lng, e.lat], zoom:15, speed:1.6, curve:1.4 });
+  }
+  if (onMobile && typeof setPinned === 'function') setPinned(e);
+};
 
-    const color = (CATEGORY_COLORS && CATEGORY_COLORS[e.category]) ? CATEGORY_COLORS[e.category] : '#888';
-    const _safe = (typeof safe === 'function') ? safe : (s => String(s||'').replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])));
-    const promo = isPromoted(e);
+row.ondblclick = (ev) => {
+  // Ignore double-clicks on the Directions button
+  if (ev.target.closest('.dirBtn')) return;
 
-    // marker element
-    const el = document.createElement('div');
-    el.className = 'eventMarker eventMarker--round eventMarker--ghost eventMarker--thin';
-    el.style.background = color;
-    el.style.setProperty('--marker-color', color);
+  const onMobile = (typeof isMobile === 'function')
+    ? isMobile()
+    : window.matchMedia('(max-width: 960px)').matches;
+  if (onMobile) return;
 
-    if (promo) {
-      el.classList.add('eventMarker--promoted','is-promoted');
-      const badge = document.createElement('span');
-      badge.className = 'eventMarker__badge';
-      badge.textContent = '★';
-      badge.setAttribute('aria-hidden','true');
-      el.appendChild(badge);
-    }
+  ev.preventDefault();
+  if (e.link) window.open(e.link, '_blank', 'noopener');
+};        
+        // --- build one list row ---
+const color = CATEGORY_COLORS[e.category] || '#888';
 
-    const marker = new maplibregl.Marker({ element: el }).setLngLat([e.lng, e.lat]);
+const stripe = document.createElement('div');
+stripe.className = 'leftStripe';
+stripe.style.background = color;
+stripe.style.gridRow = '1 / span 2';
+stripe.style.alignSelf = 'stretch';
 
-    // DESKTOP: popup; MOBILE: no popup
-    if (!onMobile) {
-      try {
-        marker.setPopup(
-          new maplibregl.Popup({ offset: 12 }).setHTML(
-            `<strong>${_safe(e.name)}</strong>` +
-            (promo ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
-            `<br>${_safe(e.venue || '')}${e.time ? ' • ' + _safe(e.time) : ''}` +
-            (e.link ? `<br><a href="${e.link}" target="_blank" rel="noopener">Event page</a>` : ``)
-          )
-        );
-      } catch(_) {}
-    }
+const img = document.createElement('img');
+img.className = 'thumb';
+img.src = e.photo || 'https://placehold.co/200x200?text=Photo';
+img.alt = e.name || 'event photo';
 
-    marker.addTo(map);
+const meta = document.createElement('div');
+meta.className = 'meta';
 
-    el.addEventListener('click', () => {
-      if (onMobile) {
-        if (typeof setPinned === 'function') setPinned(e);
-      } else {
-        if (typeof highlightCard === 'function') highlightCard(i);
-        const p = marker.getPopup && marker.getPopup();
-        if (p && !p.isOpen()) marker.togglePopup();
-      }
-    });
+// Make the whole pill open the calendar on desktop
+(function(){
+  const dp = document.getElementById('datePicker');
+  const wrap = document.getElementById('dateWrap');
+  if (!dp || !wrap) return;
 
-    if (marker.getPopup){
-      marker.getPopup()
-        .on('open', () => el.classList.add('is-selected'))
-        .on('close', () => el.classList.remove('is-selected'));
-    }
+  // Click anywhere on the pill -> open native picker (Chrome/Edge support showPicker)
+  wrap.addEventListener('click', (e) => {
+    // If the actual input was clicked, let the browser handle it
+    if (e.target === dp) return;
 
-    markers.push(marker);
-    bounds.extend([e.lng, e.lat]);
-    havePts = true;
-  });
-
-  // Optional fit:
-  // if (havePts) map.fitBounds(bounds, { padding: 30, maxZoom: 16 });
-
-  // 3) List
-  listEl.innerHTML = '';
-  ordered.forEach((e,i) => {
-    const row = document.createElement('div');
-    row.className = 'item';
-
-    const key = `${e.name || ''}|${e.date || ''}|${e.venue || ''}|${e.address || ''}`;
-    row.dataset.key = key;
-    if (selectedEventKey === key) row.classList.add('selected');
-
-    row.onclick = (ev) => {
-      if (ev.target.closest('.dirBtn')) return;
-
-      const myKey = row.dataset.key;
-      if (onMobile) {
-        if (selectedEventKey === myKey) {
-          if (e.link) window.open(e.link, '_blank', 'noopener');
-          return;
-        }
-      } else {
-        if (selectedEventKey === myKey) return;
-      }
-
-      selectedEventKey = myKey;
-      document.querySelectorAll('.item.selected').forEach(el => el.classList.remove('selected'));
-      row.classList.add('selected');
-
-      if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
-        map.flyTo({ center:[e.lng, e.lat], zoom:15, speed:1.6, curve:1.4 });
-      }
-      if (onMobile && typeof setPinned === 'function') setPinned(e);
-    };
-
-    row.ondblclick = (ev) => {
-      if (ev.target.closest('.dirBtn')) return;
-      if (onMobile) return;
-      ev.preventDefault();
-      if (e.link) window.open(e.link, '_blank', 'noopener');
-    };
-
-    const color = CATEGORY_COLORS[e.category] || '#888';
-
-    const stripe = document.createElement('div');
-    stripe.className = 'leftStripe';
-    stripe.style.background = color;
-    stripe.style.gridRow = '1 / span 2';
-    stripe.style.alignSelf = 'stretch';
-
-    const img = document.createElement('img');
-    img.className = 'thumb';
-    img.src = e.photo || 'https://placehold.co/200x200?text=Photo';
-    img.alt = e.name || 'event photo';
-
-    const meta = document.createElement('div');
-    meta.className = 'meta';
-
-    // Directions link only if user location + method exist
-    let dirLink = '';
-    try {
-      if (hasUserLocation && hasUserLocation() && userMarker && typeof userMarker.getLngLat === 'function') {
-        const u = userMarker.getLngLat(); // {lng, lat}
-        const url = gmapsDirectionsURLFallback(u.lat, u.lng, e);
-        if (url) dirLink = `<div class="sub"><a class="dirBtn" href="${url}" target="_blank" rel="noopener">Directions</a></div>`;
-      }
-    } catch(_) {}
-
-    const promotedTag = isPromoted(e)
-      ? `<span class="promotedTag" aria-label="Promoted"><span class="star">★</span> Promoted</span>`
-      : '';
-
-    if (onMobile) {
-      meta.innerHTML = `
-        <div class="titleRow">
-          <div class="title">${safe(e.name)}</div>
-          ${promotedTag}
-          <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
-        </div>
-        <div class="sub">${safe(e.venue || e.address || '')}</div>
-        ${e.time ? `<div class="sub">${safe(e.time)}</div>` : ``}
-        ${dirLink || ``}
-      `;
+    // Otherwise programmatically open it
+    if (typeof dp.showPicker === 'function') {
+      dp.showPicker();                // best UX in Chromium
     } else {
-      meta.innerHTML = `
-        <div class="title">${safe(e.name)}</div>
-        <div class="sub">${safe(e.venue || e.address || '')}</div>
-        ${e.time ? `<div class="sub">${safe(e.time)}</div>` : ``}
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          ${promotedTag}
-          <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
-        </div>
-        ${dirLink || ``}
-      `;
+      dp.focus();                     // fallback focuses input (Safari/Firefox)
+      // Optional nudge: open keyboard on mobile
+      // dp.click(); // uncomment if you want an extra poke in some browsers
     }
-
-    // Keep Directions from triggering row handlers
-    const dirBtnEl = meta.querySelector('.dirBtn');
-    if (dirBtnEl) {
-      dirBtnEl.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        ev.preventDefault();
-        window.open(dirBtnEl.href, '_blank', 'noopener');
-      });
-      dirBtnEl.addEventListener('dblclick', (ev) => {
-        ev.stopPropagation();
-        ev.preventDefault();
-      });
-    }
-
-    const thumbWrap = document.createElement('div');
-    thumbWrap.appendChild(img);
-
-    const rowWrap = document.createElement('div');
-    rowWrap.style.display = 'contents';
-    rowWrap.appendChild(meta);
-    rowWrap.appendChild(thumbWrap);
-
-    row.appendChild(stripe);
-    row.appendChild(rowWrap);
-    listEl.appendChild(row);
   });
 
-  countEl.textContent = `${ordered.length} event${ordered.length===1?'':'s'} shown`;
+  // Keyboard support when wrapper is focused (accessibility)
+  wrap.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (typeof dp.showPicker === 'function') dp.showPicker(); else dp.focus();
+    }
+  });
+})();
+
+
+
+
+// Build a Google Maps directions link if user location is available
+let dirUrl = '';
+if (hasUserLocation()){
+  const u = userMarker.getLngLat(); // {lng, lat}
+  dirUrl = gmapsDirectionsURLFallback(u.lat, u.lng, e);
+}
+const dirLink = dirUrl
+  ? `<div class="sub"><a class="dirBtn" href="${dirUrl}" target="_blank" rel="noopener">Directions</a></div>`
+  : '';
+
+const promoted = !!e.promoted || /^(1|true|yes|y)$/i.test(String(e.Promoted||'').trim());
+const promotedTag = promoted ? `<span class="promotedTag" aria-label="Promoted"><span class="star">★</span> Promoted</span>` : '';
+
+// Mobile: title + badge on one line; Desktop: original layout
+if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches) {
+ meta.innerHTML = `
+  <div class="titleRow">
+    <div class="title">${safe(e.name)}</div>
+    ${promotedTag}
+    <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
+  </div>
+  <div class="sub">${safe(e.venue || e.address || '')}</div>
+  ${e.time ? `<div class="sub">${safe(e.time)}</div>` : ``}
+  ${dirLink || ``}
+`;
+
+
+} else {
+  // DESKTOP (no "Event page" link here)
+meta.innerHTML = `
+  <div class="title">${safe(e.name)}</div>
+  <div class="sub">${safe(e.venue || e.address || '')}</div>
+  ${e.time ? `<div class="sub">${safe(e.time)}</div>` : ``}
+  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    ${promotedTag}
+    <span class="badge"><span class="dot" style="background:${color}"></span>${safe(e.category||'')}</span>
+  </div>
+  ${dirLink || ``}
+`;
 }
 
+// Prevent row handlers from firing when clicking Directions
+const dirBtnEl = meta.querySelector('.dirBtn');
+if (dirBtnEl) {
+  dirBtnEl.addEventListener('click', (ev) => {
+    ev.stopPropagation();     // don't bubble to the row
+    // open explicitly so we can also preventDefault (avoids odd behaviors)
+    ev.preventDefault();
+    window.open(dirBtnEl.href, '_blank', 'noopener');
+  });
+  // Also suppress dblclick bubbling from the button
+  dirBtnEl.addEventListener('dblclick', (ev) => {
+    ev.stopPropagation();
+    ev.preventDefault();
+  });
+}
+
+// Order content: on phones -> text left, image right; desktop -> image left, text right
+const thumbWrap = document.createElement('div');
+thumbWrap.appendChild(img);
+
+const rowWrap = document.createElement('div');
+rowWrap.style.display = 'contents';
+
+// Text/links left, image right (mobile AND desktop)
+rowWrap.appendChild(meta);
+rowWrap.appendChild(thumbWrap);
+
+
+row.appendChild(stripe);
+row.appendChild(rowWrap);
+listEl.appendChild(row);
+
+      });
+      countEl.textContent = `${ordered.length} event${ordered.length===1?'':'s'} shown`;
+    }
 
     function highlightCard(index){
   const cards = [...document.querySelectorAll('.item')];
