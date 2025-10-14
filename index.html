@@ -1036,6 +1036,22 @@ const map = new maplibregl.Map({
   maxBounds: TORONTO_BOUNDS
 });
 
+  const cacheBust = 'v=20251014a';
+  fetch(`./style.json?${cacheBust}`)
+    .then(r => {
+      if (!r.ok) throw new Error('Failed to fetch style.json');
+      return r.json();
+    })
+    .then(style => {
+      // Safety: ensure the source points to your R2 URL
+      if (style?.sources?.toronto?.url && !String(style.sources.toronto.url).startsWith('pmtiles://')) {
+        console.warn('Adjusting toronto source to pmtiles:// scheme at runtime');
+        style.sources.toronto.url = 'pmtiles://https://pub-083e9ab60fc847608e085d99437174fb.r2.dev/toronto.pmtiles';
+      }
+      map.setStyle(style);
+    })
+    .catch(err => console.error(err));
+    
     /*
 // Build the map from your MapLibre style.json (hosted in GitHub too)
 const map = new maplibregl.Map({
