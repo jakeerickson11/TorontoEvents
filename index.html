@@ -1031,12 +1031,12 @@ const map = new maplibregl.Map({
   zoom: 12,
   minZoom: 9,
   maxZoom:20,
-  attributionContril: true, 
+  //attributionContril: true, 
   bounds: TORONTO_BOUNDS,
   maxBounds: TORONTO_BOUNDS
 });
 
-  const cacheBust = 'v=20251014a';
+/*  const cacheBust = 'v=20251014a';
   fetch(`./style.json?${cacheBust}`)
     .then(r => {
       if (!r.ok) throw new Error('Failed to fetch style.json');
