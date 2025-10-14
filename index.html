@@ -996,7 +996,9 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script> 
   <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script>
-   
+   <script type="module">
+  import maplibregl from "https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js";
+  import * as pmtiles from "https://cdn.jsdelivr.net/npm/pmtiles@3.0.6/dist/index.js"; </script>
   <script>
 
 // --- MapLibre + PMTiles setup ---
@@ -1007,9 +1009,7 @@ const protocol = new pmtiles.Protocol();
 maplibregl.addProtocol('pmtiles', protocol.tile);
 
 // IMPORTANT: add your archive to the protocol cache so style.json can resolve it
-<script type="module">
-  import maplibregl from "https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js";
-  import * as pmtiles from "https://cdn.jsdelivr.net/npm/pmtiles@3.0.6/dist/index.js";
+
 
   // 1) Register the custom protocol FIRST
   maplibregl.addProtocol("pmtiles", new pmtiles.Protocol().tile);
