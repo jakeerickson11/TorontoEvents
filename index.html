@@ -2179,26 +2179,5 @@ if (datePicker) {
 
     loadAll();
   </script>
-  <!-- MapLibre CSS (in <head> ideally, but okay here if needed) -->
-<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
-
-<!-- UMD builds: no ESM imports, global variables are exposed -->
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pmtiles@3.0.6/dist/pmtiles.js"></script>
-
-<script>
-  // 1) Register pmtiles protocol BEFORE creating the map / loading the style
-  maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
-
-  // 2) Create the map AFTER protocol registration
-  const map = new maplibregl.Map({
-    container: 'map',
-    style: './style.json', // this file must point to your R2 pmtiles URL
-    center: [-79.39246303205854, 43.66447814738001],
-    zoom: 12,
-    attributionControl: true
-  });
-</script>
-
 </body>
 </html>
