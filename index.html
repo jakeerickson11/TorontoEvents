@@ -979,7 +979,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 
 
   <div class="container">
-    <div id="map" aria-label="Events map"></div>
+    <div id="map" style="position:fixed; inset:0;"></div>
     <aside class="panel" aria-label="Events list panel">
       <div class="filters"> 
         <div class="cats" id="catChips"></div>
@@ -997,15 +997,9 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   <!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script> -->
   <!-- PapaParse for CSV -->
    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script> 
-  <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
-<script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script>
-   <script type="module">
-  import maplibregl from "https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js";
-  import * as pmtiles from "https://cdn.jsdelivr.net/npm/pmtiles@3.0.6/dist/index.js"; 
-    
-  // 1) Register the custom protocol FIRST
-  maplibregl.addProtocol("pmtiles", new pmtiles.Protocol().tile);
-   </script>
+ <!-- UMD builds (globals: window.maplibregl and window.pmtiles) -->
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pmtiles@3.0.6/dist/pmtiles.js"></script>
   <script>
 
 // --- MapLibre + PMTiles setup ---
