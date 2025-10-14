@@ -8,6 +8,9 @@
  <!-- MapLibre GL + PMTiles -->
 <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
 
+<!-- MapLibre CSS (in <head> ideally, but okay here if needed) -->
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  
 <!-- Font -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
 
@@ -1002,7 +1005,6 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
     
   // 1) Register the custom protocol FIRST
   maplibregl.addProtocol("pmtiles", new pmtiles.Protocol().tile);
-     
    </script>
   <script>
 
@@ -1027,7 +1029,7 @@ const HOME = {
     // 2) make sure the map doesn't restore last state from the URL
 const map = new maplibregl.Map({
   container: 'map',
-  style: 'https://Jakeerickson11.github.io/TorontoEvents/style.json',
+  style: './style.json',
   hash: false,              // important: don't read/write #zoom/center in URL
   interactive: true,        // normal interactions after load
   // start anywhere; we’ll animate to HOME on 'load'
@@ -1035,6 +1037,7 @@ const map = new maplibregl.Map({
   zoom: 12,
   minZoom: 9,
   maxZoom:20,
+  attributionContril: true, 
   bounds: TORONTO_BOUNDS,
   maxBounds: TORONTO_BOUNDS
 });
