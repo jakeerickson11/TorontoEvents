@@ -994,10 +994,6 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   <!-- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script> -->
   <!-- PapaParse for CSV -->
    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script> 
-<!-- Material Web (M3) date picker web component -->
-<script type="module">
-  import 'https://esm.run/@material/web/labs/datepicker/datepicker.js'; </script>
-
   <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
 <script src="https://unpkg.com/pmtiles@3.0.7/dist/pmtiles.js"></script>
    
@@ -1011,6 +1007,21 @@ const protocol = new pmtiles.Protocol();
 maplibregl.addProtocol('pmtiles', protocol.tile);
 
 // IMPORTANT: add your archive to the protocol cache so style.json can resolve it
+<script type="module">
+  import maplibregl from "https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js";
+  import * as pmtiles from "https://cdn.jsdelivr.net/npm/pmtiles@3.0.6/dist/index.js";
+
+  // 1) Register the custom protocol FIRST
+  maplibregl.addProtocol("pmtiles", new pmtiles.Protocol().tile);
+
+  // 2) Create the map AFTER the protocol is registered
+  const map = new maplibregl.Map({
+    container: "map",
+    style: "./style.json", // this file should point to your R2 URL below
+    center: [-79.39246303205854, 43.66447814738001],
+    zoom: 12
+  });
+    
 // (use your real GitHub Pages URL for )
 protocol.add(new pmtiles.PMTiles('https://pub-083e9ab60fc847608e085d99437174fb.r2.dev/toronto.pmtiles'));
 
