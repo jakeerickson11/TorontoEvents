@@ -1567,13 +1567,24 @@ function buildCategoryChips(){
       });
     }
 
-    // Cleaners for both sheets
- function cleanOneOff(r){
-  const coordsField = r["Coords"] || r["Coordinates"] || r["Lat/Lng"] || r["Location"] || '';
 
-  let lat = parseFloat(r["Lat"]);
-  let lng = parseFloat(r["Lng"]);
+//Cleaner for the events sheets 
+function cleanOneOff(r){
+  // tolerant field lookups
+  const dateRaw = getField(r, ['Date','Start','Start Date','Event Date']);
+  const timeRaw = getField(r, ['Time','Start Time','Event Time','When']);
+  const nameRaw = getField(r, ['Event name','Name','Title']);
+  const venueRaw= getField(r, ['Venue','Location Name']);
+  const linkRaw = getField(r, ['Link','URL','Event Link']);
+  const addrRaw = getField(r, ['Address','Addr']);
+  const photoRaw= getField(r, ['Photo','Image','Image URL']);
+  const latRaw  = getField(r, ['Lat','Latitude']);
+  const lngRaw  = getField(r, ['Lng','Longitude','Lon']);
+  const coordsField = getField(r, ['Coords','Coordinates','Lat/Lng','Location','Geo']);
 
+  // coords: prefer explicit lat/lng, else parse "43.65, -79.38" etc.
+  let lat = parseFloat(latRaw);
+  let lng = parseFloat(lngRaw);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     const c = parseCoordsToLatLng(coordsField);
     lat = Number.isFinite(c.lat) ? c.lat : null;
@@ -1581,19 +1592,20 @@ function buildCategoryChips(){
   }
 
   return {
-    name: (r["Event name"] || r.name || '').trim(),
-    venue: (r["Venue"] || r.venue || '').trim(),
-    date: normalizeDate((r["Date"] || r.date || '').trim()),
-    time: (r["Time"] || r.time || '').trim(),
-    category: (r["Category"] || r.category || '').trim(),
-    link: (r["Link"] || r.link || '').trim(),
-    address: (r["Address"] || r.address || '').trim(),
-    photo: (r["Photo"] || r.photo || '').trim(),
+    name: (nameRaw || '').trim(),
+    venue: (venueRaw || '').trim(),
+    date: normalizeDate((dateRaw || '').trim()),   // <-- now reads Start too
+    time: (timeRaw || '').trim(),
+    category: (getField(r, ['Category','Type']) || '').trim(),
+    link: (linkRaw || '').trim(),
+    address: (addrRaw || '').trim(),
+    photo: (photoRaw || '').trim(),
     lat, lng,
-    promoted: truthy(getField(r, ['Promoted','promoted'])),  // ← simple & global
+    promoted: truthy(getField(r, ['Promoted','promoted','Is Promoted'])),
     __source: 'oneoff'
   };
 }
+
 
 // Interprets 1 / true / yes / y (case-insensitive) as true
 function truthy(v){
