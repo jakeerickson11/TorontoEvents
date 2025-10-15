@@ -1778,7 +1778,10 @@ function expandWeekly(row, rangeStart, rangeEnd){
     const [oneOffRaw, weeklyRaw] = await Promise.all([
       loadCSV(GOOGLE_SHEET_CSV_URL),
       loadCSV(WEEKLY_SHEET_CSV_URL)
-    ]);
+    ]
+    console.log('oneOffRaw rows:', oneOffRaw?.length, 'weeklyRaw rows:', weeklyRaw?.length);
+);
+    
 
     const oneOff = (oneOffRaw || []).map(cleanOneOff).filter(r => r.name && r.date);
     const weekly = (weeklyRaw || []).map(cleanWeekly).filter(r => r.name && r.day != null);
