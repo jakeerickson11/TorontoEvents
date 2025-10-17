@@ -601,12 +601,23 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 }
 
 /* Blue circular "me" control (MapLibre control) */
+/* Remove the square background just for the group that holds .meCtrl */
+.maplibregl-ctrl-group:has(.meCtrl){
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Your button stays a round chip */
 .maplibregl-ctrl .meCtrl{
   width:36px;height:36px;border-radius:999px;
   background:#0ea5e9;color:#fff;border:2px solid #fff;
   font-weight:700;font-size:12px;text-transform:uppercase;
-  line-height:1; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.25);
+  line-height:36px; text-align:center; /* ensures perfect centering */
+  cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.25);
 }
+
 
 /* Hide zoom buttons on mobile */
 @media (max-width:960px){
