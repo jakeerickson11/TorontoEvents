@@ -1904,12 +1904,58 @@ let selectedEventKey = null; // tracks the currently-selected list item
     return matchDate && matchCat; // (search removed)
   });
 
+/////////////////////////////////////////////////////////    
+// Helper: turn many time formats into "minutes since midnight"
+function parseEventMinutes(e){
+  let t = e.time ?? e.Time ?? e.start ?? e.Start ?? '';
+  if (t instanceof Date) return t.getHours()*60 + t.getMinutes();
+  if (typeof t !== 'string') t = String(t || '').trim();
+
+  // Try full Date-like strings (e.g., "Sat Dec 30 1899 19:30:00 GMT-0500 ...")
+  const dt = new Date(t);
+  if (!isNaN(dt)) return dt.getHours()*60 + dt.getMinutes();
+
+  // 12-hour (e.g., "7", "7pm", "7:30 pm")
+  let m = t.match(/^\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\s*$/i);
+  if (m){
+    let h = parseInt(m[1],10), min = parseInt(m[2]||'0',10), ap = m[3].toLowerCase();
+    if (ap==='p' && h!==12) h+=12; if (ap==='a' && h===12) h=0;
+    return h*60 + min;
+  }
+
+  // 24-hour (e.g., "07:00", "19:30")
+  m = t.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
+  if (m){
+    const h = parseInt(m[1],10), min = parseInt(m[2],10);
+    if (h>=0 && h<24) return h*60 + min;
+  }
+
+  return Infinity; // unknown -> goes to bottom
+}
+///////////////////////////////////////////////////////////////////
+
+
+
+    
 // ——— NEW: put promoted first (stable order within each group)
+// keep this if you still want promoted-first
 const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
-const ordered = [
-  ...filtered.filter(isPromoted),
-  ...filtered.filter(ev => !isPromoted(ev))
-];
+
+// Sort: promoted first (optional), then by time asc, then by name
+const ordered = [...filtered].sort((a,b) => {
+  // Remove the next 3 lines if you want pure time sort with no promoted priority
+  const pa = isPromoted(a) ? 0 : 1;
+  const pb = isPromoted(b) ? 0 : 1;
+  if (pa !== pb) return pa - pb;
+
+  const ta = parseEventMinutes(a);
+  const tb = parseEventMinutes(b);
+  if (ta !== tb) return ta - tb;
+
+  // Tie-breaker: by name
+  return (a.name||'').localeCompare(b.name||'');
+});
+////////////////////////////////////////////////////////////////////
 
 
       // remove old markers
