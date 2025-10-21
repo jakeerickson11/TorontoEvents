@@ -36,7 +36,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
-/* ----- (same styles as your file, unchanged) ----- */
+/* ----- (same styles, unchanged) ----- */
 :root{
   --bg:#262626;        /* off-black page background */
   --card:#f2f2f2;      /* white panels for contrast */
@@ -50,6 +50,7 @@
 }
 *{box-sizing:border-box}
 body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu; background:var(--bg); color:var(--text)}
+    
 /* Dark header with bright text */
 header{
   padding:16px 20px;
@@ -105,7 +106,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   #map{
     height:42vh;   /* fallback */
     height:42svh;  /* small-viewport height */
-    height:42dvh;  /* dynamic viewport height (best) */
+    height:42dvh;  /* dynamic viewport height */
   }
 }
 
@@ -132,14 +133,14 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .chip { background:#ffffff; color:#0f172a; border-color:#e5eaf1; }
 
 .panel {
-  /* keep your existing panel styles */
+  /* keep existing panel styles */
   height: calc(100vh - 100px); /* same as .map so they line up */
 }
 
 .list {
   flex: 1;
-  min-height: 0;     /* new */
-  overflow: auto;    /* you already had this — leave it in */
+  min-height: 0;    
+  overflow: auto;    
 }
     
 .filters input {
@@ -153,10 +154,10 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .item:hover { background:#f5f7fb; }
 .thumb { border-color:#e5eaf1; }
 
-/* Keep the  subtle on off-black; optional: */
+/* Keep the subtle on off-black; optional: */
 /*  { background: linear-gradient(180deg, rgba(14,17,20,0.95), rgba(14,17,20,0.85)); } */
 
-/* Pinned event bar (shows under  on phones) */
+/* Pinned event bar (shows on phones) */
 .pinned{ margin:8px 16px 0 16px; }
 .pinned.hidden{ display:none; }
 .pinnedCard{
@@ -217,7 +218,6 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   .meta{ gap: 2px; }                        /* tighter spacing between lines */
   .title{ font-size:14px; line-height:1.2; }
   .sub{ font-size:11px; line-height:1.2; }
-  /*.badge{ display:none; }                   /* optional: hide category pill to reduce height */
 }
 
 /* Slimmer list items on phones */
@@ -235,6 +235,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   .sub{ font-size:11px; line-height:1.2; }
   .badge{ display:none; }                   /* optional: hide category pill to reduce height */
 }
+    
 /* Title row with inline badge on phones */
 @media (max-width: 960px){
   .titleRow{
@@ -264,9 +265,8 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   .item > * { min-width: 0; }
   .meta     { min-width: 0; }
 
-  /* Title on one line with badge… OR clamp to 2 lines (pick ONE style below) */
 
-  /* A) Clamp title to 2 lines with ellipsis (recommended: fixed height, tidy) */
+  /* Clamp title to 2 lines with ellipsis */
   .title{
     white-space: normal;              /* override any nowrap */
     display: -webkit-box;
@@ -275,19 +275,19 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
     overflow: hidden;
     line-height: 1.2;
     font-size: 14px;
-    overflow-wrap: anywhere;          /* break very long words if needed */
+    overflow-wrap: anywhere;          /* break very long words */
     word-break: break-word;
     hyphens: auto;
   }
 
-  /* Sub-lines (venue, date/time, link) kept to 1 line with ellipsis */
+  /* Sub-lines kept to 1 line with ellipsis */
   .sub{
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  /* Make sure the row itself can't create horizontal scroll */
+  /* remove horizontal scroll */
   .item{
     overflow: hidden;     /* hide any accidental overflow */
   }
@@ -305,17 +305,16 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 }
 
 /* ===== Fast sliding  (fixed) ===== */
-:root{ ---h: 64px; }              /* JS will set real height */
-
-/* Make  fixed so content never scrolls over it */
+    
+:root{ ---h: 64px; }              
 {
   position: fixed; top: 0; left: 0; right: 0;
   z-index: 1000;
-  transition: transform .12s ease;      /* faster animation */
+  transition: transform .12s ease;      
   will-change: transform;
 }
 
- Spacer reserves  height to avoid layout jump 
+ /* Spacer reserves  height to avoid layout jump */
 #Spacer{
   height: 0px;
 }
@@ -324,13 +323,12 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .-hidden { transform: translateY(-100%); }
 .-hidden #Spacer{ height: 0; }
 
-/* ===== Stack order hardening: keep  on top of map layers ===== */
+/* ===== Stack order hardening */
 
-/* Make  the top-most thing */
 {
-  position: fixed;        /* you already have this from the slide-up setup */
+  position: fixed;        
   top: 0; left: 0; right: 0;
-  z-index: 9999;          /* higher than any Leaflet pane/control */
+  z-index: 9999;         
   will-change: transform;
   backface-visibility: hidden; /* reduces flicker on iOS during fast scroll */
 }
@@ -354,7 +352,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   .leftStripe{
     grid-column: 1;
     grid-row: 1 / -1;       /* run full height of the row */
-    display: block;         /* make sure it’s visible */
+    display: block;         
   }
   .meta{
     grid-column: 2;         /* text on the left side */
@@ -402,7 +400,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 /* Selected list item highlight */
 .item.selected{
   background: #eef2ff;                 /* subtle highlight */
-  border-color: var(--accent);         /* optional, if your .item has a border */
+  border-color: var(--accent);        
 }
 
 .item { cursor: pointer; }
@@ -420,12 +418,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   background:#ffffff; color:#0f172a; font:inherit;
 }
 
-/* Hide Leaflet zoom buttons on mobile */
-@media (max-width: 960px){
-  /* .leaflet-control-zoom { display: none !important; }*/
-}
-
-/* Base marker — keep yours as-is */
+/* Base marker */
 .eventMarker{
   width:18px;height:18px;border-radius:999px;
   border:2px solid #080808;
@@ -446,7 +439,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   transform:rotate(45deg); border-radius:4px;
 }
 
-/* —— Opacity/“ghost” style (slightly transparent like your Leaflet look) */
+/* Opacity/“ghost” style */
 .eventMarker--ghost{ opacity:.8; backdrop-filter: blur(0.5px); }
 
 /* —— Halo (readable on dark/light basemaps) */
@@ -462,7 +455,6 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .eventMarker--glow{
   filter: drop-shadow(0 0 6px currentColor);
 }
-/* if you want the glow to match the fill, set color via CSS var or inline style */
 
 /* —— Inner bevel / “button” look */
 .eventMarker--bevel{
@@ -587,7 +579,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 }
 
 /* Center the existing badge inside promoted markers */
-.eventMarker--promoted{ position: absolute; }  /* marker stays relative, NOT absolute */
+.eventMarker--promoted{ position: absolute; } 
 
 .eventMarker--promoted .eventMarker__badge{
   position: absolute;
