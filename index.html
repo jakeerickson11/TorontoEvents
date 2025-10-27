@@ -527,9 +527,9 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .eventMarker--promoted{
   --marker-color: #ff2d9b; 
   width:24px; height:24px;
-  border-width:3px;
+  border-width:1px;
   box-shadow:
-    0 0 0 3px #fff,          /* white ring for contrast */
+    0 0 0 1px #fff,          /* white ring for contrast */
     0 2px 8px rgba(0,0,0,.35);
   filter: drop-shadow(0 0 8px currentColor);
   animation: promotedPulse 1.4s ease-out infinite;
@@ -573,8 +573,8 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 /* Pulse grows outward and fades—doesn't move the marker or popup */
 @keyframes promotedPulse{
   0%   { box-shadow: 0 0 0 0 currentColor; opacity:.9; }
-  60%  { box-shadow: 0 0 0 10px rgba(255,45,155,0.25); opacity:.25; }
-  100% { box-shadow: 0 0 0 18px rgba(255,45,155,0); opacity:0; }
+  60%  { box-shadow: 0 0 0 10px rgba(255,45,155,0.25); opacity:.5; }
+  100% { box-shadow: 0 0 0 18px rgba(255,45,155,0); opacity:.25; }
 }
 
 /* Respect reduced motion */
