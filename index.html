@@ -179,8 +179,8 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 }
 .pinned .dot{ width:10px; height:10px; border-radius:999px; display:inline-block; }
 
-/*  tag used in the list */
-.Tag{
+/* Promoted tag used in the list */
+.promotedTag{
   display:inline-flex; align-items:center; gap:6px;
   padding:3px 8px; border-radius:999px;
   background:#ff2d9b; color:#fff; font-size:11px; font-weight:700;
@@ -462,8 +462,8 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 /* —— Inner bevel / “button” look */
 .eventMarker--bevel{
   box-shadow:
-    inset 2px 2px 5px rgba(255,255,255,.7),
-    -2px -2px 5px rgba(0,0,0,.5);
+    inset 0 2px 4px rgba(255,255,255,.25),
+    0 1px 3px rgba(0,0,0,.25);
 }
 
 /* —— Stroke variants */
@@ -483,106 +483,27 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 }
 
 /* Use a CSS var so glow matches the fill automatically */
-/* Rounded, beveled marker */
 .eventMarker{
-  --mc: var(--marker-color, #888);
-  --mc-hi: color-mix(in srgb, var(--mc) 75%, white 25%); /* lighter edge */
-  --mc-lo: color-mix(in srgb, var(--mc) 75%, black 25%); /* darker edge */
-
-  position: relative;
-  width: 18px; 
-  height: 18px;
-  border-radius: 9999px;
-
-  /* Bevel body: subtle light-to-dark sweep */
-  background:
-    radial-gradient(120% 100% at 30% 25%, rgba(255,255,255,.35), transparent 60%) ,
-    linear-gradient(145deg, var(--mc-hi), var(--mc-lo));
-  color: var(--mc); /* keeps currentColor-based effects working */
-
-  /* Outer ring + drop shadow + inner bevel */
+  background: var(--marker-color, #888);
+  color: var(--marker-color, #888); /* used by currentColor effects */
   box-shadow:
-    0 0 0 1px #fff,                 /* white ring for contrast */
-    0 2px 8px rgba(0,0,0,.15),      /* soft drop shadow */
-    inset 0 1px 1.5px rgba(255,255,255,.3), /* top inner highlight */
-    inset 0 -1.5px 2.5px rgba(0,0,0,.15);   /* bottom inner shadow */
+    0 0 0 1px #fff,          /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.15);
+  position: relative;
 }
-
-/* Optional: glossy highlight layer (nice, still cheap) */
-.eventMarker::before{
-  content:"";
-  position:absolute;
-  inset:2px 2px auto 2px;  /* top band */
-  height:42%;
-  border-radius:9999px 9999px 60% 60% / 90% 90% 50% 50%;
-  background: radial-gradient(80% 120% at 30% 0%,
-              rgba(255,255,255,.75) 0%,
-              rgba(255,255,255,.35) 40%,
-              rgba(255,255,255,0) 70%);
-  pointer-events:none;
-}
-
 
 /* Promoted: larger, thicker stroke, white ring, glow + gentle pulse */
 .eventMarker--promoted{
   --marker-color: #ff2d9b; 
   width:24px; height:24px;
-  border-width:1px;
+  border-width:3px;
   box-shadow:
-    0 0 0 1px #fff,          /* white ring for contrast */
-    0 2px 3px rgba(0,0,0,.35);
+    0 0 0 3px #fff,          /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.35);
   filter: drop-shadow(0 0 8px currentColor);
   animation: promotedPulse 1.4s ease-out infinite;
   z-index: 2;
 }
-
-/* Promoted marker: bigger, thicker ring, stronger bevel + glow */
-.eventMarker.eventMarker--promoted{
-  --marker-color: #ff2d9b;     /* hot pink */
-  width: 24px;
-  height: 24px;
-
-  /* keep the white ring but thicker; deepen inner bevel; stronger drop glow */
-  box-shadow:
-    0 0 0 1px #fff,                    /* thicker contrast ring */
-    0 4px 8px rgba(0,0,0,.35),        /* deeper drop shadow */
-    inset 0 1.5px 2px rgba(255,255,255,.8), /* stronger top highlight */
-    inset 0 -2px 3px rgba(0,0,0,.45);       /* stronger bottom shadow */
-  filter: drop-shadow(0 0 10px currentColor);
-  z-index: 2;
-}
-
-/* Make the glossy highlight scale nicely on the bigger size */
-.eventMarker.eventMarker--promoted::before{
-  inset: 3px 3px auto 3px;   /* slightly larger top gloss band */
-  height: 46%;
-}
-
-/* Non-intrusive pulse halo using a pseudo-element (no element scale) */
-.eventMarker.eventMarker--promoted::after{
-  content:"";
-  position:absolute;
-  inset:-2px;                 /* start just outside the ring */
-  border-radius:inherit;
-  pointer-events:none;
-  box-shadow: 0 0 0 0 currentColor;
-  opacity:.9;
-  animation: promotedPulse 1.6s ease-out infinite;
-}
-
-/* Pulse grows outward and fades—doesn't move the marker or popup */
-@keyframes promotedPulse{
-  0%   { box-shadow: 0 0 0 0 currentColor; opacity:.9; }
-  60%  { box-shadow: 0 0 0 10px rgba(255,45,155,0.25); opacity:.5; }
-  100% { box-shadow: 0 0 0 18px rgba(255,45,155,0); opacity:.25; }
-}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce){
-  .eventMarker.eventMarker--promoted{ animation: none; }
-  .eventMarker.eventMarker--promoted::after{ animation: none; opacity: 0; }
-}
-
 
 /* Small star badge */
 .eventMarker__badge{
@@ -633,12 +554,12 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .eventMarker--promoted{
   --marker-color: #ff0000 !important;   /* red glow */
   position:absolute;
-  width: 21px;           /* bigger than your 18px base */
-  height: 21px;
-  border-width: 1px;     /* thicker outline */
+  width: 24px;           /* bigger than your 18px base */
+  height: 24px;
+  border-width: 3px;     /* thicker outline */
   box-shadow:
-    0 0 0 1px #fff,      /* white ring for contrast */
-    0 2px 2px rgba(0,0,0,.35);
+    0 0 0 3px #fff,      /* white ring for contrast */
+    0 2px 8px rgba(0,0,0,.35);
   filter: drop-shadow(0 0 1px currentColor); /* color-matched glow */
   animation: 
    promotedRing 0.95s ease-in-out infinite,
@@ -671,7 +592,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   margin: 0; padding: 0;
   background: transparent; border: 0; box-shadow: none;
   color: #fff;                        /* white star on hot pink */
-  font-size: 12px;                    /* try 12–14 for a 24px marker */
+  font-size: 15px;                    /* try 12–14 for a 24px marker */
   line-height: 1;
   pointer-events: none;               /* clicks hit the marker, not the star */
   text-shadow: 0 1px 2px rgba(0,0,0,.45);
