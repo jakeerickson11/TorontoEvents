@@ -179,8 +179,8 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 }
 .pinned .dot{ width:10px; height:10px; border-radius:999px; display:inline-block; }
 
-/* Promoted tag used in the list */
-.promotedTag{
+/*  tag used in the list */
+.Tag{
   display:inline-flex; align-items:center; gap:6px;
   padding:3px 8px; border-radius:999px;
   background:#ff2d9b; color:#fff; font-size:11px; font-weight:700;
@@ -544,8 +544,8 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 
   /* keep the white ring but thicker; deepen inner bevel; stronger drop glow */
   box-shadow:
-    0 0 0 3px #fff,                    /* thicker contrast ring */
-    0 4px 12px rgba(0,0,0,.35),        /* deeper drop shadow */
+    0 0 0 1px #fff,                    /* thicker contrast ring */
+    0 4px 8px rgba(0,0,0,.35),        /* deeper drop shadow */
     inset 0 1.5px 2px rgba(255,255,255,.8), /* stronger top highlight */
     inset 0 -2px 3px rgba(0,0,0,.45);       /* stronger bottom shadow */
   filter: drop-shadow(0 0 10px currentColor);
@@ -562,7 +562,7 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .eventMarker.eventMarker--promoted::after{
   content:"";
   position:absolute;
-  inset:0px;                 /* start just outside the ring */
+  inset:-2px;                 /* start just outside the ring */
   border-radius:inherit;
   pointer-events:none;
   box-shadow: 0 0 0 0 currentColor;
@@ -633,8 +633,8 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
 .eventMarker--promoted{
   --marker-color: #ff0000 !important;   /* red glow */
   position:absolute;
-  width: 24px;           /* bigger than your 18px base */
-  height: 24px;
+  width: 21px;           /* bigger than your 18px base */
+  height: 21px;
   border-width: 1px;     /* thicker outline */
   box-shadow:
     0 0 0 1px #fff,      /* white ring for contrast */
