@@ -1968,18 +1968,28 @@ function addClusterLayersOnce(map){
   });
 
   // unclustered points as symbols; you can swap to your sprite if desired
-  map.addLayer({
-    id: 'unclustered',
-    type: 'circle',
-    source: 'events',
-    filter: ['!', ['has','point_count']],
-    paint: {
-      'circle-radius': 6,
-      'circle-color': '#888',
-      'circle-stroke-width': 2,
-      'circle-stroke-color': '#fff'
-    }
-  });
+ // Replace your current unclustered layer with this:
+map.addLayer({
+  id: 'unclustered',
+  type: 'circle',
+  source: 'events',
+  filter: ['!', ['has','point_count']],
+  paint: {
+    'circle-radius': 6,
+    'circle-stroke-width': 2,
+    'circle-stroke-color': '#fff',
+    'circle-color': [
+      'match', ['coalesce', ['get','category'], 'Other'],
+      'Active & Outdoors',   '#00b894',
+      'Creative',            '#8e44ad',
+      'Entertainment',       '#ff2d9b',
+      'Competitive & Games', '#e67e22',
+      'Relaxing & Romantic', '#3498db',
+      /* default */          '#888'
+    ]
+  }
+});
+
 
   // Popup with minimal HTML (ties into your existing fields)
   map.on('click', 'unclustered', (e) => {
