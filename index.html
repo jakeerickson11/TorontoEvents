@@ -1944,28 +1944,18 @@ function addClusterLayersOnce(map){
   if (map.getLayer('clusters')) return; // already added
 
   // circles for clusters
-  // Replace your current unclustered layer with this:
-map.addLayer({
-  id: 'unclustered',
-  type: 'circle',
-  source: 'events',
-  filter: ['!', ['has','point_count']],
-  paint: {
-    'circle-radius': 6,
-    'circle-stroke-width': 2,
-    'circle-stroke-color': '#fff',
-    'circle-color': [
-      'match', ['coalesce', ['get','category'], 'Other'],
-      'Active & Outdoors',   '#00b894',
-      'Creative',            '#8e44ad',
-      'Entertainment',       '#ff2d9b',
-      'Competitive & Games', '#e67e22',
-      'Relaxing & Romantic', '#3498db',
-      /* default */          '#888'
-    ]
-  }
-});
-
+  map.addLayer({
+    id: 'clusters',
+    type: 'circle',
+    source: 'events',
+    filter: ['has', 'point_count'],
+    paint: {
+      'circle-radius': ['step', ['get','point_count'], 16, 5, 18, 10, 22, 25, 26],
+      'circle-color': '#111',
+      'circle-stroke-width': 2,
+      'circle-stroke-color': '#fff'
+    }
+  });
 
   // count label
   map.addLayer({
