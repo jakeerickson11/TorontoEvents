@@ -514,11 +514,6 @@ header a{ color:#eeeeee; }        /* any header links/buttons */
   box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,.25);
 }
 
-.eventMarker--mini{
-  width:14px;height:14px;border-radius:999px;
-  border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.25);
-}
-
 /* Pulse animation (respects reduced motion) */
 @keyframes promotedPulse{
   0%   { box-shadow: 0 0 0 3px #fff, 0 2px 8px rgba(0,0,0,.35), 0 0 0 0 rgba(0,0,0,.18); }
@@ -1320,7 +1315,7 @@ window.addEventListener('resize', () => map.resize());
     }
   });
 });
-    
+
 // Use device-specific padding when focusing events later
 function focusEvent(lng, lat){
   const padDesktop = { top: 60, right: 60, bottom: 60, left: 360 }; // sidebar + breathing room
@@ -1910,132 +1905,9 @@ function gmapsDirectionsURLFallback(oLat, oLng, ev){
   return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destText)}`;
 }
 
-
-
-//////////////////////// CLUSTER HELPERS //////////////////////////////////////////////
-    
-// Toggle to compare behaviors quickly
-const USE_CLUSTERING = true;
-
-function toGeoJSON(list){
-  return {
-    type: "FeatureCollection",
-    features: (list || [])
-      .filter(e => Number.isFinite(e.lat) && Number.isFinite(e.lng))
-      .map(e => ({
-        type: "Feature",
-        geometry: { type: "Point", coordinates: [e.lng, e.lat] },
-        properties: {
-          key: `${e.name||''}|${e.date||''}|${e.venue||''}|${e.address||''}`,
-          name: e.name || '',
-          venue: e.venue || '',
-          address: e.address || '',
-          time: e.time || '',
-          category: e.category || 'Other',
-          link: e.link || '',
-          photo: e.photo || '',
-          promoted: !!e.promoted
-        }
-      }))
-  };
-}
-
-function addClusterLayersOnce(map){
-  if (map.getLayer('clusters')) return; // already added
-
-  // circles for clusters
-  map.addLayer({
-    id: 'clusters',
-    type: 'circle',
-    source: 'events',
-    filter: ['has', 'point_count'],
-    paint: {
-      'circle-radius': ['step', ['get','point_count'], 16, 5, 18, 10, 22, 25, 26],
-      'circle-color': '#111',
-      'circle-stroke-width': 2,
-      'circle-stroke-color': '#fff'
-    }
-  });
-
-  // count label
-  map.addLayer({
-    id: 'cluster-count',
-    type: 'symbol',
-    source: 'events',
-    filter: ['has', 'point_count'],
-    layout: { 'text-field': ['get','point_count_abbreviated'], 'text-size': 12 },
-    paint: { 'text-color': '#fff' }
-  });
-
-  // unclustered points as symbols; you can swap to your sprite if desired
- // Replace your current unclustered layer with this:
-map.addLayer({
-  id: 'unclustered',
-  type: 'circle',
-  source: 'events',
-  filter: ['!', ['has','point_count']],
-  paint: {
-    'circle-radius': 6,
-    'circle-stroke-width': 2,
-    'circle-stroke-color': '#fff',
-    'circle-color': [
-      'match', ['coalesce', ['get','category'], 'Other'],
-      'Active & Outdoors',   '#00b894',
-      'Creative',            '#8e44ad',
-      'Entertainment',       '#ff2d9b',
-      'Competitive & Games', '#e67e22',
-      'Relaxing & Romantic', '#3498db',
-      /* default */          '#888'
-    ]
-  }
-});
-
-
-  // Popup with minimal HTML (ties into your existing fields)
-  map.on('click', 'unclustered', (e) => {
-    const f = e.features && e.features[0];
-    if (!f) return;
-    const p = f.properties || {};
-    const html =
-      `<strong>${p.name||''}</strong>` +
-      (p.promoted === 'true' ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
-      `<br>${p.venue||p.address||''}${p.time ? ' • ' + p.time : ''}` +
-      (p.link ? `<br><a href="${p.link}" target="_blank" rel="noopener">Event page</a>` : '');
-    new maplibregl.Popup({ offset: 12 })
-      .setLngLat(f.geometry.coordinates)
-      .setHTML(html)
-      .addTo(map);
-  });
-
-  // Cluster click → show popup list of leaves
-  map.on('click', 'clusters', (e) => {
-    const clusterFeatures = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-    const clusterId = clusterFeatures[0].properties.cluster_id;
-    map.getSource('events').getClusterLeaves(clusterId, 100, 0, (err, leaves) => {
-      if (err) return;
-      const items = leaves.map(f => {
-        const p = f.properties;
-        const t = (p.time||'').toLowerCase();
-        return `<li class="clusterItem"><a href="${p.link||'#'}" target="_blank" rel="noopener">${p.name||''}</a> <span>${t}</span></li>`;
-      }).join('');
-      const html = `<div class="clusterPopup"><strong>${leaves.length} events here</strong><ul>${items}</ul></div>`;
-      new maplibregl.Popup({ offset: 12 })
-        .setLngLat(clusterFeatures[0].geometry.coordinates)
-        .setHTML(html)
-        .addTo(map);
-    });
-  });
-
-  map.on('mouseenter', 'clusters', () => map.getCanvas().style.cursor = 'pointer');
-  map.on('mouseleave', 'clusters', () => map.getCanvas().style.cursor = '');
-  map.on('mouseenter', 'unclustered', () => map.getCanvas().style.cursor = 'pointer');
-  map.on('mouseleave', 'unclustered', () => map.getCanvas().style.cursor = '');
-}
-//////////////////////// CLUSTER HELPERS ////////////////////////////////
-    ////////////////////////////// RENDER /////////////////////////////////////
 let selectedEventKey = null; // tracks the currently-selected list item
-    
-function render(){
+
+  function render(){
   // Read date from the picker (or leave blank = show all dates)
   const chosenDate = (datePicker && datePicker.value) ? datePicker.value : '';
 
@@ -2045,159 +1917,138 @@ function render(){
     return matchDate && matchCat; // (search removed)
   });
 
-  /////////////////////////////////////////////////////////
-  // Helper: turn many time formats into "minutes since midnight"
-  function parseEventMinutes(e){
-    let t = e.time ?? e.Time ?? e.start ?? e.Start ?? '';
-    if (t instanceof Date) return t.getHours()*60 + t.getMinutes();
-    if (typeof t !== 'string') t = String(t || '').trim();
+/////////////////////////////////////////////////////////    
+// Helper: turn many time formats into "minutes since midnight"
+function parseEventMinutes(e){
+  let t = e.time ?? e.Time ?? e.start ?? e.Start ?? '';
+  if (t instanceof Date) return t.getHours()*60 + t.getMinutes();
+  if (typeof t !== 'string') t = String(t || '').trim();
 
-    // Try full Date-like strings (e.g., "Sat Dec 30 1899 19:30:00 GMT-0500 ...")
-    const dt = new Date(t);
-    if (!isNaN(dt)) return dt.getHours()*60 + dt.getMinutes();
+  // Try full Date-like strings (e.g., "Sat Dec 30 1899 19:30:00 GMT-0500 ...")
+  const dt = new Date(t);
+  if (!isNaN(dt)) return dt.getHours()*60 + dt.getMinutes();
 
-    // 12-hour (e.g., "7", "7pm", "7:30 pm")
-    let m = t.match(/^\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\s*$/i);
-    if (m){
-      let h = parseInt(m[1],10), min = parseInt(m[2]||'0',10), ap = m[3].toLowerCase();
-      if (ap==='p' && h!==12) h+=12; if (ap==='a' && h===12) h=0;
-      return h*60 + min;
-    }
-
-    // 24-hour (e.g., "07:00", "19:30")
-    m = t.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
-    if (m){
-      const h = parseInt(m[1],10), min = parseInt(m[2],10);
-      if (h>=0 && h<24) return h*60 + min;
-    }
-
-    return Infinity; // unknown -> goes to bottom
+  // 12-hour (e.g., "7", "7pm", "7:30 pm")
+  let m = t.match(/^\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\s*$/i);
+  if (m){
+    let h = parseInt(m[1],10), min = parseInt(m[2]||'0',10), ap = m[3].toLowerCase();
+    if (ap==='p' && h!==12) h+=12; if (ap==='a' && h===12) h=0;
+    return h*60 + min;
   }
-  /////////////////////////////////////////////////////////
 
-  // ——— put promoted first, then by time, then by name
-  const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
-  const ordered = [...filtered].sort((a,b) => {
-    const pa = isPromoted(a) ? 0 : 1;
-    const pb = isPromoted(b) ? 0 : 1;
-    if (pa !== pb) return pa - pb;
+  // 24-hour (e.g., "07:00", "19:30")
+  m = t.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
+  if (m){
+    const h = parseInt(m[1],10), min = parseInt(m[2],10);
+    if (h>=0 && h<24) return h*60 + min;
+  }
 
-    const ta = parseEventMinutes(a);
-    const tb = parseEventMinutes(b);
-    if (ta !== tb) return ta - tb;
+  return Infinity; // unknown -> goes to bottom
+}
+///////////////////////////////////////////////////////////////////
 
-    return (a.name||'').localeCompare(b.name||'');
+
+
+    
+// ——— NEW: put promoted first (stable order within each group)
+// keep this if you still want promoted-first
+const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
+
+// Sort: promoted first (optional), then by time asc, then by name
+const ordered = [...filtered].sort((a,b) => {
+  // Remove the next 3 lines if you want pure time sort with no promoted priority
+  const pa = isPromoted(a) ? 0 : 1;
+  const pb = isPromoted(b) ? 0 : 1;
+  if (pa !== pb) return pa - pb;
+
+  const ta = parseEventMinutes(a);
+  const tb = parseEventMinutes(b);
+  if (ta !== tb) return ta - tb;
+
+  // Tie-breaker: by name
+  return (a.name||'').localeCompare(b.name||'');
+});
+////////////////////////////////////////////////////////////////////
+
+
+      // remove old markers
+// remove old markers
+markers.forEach(m => m.remove());
+markers = [];
+
+// Build bounds
+const bounds = new maplibregl.LngLatBounds();
+let havePts = false;
+
+ordered.forEach(function(e, i){
+  if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
+
+  // Guard against missing globals so we never throw
+  var color = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[e.category])
+    ? CATEGORY_COLORS[e.category]
+    : '#888';
+
+  var _safe = (typeof safe === 'function')
+    ? safe
+    : function(s){ return String(s||'').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); };
+
+  // Promoted flag accepted from either Promoted or promoted column (TRUE/Yes/1/Y)
+ var promoted = !!e.promoted;
+
+  var el = document.createElement('div');
+  el.className = [
+    'eventMarker',
+    'eventMarker--round',
+    'eventMarker--ghost',
+    'eventMarker--bevel',
+    'eventMarker--thin'      // 👈 fix casing
+  ].join(' ');
+  el.style.background = color;                 // keep your original fill
+  el.style.setProperty('--marker-color', color); // lets CSS glow match the fill
+
+  if (promoted){
+    el.className += ' eventMarker--promoted is-promoted';
+    var badge = document.createElement('span');
+    badge.className = 'eventMarker__badge';
+    badge.setAttribute('aria-hidden','true');
+    el.appendChild(badge);
+  }
+
+  // create marker + popup
+  var marker = new maplibregl.Marker({ element: el })
+    .setLngLat([e.lng, e.lat])
+    .setPopup(
+      new maplibregl.Popup({ offset: 12 }).setHTML(
+        '<strong>' + _safe(e.name) + '</strong>' +
+        (promoted ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
+        '<br>' + _safe(e.venue || '') + (e.time ? ' • ' + _safe(e.time) : '') +
+        '<br><a href="' + e.link + '" target="_blank" rel="noopener">Event page</a>'
+      )
+    )
+    .addTo(map);
+
+  // click behavior (mobile pins = pin card, desktop = highlight list)
+  el.addEventListener('click', function(){
+    if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches){
+      if (typeof setPinned === 'function') setPinned(e);
+    } else {
+      if (typeof highlightCard === 'function') highlightCard(i);
+    }
   });
 
-  // ------ CLUSTER PIPELINE ------
-  if (USE_CLUSTERING) {
-    const data = toGeoJSON(ordered);
-    const src = map.getSource('events');
-    if (src) {
-      src.setData(data);
-    } else {
-      map.addSource('events', {
-        type: 'geojson',
-        data,
-        cluster: true,
-        clusterRadius: 44,
-        clusterMaxZoom: 18
-      });
-      addClusterLayersOnce(map);
-    }
-  }
-  // ------------------------------
-
-  // remove old HTML markers (we won't use them if clustering is on)
-  markers.forEach(m => m.remove());
-  markers = [];
-
-  // Build bounds
-  const bounds = new maplibregl.LngLatBounds();
-  let havePts = false;
-
-  if (!USE_CLUSTERING) {
-    // >>> HTML markers path (your original code) <<<
-    ordered.forEach(function(e, i){
-      if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
-
-      // Guard against missing globals so we never throw
-      var color = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[e.category])
-        ? CATEGORY_COLORS[e.category]
-        : '#888';
-
-      var _safe = (typeof safe === 'function')
-        ? safe
-        : function(s){ return String(s||'').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); };
-
-      // Promoted flag
-      var promoted = !!e.promoted || /^(1|true|yes|y)$/i.test(String(e.Promoted||'').trim());
-
-      var el = document.createElement('div');
-      el.className = [
-        'eventMarker',
-        'eventMarker--round',
-        'eventMarker--ghost',
-        'eventMarker--bevel',
-        'eventMarker--thin'
-      ].join(' ');
-      el.style.background = color;
-      el.style.setProperty('--marker-color', color);
-
-      if (promoted){
-        el.className += ' eventMarker--promoted is-promoted';
-        var badge = document.createElement('span');
-        badge.className = 'eventMarker__badge';
-        badge.setAttribute('aria-hidden','true');
-        el.appendChild(badge);
-      }
-
-      // create marker + popup
-      var marker = new maplibregl.Marker({ element: el })
-        .setLngLat([e.lng, e.lat])
-        .setPopup(
-          new maplibregl.Popup({ offset: 12 }).setHTML(
-            '<strong>' + _safe(e.name) + '</strong>' +
-            (promoted ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
-            '<br>' + _safe(e.venue || '') + (e.time ? ' • ' + _safe(e.time) : '') +
-            '<br><a href="' + e.link + '" target="_blank" rel="noopener">Event page</a>'
-          )
-        )
-        .addTo(map);
-
-      // click behavior
-      el.addEventListener('click', function(){
-        if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches){
-          if (typeof setPinned === 'function') setPinned(e);
-        } else {
-          if (typeof highlightCard === 'function') highlightCard(i);
-        }
-      });
-
-      if (marker.getPopup){
-        marker.getPopup()
-          .on('open', function(){ el.classList.add('is-selected'); })
-          .on('close', function(){ el.classList.remove('is-selected'); });
-      }
-
-      markers.push(marker);
-      bounds.extend([e.lng, e.lat]);
-      havePts = true;
-    });
-  } else {
-    // When clustering, just compute bounds from points (no HTML markers)
-    ordered.forEach(e => {
-      if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
-        bounds.extend([e.lng, e.lat]);
-        havePts = true;
-      }
-    });
+  
+  // optional selected styling, safe to keep
+  if (marker.getPopup){
+    marker.getPopup()
+      .on('open', function(){ el.classList.add('is-selected'); })
+      .on('close', function(){ el.classList.remove('is-selected'); });
   }
 
-  // (fitBounds logic can remain here if you use it)
-  // if (havePts) map.fitBounds(bounds, { padding: 30, maxZoom: 16 });
+  markers.push(marker);
+  bounds.extend([e.lng, e.lat]);
+  havePts = true;
+});
 
-  // ... your list building continues below ...
 
     /////////////// drive color by data-attribute (CSS above handles fill) 
     ////////BREAKS GOOGLE SHEETS 
