@@ -1316,6 +1316,97 @@ window.addEventListener('resize', () => map.resize());
   });
 });
 
+
+
+////////////////////////////////////// CLUSTERING //////////////////////
+// 1) Source with clustering
+map.addSource('events', {
+  type: 'geojson',
+  data: eventsGeoJson, // your features; one per class
+  cluster: true,
+  clusterRadius: 44,     // tweak for tighter/looser clustering
+  clusterMaxZoom: 18
+});
+
+// 2) Cluster layer (symbol or circle)
+map.addLayer({
+  id: 'clusters',
+  type: 'circle',
+  source: 'events',
+  filter: ['has', 'point_count'],
+  paint: {
+    'circle-radius': [
+      'step', ['get', 'point_count'],
+      16, 5, 18, 10, 22, 25, 26
+    ],
+    'circle-color': '#111',
+    'circle-stroke-width': 2,
+    'circle-stroke-color': '#fff'
+  }
+});
+
+// 3) Cluster count
+map.addLayer({
+  id: 'cluster-count',
+  type: 'symbol',
+  source: 'events',
+  filter: ['has', 'point_count'],
+  layout: {
+    'text-field': ['get', 'point_count_abbreviated'],
+    'text-size': 12
+  },
+  paint: { 'text-color': '#fff' }
+});
+
+// 4) Unclustered points layer (your existing marker styling)
+map.addLayer({
+  id: 'unclustered',
+  type: 'symbol',
+  source: 'events',
+  filter: ['!', ['has', 'point_count']],
+  layout: {
+    'icon-image': 'event-pin',  // your sprite or use HTML Markers elsewhere
+    'icon-size': 1
+  }
+});
+
+// 5) Click => show compact list for that cluster
+map.on('click', 'clusters', async (e) => {
+  const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+  const clusterId = features[0].properties.cluster_id;
+  const source = map.getSource('events');
+
+  source.getClusterLeaves(clusterId, 100, 0, (err, leaves) => {
+    if (err) return;
+
+    // Build a simple popup list (title + time)
+    const items = leaves.map(f => {
+      const p = f.properties;
+      const t = (p.time12 || p.time24 || '').toLowerCase();
+      return `<li class="clusterItem"><a href="${p.link}" target="_blank">${p.name}</a> <span>${t}</span></li>`;
+    }).join('');
+
+    const html = `
+      <div class="clusterPopup">
+        <strong>${leaves.length} classes here</strong>
+        <ul>${items}</ul>
+      </div>
+    `;
+
+    new maplibregl.Popup({ closeButton:true, offset:12 })
+      .setLngLat(features[0].geometry.coordinates)
+      .setHTML(html)
+      .addTo(map);
+  });
+});
+
+//////////////////////////////////////////////// CLUSTERING END /////////////////////////////////////////////
+
+    
+
+
+
+    
 // Use device-specific padding when focusing events later
 function focusEvent(lng, lat){
   const padDesktop = { top: 60, right: 60, bottom: 60, left: 360 }; // sidebar + breathing room
