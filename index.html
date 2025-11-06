@@ -1320,121 +1320,6 @@ window.addEventListener('resize', () => map.resize());
     }
   });
 });
-
-
-
-////////////////////////////////////// CLUSTERING //////////////////////
-// 1) Source with clustering
-
-// --- Convert allEvents (your events array) into a GeoJSON FeatureCollection ---
-const eventsGeoJson = {
-  type: "FeatureCollection",
-  features: allEvents.map(ev => ({
-    type: "Feature",
-    geometry: {
-      type: "Point",
-      coordinates: [parseFloat(ev.Lng), parseFloat(ev.Lat)]
-    },
-    properties: {
-      name: ev["Event name"],
-      venue: ev.Venue,
-      date: ev.Start,
-      time12: ev.Time,
-      category: ev.Category,
-      link: ev.Link,
-      photo: ev.Photo
-    }
-  }))
-};
-
-
-    
-map.addSource('events', {
-  type: 'geojson',
-  data: eventsGeoJson, // your features; one per class
-  cluster: true,
-  clusterRadius: 44,     // tweak for tighter/looser clustering
-  clusterMaxZoom: 18
-});
-
-// 2) Cluster layer (symbol or circle)
-map.addLayer({
-  id: 'clusters',
-  type: 'circle',
-  source: 'events',
-  filter: ['has', 'point_count'],
-  paint: {
-    'circle-radius': [
-      'step', ['get', 'point_count'],
-      16, 5, 18, 10, 22, 25, 26
-    ],
-    'circle-color': '#111',
-    'circle-stroke-width': 2,
-    'circle-stroke-color': '#fff'
-  }
-});
-
-// 3) Cluster count
-map.addLayer({
-  id: 'cluster-count',
-  type: 'symbol',
-  source: 'events',
-  filter: ['has', 'point_count'],
-  layout: {
-    'text-field': ['get', 'point_count_abbreviated'],
-    'text-size': 12
-  },
-  paint: { 'text-color': '#fff' }
-});
-
-// 4) Unclustered points layer (your existing marker styling)
-map.addLayer({
-  id: 'unclustered',
-  type: 'symbol',
-  source: 'events',
-  filter: ['!', ['has', 'point_count']],
-  layout: {
-    'icon-image': 'event-pin',  // your sprite or use HTML Markers elsewhere
-    'icon-size': 1
-  }
-});
-
-// 5) Click => show compact list for that cluster
-map.on('click', 'clusters', async (e) => {
-  const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-  const clusterId = features[0].properties.cluster_id;
-  const source = map.getSource('events');
-
-  source.getClusterLeaves(clusterId, 100, 0, (err, leaves) => {
-    if (err) return;
-
-    // Build a simple popup list (title + time)
-    const items = leaves.map(f => {
-      const p = f.properties;
-      const t = (p.time12 || p.time24 || '').toLowerCase();
-      return `<li class="clusterItem"><a href="${p.link}" target="_blank">${p.name}</a> <span>${t}</span></li>`;
-    }).join('');
-
-    const html = `
-      <div class="clusterPopup">
-        <strong>${leaves.length} classes here</strong>
-        <ul>${items}</ul>
-      </div>
-    `;
-
-    new maplibregl.Popup({ closeButton:true, offset:12 })
-      .setLngLat(features[0].geometry.coordinates)
-      .setHTML(html)
-      .addTo(map);
-  });
-});
-
-//////////////////////////////////////////////// CLUSTERING END /////////////////////////////////////////////
-
-    
-
-
-
     
 // Use device-specific padding when focusing events later
 function focusEvent(lng, lat){
@@ -2025,8 +1910,121 @@ function gmapsDirectionsURLFallback(oLat, oLng, ev){
   return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destText)}`;
 }
 
-let selectedEventKey = null; // tracks the currently-selected list item
 
+
+//////////////////////// CLUSTER HELPERS //////////////////////////////////////////////
+    
+// Toggle to compare behaviors quickly
+const USE_CLUSTERING = true;
+
+function toGeoJSON(list){
+  return {
+    type: "FeatureCollection",
+    features: (list || [])
+      .filter(e => Number.isFinite(e.lat) && Number.isFinite(e.lng))
+      .map(e => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [e.lng, e.lat] },
+        properties: {
+          key: `${e.name||''}|${e.date||''}|${e.venue||''}|${e.address||''}`,
+          name: e.name || '',
+          venue: e.venue || '',
+          address: e.address || '',
+          time: e.time || '',
+          category: e.category || 'Other',
+          link: e.link || '',
+          photo: e.photo || '',
+          promoted: !!e.promoted
+        }
+      }))
+  };
+}
+
+function addClusterLayersOnce(map){
+  if (map.getLayer('clusters')) return; // already added
+
+  // circles for clusters
+  map.addLayer({
+    id: 'clusters',
+    type: 'circle',
+    source: 'events',
+    filter: ['has', 'point_count'],
+    paint: {
+      'circle-radius': ['step', ['get','point_count'], 16, 5, 18, 10, 22, 25, 26],
+      'circle-color': '#111',
+      'circle-stroke-width': 2,
+      'circle-stroke-color': '#fff'
+    }
+  });
+
+  // count label
+  map.addLayer({
+    id: 'cluster-count',
+    type: 'symbol',
+    source: 'events',
+    filter: ['has', 'point_count'],
+    layout: { 'text-field': ['get','point_count_abbreviated'], 'text-size': 12 },
+    paint: { 'text-color': '#fff' }
+  });
+
+  // unclustered points as symbols; you can swap to your sprite if desired
+  map.addLayer({
+    id: 'unclustered',
+    type: 'circle',
+    source: 'events',
+    filter: ['!', ['has','point_count']],
+    paint: {
+      'circle-radius': 6,
+      'circle-color': '#888',
+      'circle-stroke-width': 2,
+      'circle-stroke-color': '#fff'
+    }
+  });
+
+  // Popup with minimal HTML (ties into your existing fields)
+  map.on('click', 'unclustered', (e) => {
+    const f = e.features && e.features[0];
+    if (!f) return;
+    const p = f.properties || {};
+    const html =
+      `<strong>${p.name||''}</strong>` +
+      (p.promoted === 'true' ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
+      `<br>${p.venue||p.address||''}${p.time ? ' • ' + p.time : ''}` +
+      (p.link ? `<br><a href="${p.link}" target="_blank" rel="noopener">Event page</a>` : '');
+    new maplibregl.Popup({ offset: 12 })
+      .setLngLat(f.geometry.coordinates)
+      .setHTML(html)
+      .addTo(map);
+  });
+
+  // Cluster click → show popup list of leaves
+  map.on('click', 'clusters', (e) => {
+    const clusterFeatures = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+    const clusterId = clusterFeatures[0].properties.cluster_id;
+    map.getSource('events').getClusterLeaves(clusterId, 100, 0, (err, leaves) => {
+      if (err) return;
+      const items = leaves.map(f => {
+        const p = f.properties;
+        const t = (p.time||'').toLowerCase();
+        return `<li class="clusterItem"><a href="${p.link||'#'}" target="_blank" rel="noopener">${p.name||''}</a> <span>${t}</span></li>`;
+      }).join('');
+      const html = `<div class="clusterPopup"><strong>${leaves.length} events here</strong><ul>${items}</ul></div>`;
+      new maplibregl.Popup({ offset: 12 })
+        .setLngLat(clusterFeatures[0].geometry.coordinates)
+        .setHTML(html)
+        .addTo(map);
+    });
+  });
+
+  map.on('mouseenter', 'clusters', () => map.getCanvas().style.cursor = 'pointer');
+  map.on('mouseleave', 'clusters', () => map.getCanvas().style.cursor = '');
+  map.on('mouseenter', 'unclustered', () => map.getCanvas().style.cursor = 'pointer');
+  map.on('mouseleave', 'unclustered', () => map.getCanvas().style.cursor = '');
+}
+//////////////////////// CLUSTER HELPERS ////////////////////////////////
+    ////////////////////////////// RENDER /////////////////////////////////////
+let selectedEventKey = null; // tracks the currently-selected list item
+    
   function render(){
   // Read date from the picker (or leave blank = show all dates)
   const chosenDate = (datePicker && datePicker.value) ? datePicker.value : '';
@@ -2037,7 +2035,6 @@ let selectedEventKey = null; // tracks the currently-selected list item
     return matchDate && matchCat; // (search removed)
   });
 
-/////////////////////////////////////////////////////////    
 // Helper: turn many time formats into "minutes since midnight"
 function parseEventMinutes(e){
   let t = e.time ?? e.Time ?? e.start ?? e.Start ?? '';
@@ -2093,16 +2090,52 @@ const ordered = [...filtered].sort((a,b) => {
 
       // remove old markers
 // remove old markers
+// remove old markers
 markers.forEach(m => m.remove());
 markers = [];
 
-// Build bounds
 const bounds = new maplibregl.LngLatBounds();
 let havePts = false;
 
-ordered.forEach(function(e, i){
-  if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
+if (!USE_CLUSTERING) {
+  ordered.forEach(function(e, i){
+    if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
 
+    // ... your existing HTML marker creation code (unchanged) ...
+
+    markers.push(marker);
+    bounds.extend([e.lng, e.lat]);
+    havePts = true;
+  });
+} else {
+  // When clustering, compute bounds from the ordered list (for initial fit/fly)
+  ordered.forEach(e => {
+    if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
+      bounds.extend([e.lng, e.lat]);
+      havePts = true;
+    }
+  });
+}
+
+
+// ——— CLUSTER PIPELINE ———
+if (USE_CLUSTERING) {
+  const data = toGeoJSON(ordered);
+  const src = map.getSource('events');
+  if (src) {
+    src.setData(data);
+  } else {
+    map.addSource('events', {
+      type: 'geojson',
+      data,
+      cluster: true,
+      clusterRadius: 44,
+      clusterMaxZoom: 18
+    });
+    addClusterLayersOnce(map);
+  }
+}
+  
   // Guard against missing globals so we never throw
   var color = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[e.category])
     ? CATEGORY_COLORS[e.category]
