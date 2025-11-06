@@ -2025,7 +2025,7 @@ function addClusterLayersOnce(map){
     ////////////////////////////// RENDER /////////////////////////////////////
 let selectedEventKey = null; // tracks the currently-selected list item
     
-  function render(){
+function render(){
   // Read date from the picker (or leave blank = show all dates)
   const chosenDate = (datePicker && datePicker.value) ? datePicker.value : '';
 
@@ -2035,173 +2035,159 @@ let selectedEventKey = null; // tracks the currently-selected list item
     return matchDate && matchCat; // (search removed)
   });
 
-// Helper: turn many time formats into "minutes since midnight"
-function parseEventMinutes(e){
-  let t = e.time ?? e.Time ?? e.start ?? e.Start ?? '';
-  if (t instanceof Date) return t.getHours()*60 + t.getMinutes();
-  if (typeof t !== 'string') t = String(t || '').trim();
+  /////////////////////////////////////////////////////////
+  // Helper: turn many time formats into "minutes since midnight"
+  function parseEventMinutes(e){
+    let t = e.time ?? e.Time ?? e.start ?? e.Start ?? '';
+    if (t instanceof Date) return t.getHours()*60 + t.getMinutes();
+    if (typeof t !== 'string') t = String(t || '').trim();
 
-  // Try full Date-like strings (e.g., "Sat Dec 30 1899 19:30:00 GMT-0500 ...")
-  const dt = new Date(t);
-  if (!isNaN(dt)) return dt.getHours()*60 + dt.getMinutes();
+    // Try full Date-like strings (e.g., "Sat Dec 30 1899 19:30:00 GMT-0500 ...")
+    const dt = new Date(t);
+    if (!isNaN(dt)) return dt.getHours()*60 + dt.getMinutes();
 
-  // 12-hour (e.g., "7", "7pm", "7:30 pm")
-  let m = t.match(/^\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\s*$/i);
-  if (m){
-    let h = parseInt(m[1],10), min = parseInt(m[2]||'0',10), ap = m[3].toLowerCase();
-    if (ap==='p' && h!==12) h+=12; if (ap==='a' && h===12) h=0;
-    return h*60 + min;
+    // 12-hour (e.g., "7", "7pm", "7:30 pm")
+    let m = t.match(/^\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\s*$/i);
+    if (m){
+      let h = parseInt(m[1],10), min = parseInt(m[2]||'0',10), ap = m[3].toLowerCase();
+      if (ap==='p' && h!==12) h+=12; if (ap==='a' && h===12) h=0;
+      return h*60 + min;
+    }
+
+    // 24-hour (e.g., "07:00", "19:30")
+    m = t.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
+    if (m){
+      const h = parseInt(m[1],10), min = parseInt(m[2],10);
+      if (h>=0 && h<24) return h*60 + min;
+    }
+
+    return Infinity; // unknown -> goes to bottom
   }
+  /////////////////////////////////////////////////////////
 
-  // 24-hour (e.g., "07:00", "19:30")
-  m = t.match(/^\s*(\d{1,2}):(\d{2})\s*$/);
-  if (m){
-    const h = parseInt(m[1],10), min = parseInt(m[2],10);
-    if (h>=0 && h<24) return h*60 + min;
-  }
+  // ——— put promoted first, then by time, then by name
+  const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
+  const ordered = [...filtered].sort((a,b) => {
+    const pa = isPromoted(a) ? 0 : 1;
+    const pb = isPromoted(b) ? 0 : 1;
+    if (pa !== pb) return pa - pb;
 
-  return Infinity; // unknown -> goes to bottom
-}
-///////////////////////////////////////////////////////////////////
+    const ta = parseEventMinutes(a);
+    const tb = parseEventMinutes(b);
+    if (ta !== tb) return ta - tb;
 
-
-
-    
-// ——— NEW: put promoted first (stable order within each group)
-// keep this if you still want promoted-first
-const isPromoted = (ev) => !!ev.promoted || /^(1|true|yes|y)$/i.test(String(ev.Promoted||'').trim());
-
-// Sort: promoted first (optional), then by time asc, then by name
-const ordered = [...filtered].sort((a,b) => {
-  // Remove the next 3 lines if you want pure time sort with no promoted priority
-  const pa = isPromoted(a) ? 0 : 1;
-  const pb = isPromoted(b) ? 0 : 1;
-  if (pa !== pb) return pa - pb;
-
-  const ta = parseEventMinutes(a);
-  const tb = parseEventMinutes(b);
-  if (ta !== tb) return ta - tb;
-
-  // Tie-breaker: by name
-  return (a.name||'').localeCompare(b.name||'');
-});
-////////////////////////////////////////////////////////////////////
-
-
-      // remove old markers
-// remove old markers
-// remove old markers
-markers.forEach(m => m.remove());
-markers = [];
-
-const bounds = new maplibregl.LngLatBounds();
-let havePts = false;
-
-if (!USE_CLUSTERING) {
-  ordered.forEach(function(e, i){
-    if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
-
-    // ... your existing HTML marker creation code (unchanged) ...
-
-    markers.push(marker);
-    bounds.extend([e.lng, e.lat]);
-    havePts = true;
+    return (a.name||'').localeCompare(b.name||'');
   });
-} else {
-  // When clustering, compute bounds from the ordered list (for initial fit/fly)
-  ordered.forEach(e => {
-    if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
+
+  // ------ CLUSTER PIPELINE ------
+  if (USE_CLUSTERING) {
+    const data = toGeoJSON(ordered);
+    const src = map.getSource('events');
+    if (src) {
+      src.setData(data);
+    } else {
+      map.addSource('events', {
+        type: 'geojson',
+        data,
+        cluster: true,
+        clusterRadius: 44,
+        clusterMaxZoom: 18
+      });
+      addClusterLayersOnce(map);
+    }
+  }
+  // ------------------------------
+
+  // remove old HTML markers (we won't use them if clustering is on)
+  markers.forEach(m => m.remove());
+  markers = [];
+
+  // Build bounds
+  const bounds = new maplibregl.LngLatBounds();
+  let havePts = false;
+
+  if (!USE_CLUSTERING) {
+    // >>> HTML markers path (your original code) <<<
+    ordered.forEach(function(e, i){
+      if (!Number.isFinite(e.lat) || !Number.isFinite(e.lng)) return;
+
+      // Guard against missing globals so we never throw
+      var color = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[e.category])
+        ? CATEGORY_COLORS[e.category]
+        : '#888';
+
+      var _safe = (typeof safe === 'function')
+        ? safe
+        : function(s){ return String(s||'').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); };
+
+      // Promoted flag
+      var promoted = !!e.promoted || /^(1|true|yes|y)$/i.test(String(e.Promoted||'').trim());
+
+      var el = document.createElement('div');
+      el.className = [
+        'eventMarker',
+        'eventMarker--round',
+        'eventMarker--ghost',
+        'eventMarker--bevel',
+        'eventMarker--thin'
+      ].join(' ');
+      el.style.background = color;
+      el.style.setProperty('--marker-color', color);
+
+      if (promoted){
+        el.className += ' eventMarker--promoted is-promoted';
+        var badge = document.createElement('span');
+        badge.className = 'eventMarker__badge';
+        badge.setAttribute('aria-hidden','true');
+        el.appendChild(badge);
+      }
+
+      // create marker + popup
+      var marker = new maplibregl.Marker({ element: el })
+        .setLngLat([e.lng, e.lat])
+        .setPopup(
+          new maplibregl.Popup({ offset: 12 }).setHTML(
+            '<strong>' + _safe(e.name) + '</strong>' +
+            (promoted ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
+            '<br>' + _safe(e.venue || '') + (e.time ? ' • ' + _safe(e.time) : '') +
+            '<br><a href="' + e.link + '" target="_blank" rel="noopener">Event page</a>'
+          )
+        )
+        .addTo(map);
+
+      // click behavior
+      el.addEventListener('click', function(){
+        if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches){
+          if (typeof setPinned === 'function') setPinned(e);
+        } else {
+          if (typeof highlightCard === 'function') highlightCard(i);
+        }
+      });
+
+      if (marker.getPopup){
+        marker.getPopup()
+          .on('open', function(){ el.classList.add('is-selected'); })
+          .on('close', function(){ el.classList.remove('is-selected'); });
+      }
+
+      markers.push(marker);
       bounds.extend([e.lng, e.lat]);
       havePts = true;
-    }
-  });
-}
-
-
-// ——— CLUSTER PIPELINE ———
-if (USE_CLUSTERING) {
-  const data = toGeoJSON(ordered);
-  const src = map.getSource('events');
-  if (src) {
-    src.setData(data);
-  } else {
-    map.addSource('events', {
-      type: 'geojson',
-      data,
-      cluster: true,
-      clusterRadius: 44,
-      clusterMaxZoom: 18
     });
-    addClusterLayersOnce(map);
-  }
-}
-  
-  // Guard against missing globals so we never throw
-  var color = (typeof CATEGORY_COLORS !== 'undefined' && CATEGORY_COLORS[e.category])
-    ? CATEGORY_COLORS[e.category]
-    : '#888';
-
-  var _safe = (typeof safe === 'function')
-    ? safe
-    : function(s){ return String(s||'').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); };
-
-  // Promoted flag accepted from either Promoted or promoted column (TRUE/Yes/1/Y)
- var promoted = !!e.promoted;
-
-  var el = document.createElement('div');
-  el.className = [
-    'eventMarker',
-    'eventMarker--round',
-    'eventMarker--ghost',
-    'eventMarker--bevel',
-    'eventMarker--thin'      // 👈 fix casing
-  ].join(' ');
-  el.style.background = color;                 // keep your original fill
-  el.style.setProperty('--marker-color', color); // lets CSS glow match the fill
-
-  if (promoted){
-    el.className += ' eventMarker--promoted is-promoted';
-    var badge = document.createElement('span');
-    badge.className = 'eventMarker__badge';
-    badge.setAttribute('aria-hidden','true');
-    el.appendChild(badge);
+  } else {
+    // When clustering, just compute bounds from points (no HTML markers)
+    ordered.forEach(e => {
+      if (Number.isFinite(e.lat) && Number.isFinite(e.lng)) {
+        bounds.extend([e.lng, e.lat]);
+        havePts = true;
+      }
+    });
   }
 
-  // create marker + popup
-  var marker = new maplibregl.Marker({ element: el })
-    .setLngLat([e.lng, e.lat])
-    .setPopup(
-      new maplibregl.Popup({ offset: 12 }).setHTML(
-        '<strong>' + _safe(e.name) + '</strong>' +
-        (promoted ? ' <span style="font-size:12px;padding:2px 6px;border:1px solid #111;border-radius:999px;background:#fff;color:#111;vertical-align:middle;">Promoted</span>' : '') +
-        '<br>' + _safe(e.venue || '') + (e.time ? ' • ' + _safe(e.time) : '') +
-        '<br><a href="' + e.link + '" target="_blank" rel="noopener">Event page</a>'
-      )
-    )
-    .addTo(map);
+  // (fitBounds logic can remain here if you use it)
+  // if (havePts) map.fitBounds(bounds, { padding: 30, maxZoom: 16 });
 
-  // click behavior (mobile pins = pin card, desktop = highlight list)
-  el.addEventListener('click', function(){
-    if (typeof isMobile === 'function' ? isMobile() : window.matchMedia('(max-width: 960px)').matches){
-      if (typeof setPinned === 'function') setPinned(e);
-    } else {
-      if (typeof highlightCard === 'function') highlightCard(i);
-    }
-  });
-
-  
-  // optional selected styling, safe to keep
-  if (marker.getPopup){
-    marker.getPopup()
-      .on('open', function(){ el.classList.add('is-selected'); })
-      .on('close', function(){ el.classList.remove('is-selected'); });
-  }
-
-  markers.push(marker);
-  bounds.extend([e.lng, e.lat]);
-  havePts = true;
-};
-
+  // ... your list building continues below ...
 
     /////////////// drive color by data-attribute (CSS above handles fill) 
     ////////BREAKS GOOGLE SHEETS 
