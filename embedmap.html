@@ -347,10 +347,21 @@ el.className = 'eventMarker' + (
 function normalizeLink(u) {
   if (!u) return '';
   const s = String(u).trim();
-  if (/^https?:\/\//i.test(s)) return s;          // already absolute
-  if (/^www\./i.test(s)) return 'https://' + s;    // add scheme
-  return s; // leave as-is if author intentionally passed a custom scheme
+
+  // already absolute
+  if (/^https?:\/\//i.test(s)) return s;
+
+  // protocol-relative //example.com
+  if (/^\/\//.test(s)) return 'https:' + s;
+
+  // bare www.example.com or example.com/path
+  if (/^[\w.-]+\.[a-z]{2,}(\/.*)?$/i.test(s)) return 'https://' + s;
+
+  // mailto:, tel:, etc. (leave as-is)
+  return s;
 }
+
+
     
   function selectEvent(ev){
   // Photo
@@ -387,16 +398,17 @@ function normalizeLink(u) {
   }
 
   // More Info: use the exact URL from the sheet (normalized)
-  const direct = normalizeLink(ev.link);
-  if (direct) {
-    pinMore.style.display = 'inline-flex';
-    pinMore.href = direct;
-    pinMore.target = '_blank';
-    pinMore.rel = 'noopener noreferrer';
-  } else {
-    pinMore.style.display = 'none';
-    pinMore.removeAttribute('href');
-  }
+ const direct = normalizeLink(ev.link);
+if (direct) {
+  pinMore.style.display = 'inline-flex';
+  pinMore.href = direct;
+  pinMore.target = '_blank';
+  pinMore.rel = 'noopener noreferrer';
+} else {
+  pinMore.style.display = 'none';
+  pinMore.removeAttribute('href');
+}
+
 
   // Center map on selection (gentle)
   if (ev.lat!=null && ev.lng!=null){
