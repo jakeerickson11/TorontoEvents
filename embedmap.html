@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Local Events Widget</title>
   <!-- MapLibre GL JS (UMD) -->
-  <link href="https://unpkg.com/maplibre-gl@3.7.0/dist/maplibre-gl.css" rel="stylesheet" />
-  <script src="https://unpkg.com/maplibre-gl@3.7.0/dist/maplibre-gl.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/3.7.0/maplibre-gl.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/3.7.0/maplibre-gl.min.js"></script>
   <!-- PMTiles (MapLibre plugin) -->
   <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
 
@@ -158,11 +158,11 @@
   if (qp.get('hotelLat')) CONFIG.HOTEL_ORIGIN.lat  = parseFloat(qp.get('hotelLat'));
   if (qp.get('hotelLng')) CONFIG.HOTEL_ORIGIN.lng  = parseFloat(qp.get('hotelLng'));
 
-  // Register pmtiles protocol if provided (lets your style use pmtiles:// URLs)
+  // Always register pmtiles:// protocol so styles can reference pmtiles:// URLs
+  const protocol = new pmtiles.Protocol();
+  maplibregl.addProtocol("pmtiles", protocol.tile);
+  // Preload for faster first paint (optional)
   if (CONFIG.PMTILES_URL){
-    const protocol = new pmtiles.Protocol();
-    maplibregl.addProtocol("pmtiles", protocol.tile);
-    // Preload for faster first paint (optional)
     const p = new pmtiles.PMTiles(CONFIG.PMTILES_URL);
     protocol.add(CONFIG.PMTILES_URL, p);
   }
