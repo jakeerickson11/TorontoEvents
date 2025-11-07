@@ -83,7 +83,11 @@
     .eventMarker--promoted{ --marker-color: var(--marker-promoted); width:24px; height:24px; box-shadow: 0 0 0 3px var(--ring), 0 2px 10px rgba(0,0,0,.35); filter: drop-shadow(0 0 10px var(--marker-promoted)); }
     /* Centered number (optional) */
     .eventMarker__num{ position:absolute; inset:0; display:grid; place-items:center; color:#000; font-weight:800; font-size:11px; text-shadow:0 1px 0 rgba(255,255,255,.6); }
+    .eventMarker--static{ --marker-color: #14b8a6; } /* teal */
 
+
+
+    
     /* Small screens: stack panel under map */
     @media (max-width: 820px){
       .widget{ grid-template-columns: 1fr; height: auto; }
@@ -237,28 +241,30 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
   }
 
   // Basic normalizer for expected schema
-  function normalize(ev){
-    const get = (k, fallback='') => (ev[k] ?? ev[k?.toLowerCase?.()] ?? fallback);
-    const num = (n) => (n==null || n==="" ? null : Number(n));
+function normalize(ev){
+  const get = (k, fallback='') => (ev[k] ?? ev[k?.toLowerCase?.()] ?? fallback);
+  const num = (n) => (n==null || n==="" ? null : Number(n));
 
-    const name  = String(get('Event name') || get('Name') || get('Title') || 'Event').trim();
-    const date  = (get('Date') || '').toString().slice(0,10); // yyyy-mm-dd
-    const start = (get('Start') || get('Time') || '').toString();
-    const end   = (get('End') || '').toString();
-    const cat   = String(get('Category') || 'Other').trim();
-    const link  = String(get('Link') || get('URL') || '').trim();
-    const addr  = String(get('Address') || '').trim();
-    const photo = String(get('Photo') || '').trim();
-    const desc  = String(get('Description') || '').trim();
-    const openH = String(get('Open') || get('Open Hours') || '').trim();
-    const closeH= String(get('Close') || get('Close Hours') || '').trim();
-    const lat   = num(get('Lat'));
-    const lng   = num(get('Lng'));
+  const name  = String(get('Event name') || get('Name') || get('Title') || 'Event').trim();
+  const date  = (get('Date') || '').toString().slice(0,10); // yyyy-mm-dd
+  const start = (get('Start') || get('Time') || '').toString();
+  const end   = (get('End') || '').toString();
+  const cat   = String(get('Category') || 'Other').trim();
+  const link  = String(get('Link') || get('URL') || '').trim();
+  const addr  = String(get('Address') || '').trim();
+  const photo = String(get('Photo') || '').trim();
+  const desc  = String(get('Description') || '').trim();
+  const openH = String(get('Open') || get('Open Hours') || '').trim();
+  const closeH= String(get('Close') || get('Close Hours') || '').trim();
+  const lat   = num(get('Lat'));
+  const lng   = num(get('Lng'));
 
-    const promoted = /^(1|true|yes|y)$/i.test(String(get('Promoted')||'').trim());
+  const promoted = /^(1|true|yes|y)$/i.test(String(get('Promoted')||'').trim());
+  const isStatic = !date; // no Date = static venue (always show)
 
-    return { name, date, start, end, category:cat, link, address:addr, photo, desc, openH, closeH, lat, lng, promoted };
-  }
+  return { name, date, start, end, category:cat, link, address:addr, photo, desc, openH, closeH, lat, lng, promoted, isStatic };
+}
+
 
   // Utility: Google Maps directions URL
   function gmapsDirUrl(origin, dest, mode='walking'){
@@ -278,7 +284,12 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
     markers.splice(0).forEach(m => m.remove());
 
     const chosenDate = dateFilter.value ? dateFilter.value : '';
-    const filtered = allEvents.filter(e => chosenDate ? e.date === chosenDate : true);
+    const filtered = allEvents.filter(e => {
+  if (!chosenDate) return true;   // no filter → show all
+  if (!e.date) return true;       // static (no date) → always show
+  return e.date === chosenDate;   // dated events must match
+});
+
 
     // Promoted first for z-index layering
     const ordered = [
@@ -290,7 +301,11 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
       if(ev.lat==null || ev.lng==null) return; // skip if no coords
 
       const el = document.createElement('div');
-      el.className = 'eventMarker' + (ev.promoted ? ' eventMarker--promoted' : '');
+el.className = 'eventMarker' + (
+  ev.promoted ? ' eventMarker--promoted' :
+  (!ev.date ? ' eventMarker--static' : '')
+);
+
 
       // Optional: numbered markers (index per current render)
       const num = document.createElement('div');
@@ -314,7 +329,10 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
 
     pinTitle.textContent = ev.name || 'Event';
     const dateStr = ev.date ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric', year:'numeric'}) : '';
-    const when = [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ');
+    const when = ev.date
+  ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
+  : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
+
     const where = ev.address || '';
     pinMeta.textContent = [when, where].filter(Boolean).join('  —  ');
 
