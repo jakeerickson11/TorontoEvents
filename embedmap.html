@@ -324,47 +324,60 @@ function normalizeLink(u) {
 }
     
   function selectEvent(ev){
-    // Update the pinned panel
-    pinPhoto.src = ev.photo || '';
-    pinPhoto.style.display = ev.photo ? 'block' : 'none';
+  // Photo
+  pinPhoto.src = ev.photo || '';
+  pinPhoto.style.display = ev.photo ? 'block' : 'none';
 
-    pinTitle.textContent = ev.name || 'Event';
-    const dateStr = ev.date ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric', year:'numeric'}) : '';
-    const when = ev.date
-  ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
-  : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
+  // Title
+  pinTitle.textContent = ev.name || 'Event';
 
-    const where = ev.address || '';
-    pinMeta.textContent = [when, where].filter(Boolean).join('  —  ');
+  // When (date/time or hours) and where (address)
+  const dateStr = ev.date
+    ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {
+        weekday:'short', month:'short', day:'numeric', year:'numeric'
+      })
+    : '';
 
-    const metaText = [when, where].filter(Boolean).join('  —  ');
-pinMeta.textContent = metaText;
-pinMeta.style.display = metaText ? 'block' : 'none';
+  const when = ev.date
+    ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
+    : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
 
+  const where = ev.address || '';
 
-    if(ev.desc){
-      pinDesc.style.display = 'block';
-      pinDesc.textContent = ev.desc;
-    } else {
-      pinDesc.style.display = 'none';
-      pinDesc.textContent = '';
-    }
+  const metaText = [when, where].filter(Boolean).join('  —  ');
+  pinMeta.textContent = metaText;
+  pinMeta.style.display = metaText ? 'block' : 'none';
 
-    // Show action buttons
-    if(ev.link){
-      pinMore.style.display = 'inline-flex';
-      pinMore.href = ev.link;
-    } else {
-      pinMore.style.display = 'none';
-      pinMore.removeAttribute('href');
-    }
-
-    // Center map on selection (gentle)
-    if (ev.lat!=null && ev.lng!=null){
-      map.easeTo({ center:[ev.lng, ev.lat], duration: 700, zoom: Math.max(map.getZoom(), isMobile?13:14) });
-    }
+  // Description (hide if empty)
+  if (ev.desc && ev.desc.trim()) {
+    pinDesc.style.display = 'block';
+    pinDesc.textContent = ev.desc;
+  } else {
+    pinDesc.style.display = 'none';
+    pinDesc.textContent = '';
   }
 
+  // More Info: use the exact URL from the sheet (normalized)
+  const direct = normalizeLink(ev.link);
+  if (direct) {
+    pinMore.style.display = 'inline-flex';
+    pinMore.href = direct;
+    pinMore.target = '_blank';
+    pinMore.rel = 'noopener noreferrer';
+  } else {
+    pinMore.style.display = 'none';
+    pinMore.removeAttribute('href');
+  }
+
+  // Center map on selection (gentle)
+  if (ev.lat!=null && ev.lng!=null){
+    map.easeTo({
+      center:[ev.lng, ev.lat],
+      duration: 700,
+      zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
+    });
+  }
+}
   // Wire date filter
   dateFilter.addEventListener('change', render);
 
