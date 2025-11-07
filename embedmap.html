@@ -207,6 +207,7 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
 
     // build map 
 // build map
+// build map (start view so there's no flash)
 const isMobile  = matchMedia('(max-width: 820px)').matches;
 const finalZoom = isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop;
 const startZoom = Math.max(3, finalZoom - 0.8);
@@ -215,11 +216,11 @@ const map = new maplibregl.Map({
   container: 'map',
   style: CONFIG.STYLE_URL,
   center: CONFIG.MAP.center,
-  zoom: startZoom,  // start view
-  pitch: 0,
-  bearing: 0,
+  zoom: startZoom,   // start slightly zoomed out
+  pitch: 0,          // flat at start
+  bearing: 0,        // no rotation at start
   attributionControl: true,
-  hash: false,
+  hash: false
 });
 
 let introAnimating = false;
@@ -228,55 +229,27 @@ const doAnim =
   !qp.get('noAnim');
 
 map.once('load', () => {
-  if (!doAnim) {
+  if (doAnim) {
+    introAnimating = true;
+    map.easeTo({
+      center:  CONFIG.MAP.center,
+      zoom:    finalZoom,
+      bearing: CONFIG.MAP.bearing, // use +15 for clockwise
+      pitch:   CONFIG.MAP.pitch,
+      duration: 1400,
+      easing: t => 1 - Math.pow(1 - t, 3)
+    });
+    map.once('moveend', () => { introAnimating = false; });
+  } else {
     map.jumpTo({
-      center: CONFIG.MAP.center,
-      zoom:   finalZoom,
+      center:  CONFIG.MAP.center,
+      zoom:    finalZoom,
       bearing: CONFIG.MAP.bearing,
       pitch:   CONFIG.MAP.pitch
     });
-    return;
-  }
-  introAnimating = true;
-  map.easeTo({
-    center:  CONFIG.MAP.center,
-    zoom:    finalZoom,
-    bearing: CONFIG.MAP.bearing,  // final rotation
-    pitch:   CONFIG.MAP.pitch,
-    duration: 1400,
-    easing: t => 1 - Math.pow(1 - t, 3)
-  });
-  map.once('moveend', () => { introAnimating = false; });
-});
-
-
-  // Jump immediately so there’s no flash of the final view
-  map.jumpTo({
-    center: CONFIG.MAP.center,
-    zoom: Math.max(3, startZoom),
-    pitch: 0,
-    bearing: 0
-  })
-
-  if (doAnim) {
-    map.easeTo({
-      center: CONFIG.MAP.center,
-      zoom: (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop),
-      bearing: -15, // 15°
-      pitch: 0,     // keep your current pitch (0) or bump to 10 if you like
-      duration: 1400,
-      easing: t => 1 - Math.pow(1 - t, 3) // cubic ease-out
-    });
-  } else {
-    // If user prefers reduced motion, just jump to final state
-    map.jumpTo({
-      center: CONFIG.MAP.center,
-      zoom: (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop),
-      bearing: CONFIG.MAP.bearing,
-      pitch: CONFIG.MAP.pitch
-    });
   }
 });
+
 
 
     
