@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Local Events Widget</title>
+  <!-- MapLibre GL JS (UMD) -->
+  <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.7.0/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.7.0/dist/maplibre-gl.js"></script>
+  <!-- PMTiles (MapLibre plugin) -->
+  <script src="https://cdn.jsdelivr.net/npm/pmtiles@3.0.6/dist/pmtiles.js"></script>
+
+  <style>
+    :root{
+      --bg: #0b0b0b;           /* widget background */
+      --panel: #121212;        /* pinned panel background */
+      --text: #f3f3f3;         /* primary text */
+      --muted: #a1a1aa;        /* secondary text */
+      --accent: #0ea5e9;       /* accents & focus */
+      --marker: #888;          /* default marker */
+      --marker-promoted: #ff2d9b; /* hot pink */
+      --ring: #fff;            /* white ring for map markers */
+      --radius: 16px;
+    }
+
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif}
+
+    /* --- Layout: Map (left) + Pinned panel (right) --- */
+    .widget{
+      display:grid; grid-template-columns: 1fr min(380px, 40%);
+      gap: 10px; height: min(80vh, 760px); padding:10px;
+    }
+    #map{ width:100%; height:100%; border-radius: var(--radius); overflow:hidden; }
+
+    .panel{
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding: 12px; display:flex; flex-direction:column; gap:12px;
+      min-height:0; /* allow child scroll */
+    }
+
+    .row{ display:flex; gap:10px; align-items:center; }
+    .header{ display:flex; gap:8px; align-items:center; justify-content:space-between; }
+
+    .dateFilter{
+      appearance:none; background:#1c1c1c; color:var(--text);
+      border:1px solid #2a2a2a; border-radius:10px; padding:8px 10px;
+      outline:none; box-shadow:none; font:inherit; width: 100%;
+    }
+
+    .legend{ display:flex; gap:8px; align-items:center; color:var(--muted); font-size:12px; }
+    .dot{ width:10px; height:10px; border-radius:999px; background:var(--marker); box-shadow:0 0 0 2px var(--ring) inset; }
+    .dot.promo{ background:var(--marker-promoted); }
+
+    .card{ background:#1a1a1a; border:1px solid #2a2a2a; border-radius:12px; overflow:hidden; }
+    .card .media{ aspect-ratio: 16/9; background:#0d0d0d; display:block; width:100%; object-fit:cover; }
+    .card .body{ padding:12px; }
+    .title{ font-weight:700; font-size:16px; margin:0 0 2px; }
+    .muted{ color:var(--muted); font-size:12px; }
+    .desc{ margin-top:8px; color:#e7e7e7; font-size:13px; }
+
+    .btns{ display:flex; gap:8px; margin-top:10px; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      border:1px solid #2c2c2c; background:#181818; color:#fff; text-decoration:none;
+      padding:8px 10px; border-radius:10px; cursor:pointer; user-select:none;
+      transition: transform .06s ease, border-color .2s;
+    }
+    .btn:hover{ border-color:#3a3a3a; }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{ background:var(--accent); border-color:var(--accent); color:#03121a; font-weight:700; }
+
+    /* --- Map marker styles (div markers) --- */
+    .eventMarker{
+      --marker-color: var(--marker);
+      width:18px; height:18px; border-radius:999px; background: var(--marker-color);
+      position:relative; box-shadow: 0 0 0 2px var(--ring), 0 2px 8px rgba(0,0,0,.2);
+      transform: translate(-50%, -50%);
+    }
+    .eventMarker--promoted{ --marker-color: var(--marker-promoted); width:24px; height:24px; box-shadow: 0 0 0 3px var(--ring), 0 2px 10px rgba(0,0,0,.35); filter: drop-shadow(0 0 10px var(--marker-promoted)); }
+    /* Centered number (optional) */
+    .eventMarker__num{ position:absolute; inset:0; display:grid; place-items:center; color:#000; font-weight:800; font-size:11px; text-shadow:0 1px 0 rgba(255,255,255,.6); }
+
+    /* Small screens: stack panel under map */
+    @media (max-width: 820px){
+      .widget{ grid-template-columns: 1fr; height: auto; }
+      #map{ height: 54vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="widget" id="widgetRoot">
+    <div id="map"></div>
+
+    <aside class="panel">
+      <div class="header">
+        <div>
+          <div style="font-weight:700">Local Events</div>
+          <div class="legend"><span class="dot"></span> Nearby <span class="dot promo"></span> Promoted</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <input id="dateFilter" class="dateFilter" type="date" />
+      </div>
+
+      <!-- Pinned event card -->
+      <div class="card" id="pinned">
+        <img id="pinPhoto" class="media" alt="Event photo" />
+        <div class="body">
+          <h3 id="pinTitle" class="title">Select a marker</h3>
+          <div id="pinMeta" class="muted">Pick a date (optional) and click a marker on the map.</div>
+          <div id="pinDesc" class="desc" style="display:none"></div>
+          <div class="btns">
+            <a id="pinMore" class="btn" href="#" target="_blank" rel="noopener" style="display:none">More Info</a>
+            <a id="pinDirs" class="btn primary" href="#" target="_blank" rel="noopener" style="display:none">Directions</a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+  /*****************************************************************
+   * EMBED-READY WIDGET (single file)
+   *
+   * Configure via the CONFIG object below OR via query params:
+   *   ?sheet=SPREADSHEET_ID&tab=Sheet1&style=STYLE_URL&pm=PMTILES_URL
+   *   &hotelName=Soho%20Hotel%20Toronto&hotelLat=43.64&hotelLng=-79.39
+   *****************************************************************/
+  const CONFIG = {
+    SHEET_ID: "11ypk6inWH_ssq1giGnHOhOJg8_sVjlzExoKoWWXt_RU",     // Google Sheet ID (viewable/Published to web)
+    SHEET_TAB: "Events",                   // Sheet/tab name
+    STYLE_URL: "https://todoto.ca/style.json",  // Your MapLibre style.json (can reference pmtiles)
+    PMTILES_URL: "",                       // Optional: pmtiles URL if your style references pmtiles:// URLs
+    HOTEL_ORIGIN: {                         // Origin for directions
+      name: "SoHo Hotel Toronto",
+      lat: 43.64472457308373,  // e.g., 43.64274
+      lng: -79.3922206565273   // e.g., -79.39478
+    },
+    MAP: {
+      center: [-79.39246303205854, 43.66447814738001], // [lng, lat] – Queen's Park default
+      zoomDesktop: 12.8,
+      zoomMobile: 11.6,
+      pitch: 0,
+      bearing: 10 // subtle clockwise rotation
+    }
+  };
+
+  // Allow overrides by query params for easy per-hotel embeds
+  const qp = new URLSearchParams(location.search);
+  if (qp.get('sheet')) CONFIG.SHEET_ID = qp.get('sheet');
+  if (qp.get('tab')) CONFIG.SHEET_TAB = qp.get('tab');
+  if (qp.get('style')) CONFIG.STYLE_URL = qp.get('style');
+  if (qp.get('pm')) CONFIG.PMTILES_URL = qp.get('pm');
+  if (qp.get('hotelName')) CONFIG.HOTEL_ORIGIN.name = qp.get('hotelName');
+  if (qp.get('hotelLat')) CONFIG.HOTEL_ORIGIN.lat  = parseFloat(qp.get('hotelLat'));
+  if (qp.get('hotelLng')) CONFIG.HOTEL_ORIGIN.lng  = parseFloat(qp.get('hotelLng'));
+
+  // Register pmtiles protocol if provided (lets your style use pmtiles:// URLs)
+  if (CONFIG.PMTILES_URL){
+    const protocol = new pmtiles.Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tile);
+    // Preload for faster first paint (optional)
+    const p = new pmtiles.PMTiles(CONFIG.PMTILES_URL);
+    protocol.add(CONFIG.PMTILES_URL, p);
+  }
+
+  // Build map
+  const isMobile = matchMedia('(max-width: 820px)').matches;
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: CONFIG.STYLE_URL,
+    center: CONFIG.MAP.center,
+    zoom: isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop,
+    pitch: CONFIG.MAP.pitch,
+    bearing: CONFIG.MAP.bearing,
+    attributionControl: true,
+    hash: false,
+  });
+
+  // Remove maplibre logo (if desired, keep attribution per license)
+  map.addControl(new maplibregl.NavigationControl({showCompass:false, showZoom:false}), 'bottom-right'); // Zoom buttons hidden
+
+  // Data state
+  let allEvents = [];
+  const markers = [];
+
+  // Elements
+  const pinCard  = document.getElementById('pinned');
+  const pinPhoto = document.getElementById('pinPhoto');
+  const pinTitle = document.getElementById('pinTitle');
+  const pinMeta  = document.getElementById('pinMeta');
+  const pinDesc  = document.getElementById('pinDesc');
+  const pinMore  = document.getElementById('pinMore');
+  const pinDirs  = document.getElementById('pinDirs');
+  const dateFilter = document.getElementById('dateFilter');
+
+  // Sheet -> JSON loader (Google Visualization API, public readable)
+  async function loadSheet(){
+    if(!CONFIG.SHEET_ID) throw new Error('Missing CONFIG.SHEET_ID');
+    const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.SHEET_TAB)}`;
+    const res = await fetch(url, {cache:'no-store'});
+    const text = await res.text();
+    const json = JSON.parse(text.replace(/^.*setResponse\(/,'').replace(/\);?$/,''));
+    return gvizToObjects(json);
+  }
+
+  // Convert Google Visualization JSON to array of objects with normalized keys
+  function gvizToObjects(gv){
+    const cols = gv.table.cols.map(c => (c.label || c.id || '').trim());
+    const rows = gv.table.rows.map(r => r.c.map(c => c ? c.v : null));
+    return rows.map(arr => Object.fromEntries(cols.map((k,i)=>[k, arr[i]])));
+  }
+
+  // Basic normalizer for expected schema
+  function normalize(ev){
+    const get = (k, fallback='') => (ev[k] ?? ev[k?.toLowerCase?.()] ?? fallback);
+    const num = (n) => (n==null || n==="" ? null : Number(n));
+
+    const name  = String(get('Event name') || get('Name') || get('Title') || 'Event').trim();
+    const date  = (get('Date') || '').toString().slice(0,10); // yyyy-mm-dd
+    const start = (get('Start') || get('Time') || '').toString();
+    const end   = (get('End') || '').toString();
+    const cat   = String(get('Category') || 'Other').trim();
+    const link  = String(get('Link') || get('URL') || '').trim();
+    const addr  = String(get('Address') || '').trim();
+    const photo = String(get('Photo') || '').trim();
+    const desc  = String(get('Description') || '').trim();
+    const openH = String(get('Open') || get('Open Hours') || '').trim();
+    const closeH= String(get('Close') || get('Close Hours') || '').trim();
+    const lat   = num(get('Lat'));
+    const lng   = num(get('Lng'));
+
+    const promoted = /^(1|true|yes|y)$/i.test(String(get('Promoted')||'').trim());
+
+    return { name, date, start, end, category:cat, link, address:addr, photo, desc, openH, closeH, lat, lng, promoted };
+  }
+
+  // Utility: Google Maps directions URL
+  function gmapsDirUrl(origin, dest, mode='walking'){
+    const params = new URLSearchParams({ api: '1', origin, destination: dest, travelmode: mode });
+    return `https://www.google.com/maps/dir/?${params.toString()}`;
+  }
+
+  function fmtTimeRange(start, end){
+    const s = start ? start : '';
+    const e = end ? ` – ${end}` : '';
+    return (s||e) ? `${s}${e}` : '';
+  }
+
+  // Render markers for current filter
+  function render(){
+    // clear old markers
+    markers.splice(0).forEach(m => m.remove());
+
+    const chosenDate = dateFilter.value ? dateFilter.value : '';
+    const filtered = allEvents.filter(e => chosenDate ? e.date === chosenDate : true);
+
+    // Promoted first for z-index layering
+    const ordered = [
+      ...filtered.filter(e => e.promoted),
+      ...filtered.filter(e => !e.promoted)
+    ];
+
+    ordered.forEach((ev, idx) => {
+      if(ev.lat==null || ev.lng==null) return; // skip if no coords
+
+      const el = document.createElement('div');
+      el.className = 'eventMarker' + (ev.promoted ? ' eventMarker--promoted' : '');
+
+      // Optional: numbered markers (index per current render)
+      const num = document.createElement('div');
+      num.className = 'eventMarker__num';
+      num.textContent = String(idx+1);
+      el.appendChild(num);
+
+      const marker = new maplibregl.Marker({element: el, anchor:'center'})
+        .setLngLat([ev.lng, ev.lat])
+        .addTo(map);
+      markers.push(marker);
+
+      el.addEventListener('click', () => selectEvent(ev));
+    });
+  }
+
+  function selectEvent(ev){
+    // Update the pinned panel
+    pinPhoto.src = ev.photo || '';
+    pinPhoto.style.display = ev.photo ? 'block' : 'none';
+
+    pinTitle.textContent = ev.name || 'Event';
+    const dateStr = ev.date ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric', year:'numeric'}) : '';
+    const when = [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ');
+    const where = ev.address || '';
+    pinMeta.textContent = [when, where].filter(Boolean).join('  —  ');
+
+    if(ev.desc){
+      pinDesc.style.display = 'block';
+      pinDesc.textContent = ev.desc;
+    } else {
+      pinDesc.style.display = 'none';
+      pinDesc.textContent = '';
+    }
+
+    // Show action buttons
+    if(ev.link){
+      pinMore.style.display = 'inline-flex';
+      pinMore.href = ev.link;
+    } else {
+      pinMore.style.display = 'none';
+      pinMore.removeAttribute('href');
+    }
+
+    // Build Directions URL from hotel origin
+    const H = CONFIG.HOTEL_ORIGIN;
+    let origin = H.name;
+    if (H.lat!=null && H.lng!=null) origin = `${H.lat},${H.lng}`;
+
+    const dest = (ev.lat!=null && ev.lng!=null) ? `${ev.lat},${ev.lng}` : (ev.address || ev.name);
+
+    pinDirs.style.display = 'inline-flex';
+    pinDirs.href = gmapsDirUrl(origin, dest, 'walking');
+
+    // Center map on selection (gentle)
+    if (ev.lat!=null && ev.lng!=null){
+      map.easeTo({ center:[ev.lng, ev.lat], duration: 700, zoom: Math.max(map.getZoom(), isMobile?13:14) });
+    }
+  }
+
+  // Wire date filter
+  dateFilter.addEventListener('change', render);
+
+  // Kick off
+  (async function init(){
+    try{
+      const raw = await loadSheet();
+      allEvents = raw.map(normalize).filter(e => e.name && (e.lat!=null && e.lng!=null));
+      render();
+    }catch(err){
+      console.error('Sheet load failed', err);
+      pinTitle.textContent = 'Could not load events';
+      pinMeta.textContent = 'Please check the Sheet ID & permissions (Publish to web).';
+    }
+  })();
+  </script>
+</body>
+</html>
