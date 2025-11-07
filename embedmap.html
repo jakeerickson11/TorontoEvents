@@ -61,7 +61,12 @@
     .title{ font-weight:700; font-size:16px; margin:0 0 2px; }
     .muted{ color:var(--muted); font-size:12px; }
     .desc{ margin-top:8px; color:#e7e7e7; font-size:13px; }
+    .descMore{ cursor:pointer; color:var(--muted); }
+    .descMore:hover{ text-decoration: underline; }
 
+
+
+    
     .btns{ display:flex; gap:8px; margin-top:10px; }
     .btn{
       display:inline-flex; align-items:center; justify-content:center; gap:8px;
@@ -514,6 +519,35 @@ function sanitizeDesc(html){
     });
 }
 
+function renderTruncatedDesc(raw, el, limit = 500){
+  const plain = String(raw || '');
+  const cleanFull = sanitizeDesc(plain);
+
+  if (plain.length <= limit){
+    el.innerHTML = cleanFull;
+    el.style.display = cleanFull ? 'block' : 'none';
+    return;
+  }
+
+  // Make a truncated preview; avoid cutting mid-word for nicer look
+  const cutAt = (() => {
+    const soft = plain.slice(0, limit);
+    const lastSpace = soft.lastIndexOf(' ');
+    return lastSpace > 400 ? lastSpace : limit; // try to end near a word boundary
+  })();
+
+  const preview = sanitizeDesc(plain.slice(0, cutAt).trim());
+  el.innerHTML = `${preview}<span class="descMore" aria-label="Show more">…</span>`;
+  el.style.display = 'block';
+
+  // One-time expand on click of the ellipsis
+  const more = el.querySelector('.descMore');
+  if (more){
+    more.addEventListener('click', () => {
+      el.innerHTML = cleanFull;
+    }, { once: true });
+  }
+}
 
     
   function selectEvent(ev){
@@ -568,14 +602,16 @@ if (isRestaurant && menuLink) {
   pinMenu.removeAttribute('href');
 }
 
+// Description (truncate to 500 chars, expand on "…")
 const desc = (ev.desc || '').trim();
-if (desc) {
+if (desc){
   pinDesc.style.display = 'block';
-  pinDesc.innerHTML = sanitizeDesc(desc);
+  renderTruncatedDesc(desc, pinDesc, 500);
 } else {
   pinDesc.style.display = 'none';
   pinDesc.innerHTML = '';
 }
+
 
 
   // Center map on selection (gentle)
