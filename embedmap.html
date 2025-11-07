@@ -111,13 +111,14 @@
       </div>
 
       <div class="row">
-        <!-- Pretty date button (visible) -->
   <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
-        <!-- Real date input (hidden offscreen but accessible) -->
+
+  <!-- Real date input (we’ll reposition it in JS when needed) -->
   <input id="dateFilter" class="dateFilter" type="date"
          style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
          aria-hidden="true" />
-      </div>
+</div>
+
 
       <!-- Pinned event card -->
       <div class="card" id="pinned">
@@ -226,7 +227,40 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
   const pinDesc  = document.getElementById('pinDesc');
   const pinMore  = document.getElementById('pinMore');
   const dateFilter = document.getElementById('dateFilter');
-  const datePretty = document.getElementById('datePretty');
+const datePretty = document.getElementById('datePretty');
+
+// Default to today
+(function setDefaultToday(){
+  const t = new Date();
+  const yyyy = t.getFullYear();
+  const mm = String(t.getMonth()+1).padStart(2,'0');
+  const dd = String(t.getDate()).padStart(2,'0');
+  dateFilter.value = `${yyyy}-${mm}-${dd}`;
+})();
+
+function updateDatePretty(){
+  const v = dateFilter.value;
+  if (!v){ datePretty.textContent = 'Select date'; return; }
+  const d = new Date(v + 'T00:00:00');
+  datePretty.textContent = d.toLocaleDateString(undefined, {
+    weekday:'short', month:'short', day:'numeric', year:'numeric'
+  });
+}
+updateDatePretty();
+
+// Open native picker when button is clicked (works across browsers)
+datePretty.addEventListener('click', () => {
+  openNativeDatePicker(dateFilter, datePretty);
+});
+
+// Keep label + map in sync on change
+dateFilter.addEventListener('change', () => { updateDatePretty(); render(); });
+
+// Optional: keyboard accessibility on the button
+datePretty.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNativeDatePicker(dateFilter, datePretty); }
+});
+
 
     // --- Default date selector to today ---
 const today = new Date();
@@ -293,6 +327,45 @@ function normalize(ev){
   return { name, date, start, end, category, link, address:addr, photo, desc, openH, closeH, lat, lng, promoted, isStatic, menu };
 }
 
+function openNativeDatePicker(dateInput, anchorEl){
+  // Measure the pretty button and overlay the real input there
+  const r = anchorEl.getBoundingClientRect();
+  const s = dateInput.style;
+  s.position   = 'fixed';
+  s.left       = r.left + 'px';
+  s.top        = r.top  + 'px';
+  s.width      = r.width + 'px';
+  s.height     = r.height + 'px';
+  s.opacity    = 0;
+  s.pointerEvents = 'auto';
+  s.zIndex     = 9999;
+
+  const cleanup = () => {
+    // move offscreen again
+    s.position = 'absolute';
+    s.left = '-9999px';
+    s.top  = '0';
+    s.width = '1px';
+    s.height= '1px';
+    s.zIndex = '';
+    s.pointerEvents = 'none';
+  };
+
+  const onDone = () => { cleanup(); dateInput.removeEventListener('blur', onDone); dateInput.removeEventListener('change', onDone); };
+
+  dateInput.addEventListener('blur', onDone);
+  dateInput.addEventListener('change', onDone);
+
+  // Focus and try to open the picker
+  dateInput.focus({preventScroll:true});
+  // Prefer showPicker if supported (Chromium); fall back to click()
+  if (typeof dateInput.showPicker === 'function') {
+    try { dateInput.showPicker(); } catch {}
+  } else {
+    // Safari/Firefox – programmatic click usually works when focused & visible
+    dateInput.click();
+  }
+}
 
 
   // Utility: Google Maps directions URL
@@ -344,6 +417,7 @@ el.className = 'eventMarker' + (
       el.addEventListener('click', () => selectEvent(ev));
     });
   }
+    
 
 function normalizeLink(u) {
   if (!u) return '';
@@ -427,27 +501,6 @@ if (isRestaurant && menuLink) {
     });
   }
 }
-  // Wire date filter
-  //dateFilter.addEventListener('change', render);
-
-    // Default date to today
-(function setDefaultToday(){
-  const t = new Date();
-  const yyyy = t.getFullYear();
-  const mm = String(t.getMonth()+1).padStart(2,'0');
-  const dd = String(t.getDate()).padStart(2,'0');
-  dateFilter.value = `${yyyy}-${mm}-${dd}`;
-})();
-
-function updateDatePretty(){
-  const v = dateFilter.value;
-  if (!v){ datePretty.textContent = 'Select date'; return; }
-  const d = new Date(v + 'T00:00:00');
-  datePretty.textContent = d.toLocaleDateString(undefined, {
-    weekday:'short', month:'short', day:'numeric', year:'numeric'
-  });
-}
-updateDatePretty();
 
 // Clicking the pretty button opens the native picker
 datePretty.addEventListener('click', () => dateFilter.showPicker ? dateFilter.showPicker() : dateFilter.click());
