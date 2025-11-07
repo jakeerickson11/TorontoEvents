@@ -109,6 +109,7 @@
 
       <div class="row">
         <input id="dateFilter" class="dateFilter" type="date" />
+        <div id="dateLabel" class="muted" style="font-size:13px;"></div>
       </div>
 
       <!-- Pinned event card -->
@@ -217,6 +218,34 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
   const pinMore  = document.getElementById('pinMore');
   const dateFilter = document.getElementById('dateFilter');
 
+    // --- Default date selector to today ---
+const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth() + 1).padStart(2, '0');
+const dd = String(today.getDate()).padStart(2, '0');
+dateFilter.value = `${yyyy}-${mm}-${dd}`;
+
+// --- Show selected date in readable text ---
+const dateLabel = document.getElementById('dateLabel');
+function updateDateLabel() {
+  const val = dateFilter.value;
+  if (!val) { dateLabel.textContent = ''; return; }
+  const d = new Date(val + 'T00:00:00');
+  dateLabel.textContent = d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+updateDateLabel(); // run once on load
+dateFilter.addEventListener('change', () => {
+  updateDateLabel();
+  render();
+});
+
+
+    
   // Sheet -> JSON loader (Google Visualization API, public readable)
   async function loadSheet(){
     if(!CONFIG.SHEET_ID) throw new Error('Missing CONFIG.SHEET_ID');
@@ -379,7 +408,7 @@ function normalizeLink(u) {
   }
 }
   // Wire date filter
-  dateFilter.addEventListener('change', render);
+  //dateFilter.addEventListener('change', render);
 
   // Kick off
   (async function init(){
