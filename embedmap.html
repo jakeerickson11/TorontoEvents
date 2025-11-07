@@ -4,27 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Local Events Widget</title>
-  <!-- MapLibre GL JS (UMD) -->
-<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
 
+  <!-- MapLibre 3.6.2 (UMD) -->
+  <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
 
-
-<!-- PMTiles -->
-<script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
-
-  <script>
-  if (!window.maplibregl) {
-    const el = document.getElementById('map');
-    el.style.display = 'grid';
-    el.style.placeItems = 'center';
-    el.style.color = '#bbb';
-    el.innerHTML = 'Map library failed to load. Try self-hosting MapLibre or check CDN blockers.';
-    throw new Error('MapLibre not loaded');
-  }
-</script>
-
-
+  <!-- PMTiles -->
+  <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
 
   <style>
     :root{
@@ -145,6 +131,16 @@
    *   ?sheet=SPREADSHEET_ID&tab=Sheet1&style=STYLE_URL&pm=PMTILES_URL
    *   &hotelName=Soho%20Hotel%20Toronto&hotelLat=43.64&hotelLng=-79.39
    *****************************************************************/
+ if (!window.maplibregl) {
+      const el = document.getElementById('map');
+      el.style.display = 'grid';
+      el.style.placeItems = 'center';
+      el.style.color = '#bbb';
+      el.innerHTML = 'Map library failed to load. Try self-hosting or check CDN blockers.';
+      throw new Error('MapLibre not loaded');
+    }
+
+    
   const CONFIG = {
     SHEET_ID: "11ypk6inWH_ssq1giGnHOhOJg8_sVjlzExoKoWWXt_RU",     // Google Sheet ID (viewable/Published to web)
     SHEET_TAB: "Events",                   // Sheet/tab name
