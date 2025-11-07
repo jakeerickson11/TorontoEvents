@@ -234,19 +234,19 @@ map.once('load', () => {
     map.easeTo({
       center: CONFIG.MAP.center,
       zoom: (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop),
-      bearing: CONFIG.MAP.bearing, // 15°
+      bearing: -15, // 15°
       pitch: 10,     // keep your current pitch (0) or bump to 10 if you like
       duration: 1400,
       easing: t => 1 - Math.pow(1 - t, 3) // cubic ease-out
     });
-  } else {
+ // } else {
     // If user prefers reduced motion, just jump to final state
-    map.jumpTo({
-      center: CONFIG.MAP.center,
-      zoom: (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop),
-      bearing: CONFIG.MAP.bearing,
-      pitch: CONFIG.MAP.pitch
-    });
+  //  map.jumpTo({
+  //    center: CONFIG.MAP.center,
+  //    zoom: (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop),
+  //    bearing: CONFIG.MAP.bearing,
+  //    pitch: CONFIG.MAP.pitch
+  //  });
   }
 });
 
