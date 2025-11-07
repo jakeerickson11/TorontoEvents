@@ -551,16 +551,37 @@ dateFilter.addEventListener('change', () => { updateDatePretty(); render(); });
 
   // Kick off
   (async function init(){
-    try{
-      const raw = await loadSheet();
-      allEvents = raw.map(normalize).filter(e => e.name && (e.lat!=null && e.lng!=null));
-      render();
-    }catch(err){
-      console.error('Sheet load failed', err);
-      pinTitle.textContent = 'Could not load events';
-      pinMeta.textContent = 'Please check the Sheet ID & permissions (Publish to web).';
+  try{
+    const raw = await loadSheet();
+    allEvents = raw.map(normalize).filter(e => e.name && (e.lat!=null && e.lng!=null));
+
+    // Render all markers
+    render();
+
+    // --- NEW: Default to first item on load ---
+    if (allEvents.length > 0) {
+      const first = allEvents[0];
+      // Center the map gently on this marker
+      if (first.lat != null && first.lng != null) {
+        map.once('load', () => {
+          map.easeTo({
+            center: [first.lng, first.lat],
+            duration: 800,
+            zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
+          });
+        });
+      }
+      // Show its info in the pinned card
+      selectEvent(first);
     }
-  })();
+
+  }catch(err){
+    console.error('Sheet load failed', err);
+    pinTitle.textContent = 'Could not load events';
+    pinMeta.textContent = 'Please check the Sheet ID & permissions (Publish to web).';
+  }
+})();
+
   </script>
 </body>
 </html>
