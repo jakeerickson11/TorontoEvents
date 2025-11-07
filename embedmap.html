@@ -206,29 +206,29 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
 
 
     // build map 
+// build map
 const isMobile  = matchMedia('(max-width: 820px)').matches;
 const finalZoom = isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop;
 const startZoom = Math.max(3, finalZoom - 0.8);
-  const map = new maplibregl.Map({
+
+const map = new maplibregl.Map({
   container: 'map',
   style: CONFIG.STYLE_URL,
   center: CONFIG.MAP.center,
-  zoom: startZoom,     // ← start view
-  pitch: 0,            // ← start view (flat)
-  bearing: 0,          // ← start view (no rotation yet)
+  zoom: startZoom,  // start view
+  pitch: 0,
+  bearing: 0,
   attributionControl: true,
   hash: false,
 });
 
-    let introAnimating = false;
-
+let introAnimating = false;
 const doAnim =
   !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-  !qp.get('noAnim'); // allow ?noAnim=1 to disable
+  !qp.get('noAnim');
 
 map.once('load', () => {
   if (!doAnim) {
-    // Jump straight to final view (no animation)
     map.jumpTo({
       center: CONFIG.MAP.center,
       zoom:   finalZoom,
@@ -237,25 +237,18 @@ map.once('load', () => {
     });
     return;
   }
-
-  // Smoothly ease from the start view (already rendered) to the final view
   introAnimating = true;
   map.easeTo({
     center:  CONFIG.MAP.center,
     zoom:    finalZoom,
-    bearing: CONFIG.MAP.bearing,  // e.g. 15°
-    pitch:   CONFIG.MAP.pitch,    // keep your chosen pitch
+    bearing: CONFIG.MAP.bearing,  // final rotation
+    pitch:   CONFIG.MAP.pitch,
     duration: 1400,
-    easing: t => 1 - Math.pow(1 - t, 3) // cubic ease-out
+    easing: t => 1 - Math.pow(1 - t, 3)
   });
-
   map.once('moveend', () => { introAnimating = false; });
 });
 
-// Start slightly zoomed out / neutral bearing, then ease into final view
-map.once('load', () => {
-  // Set a calm starting state (no rotation) before animating
-  const startZoom = (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop) - 0.8;
 
   // Jump immediately so there’s no flash of the final view
   map.jumpTo({
@@ -304,14 +297,6 @@ map.once('load', () => {
   const dateFilter = document.getElementById('dateFilter');
 const datePretty = document.getElementById('datePretty');
 
-// Default to today
-(function setDefaultToday(){
-  const t = new Date();
-  const yyyy = t.getFullYear();
-  const mm = String(t.getMonth()+1).padStart(2,'0');
-  const dd = String(t.getDate()).padStart(2,'0');
-  dateFilter.value = `${yyyy}-${mm}-${dd}`;
-})();
 
 function updateDatePretty(){
   const v = dateFilter.value;
@@ -643,14 +628,14 @@ function selectEvent(ev){
   }
 
   // Center map on selection (gentle), but NOT during intro animation
-  if (!window.introAnimating && ev.lat != null && ev.lng != null){
-    map.easeTo({
-      center:[ev.lng, ev.lat],
-      duration: 700,
-      zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
-    });
-  }
+  if (!introAnimating && ev.lat != null && ev.lng != null) {
+  map.easeTo({
+    center:[ev.lng, ev.lat],
+    duration: 700,
+    zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
+  });
 }
+
 
 
 // Clicking the pretty button opens the native picker
