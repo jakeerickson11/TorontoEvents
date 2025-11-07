@@ -252,12 +252,6 @@ map.once('load', () => {
   map.once('moveend', () => { introAnimating = false; });
 });
 
-
-// Opening animation (respect reduced-motion + allow opt-out with ?noAnim=1)
-const doAnim =
-  !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-  !qp.get('noAnim');
-
 // Start slightly zoomed out / neutral bearing, then ease into final view
 map.once('load', () => {
   // Set a calm starting state (no rotation) before animating
