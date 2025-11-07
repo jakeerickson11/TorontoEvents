@@ -1,0 +1,11 @@
+<iframe
+  src="https://todoto.ca/hotel-widget.html
+       ?sheet=11ypk6inWH_ssq1giGnHOhOJg8_sVjlzExoKoWWXt_RU
+       &tab=Events
+       &style=https%3A%2F%2Ftodoto.ca%2Fstyle.json
+       &hotelName=SoHo%20Hotel%20Toronto
+       &hotelLat=43.64472457308373
+       &hotelLng=-79.3922206565273"
+  width="100%" height="640" style="border:0;border-radius:16px"
+  loading="lazy" sandbox="allow-scripts allow-same-origin">
+</iframe>
