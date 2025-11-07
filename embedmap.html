@@ -580,7 +580,7 @@ function renderTruncatedDesc(raw, el, limit = 500){
 }
 
     
-  function selectEvent(ev){
+function selectEvent(ev){
   // Photo
   pinPhoto.src = ev.photo || '';
   pinPhoto.style.display = ev.photo ? 'block' : 'none';
@@ -588,82 +588,70 @@ function renderTruncatedDesc(raw, el, limit = 500){
   // Title
   pinTitle.textContent = ev.name || 'Event';
 
-  // When (date/time or hours) and where (address)
-// When/Where line (hide if empty)
-const dateStr = ev.date
-  ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {
-      weekday:'short', month:'short', day:'numeric', year:'numeric'
-    })
-  : '';
+  // When / Where (hide row if empty)
+  const dateStr = ev.date
+    ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {
+        weekday:'short', month:'short', day:'numeric', year:'numeric'
+      })
+    : '';
 
-const when = ev.date
-  ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
-  : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
+  const when = ev.date
+    ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
+    : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
 
-const where = ev.address || '';
-const metaText = [when, where].filter(Boolean).join('  —  ');
-pinMeta.textContent = metaText;
-pinMeta.style.display = metaText ? 'block' : 'none';
+  const where = ev.address || '';
+  const metaText = [when, where].filter(Boolean).join('  —  ');
+  pinMeta.textContent = metaText;
+  pinMeta.style.display = metaText ? 'block' : 'none';
 
-// More Info (always absolute)
-const direct = normalizeLink(ev.link);
-if (direct) {
-  pinMore.style.display = 'inline-flex';
-  pinMore.href = direct;
-  pinMore.target = '_blank';
-  pinMore.rel = 'noopener noreferrer';
-} else {
-  pinMore.style.display = 'none';
-  pinMore.removeAttribute('href');
-}
+  // Description (truncate to 500 chars, expand on "…")
+  const desc = (ev.desc || '').trim();
+  if (desc){
+    pinDesc.style.display = 'block';
+    renderTruncatedDesc(desc, pinDesc, 500);
+  } else {
+    pinDesc.style.display = 'none';
+    pinDesc.innerHTML = '';
+  }
 
-// Menu button only for Restaurants (if present)
-const pinMenu = document.getElementById('pinMenu');
-const isRestaurant = (ev.category || '').toLowerCase().startsWith('restaurant');
-const menuLink = normalizeLink(ev.menu);
+  // More Info (normalize to absolute URL)
+  const direct = normalizeLink(ev.link);
+  if (direct) {
+    pinMore.style.display = 'inline-flex';
+    pinMore.href = direct;
+    pinMore.target = '_blank';
+    pinMore.rel = 'noopener noreferrer';
+  } else {
+    pinMore.style.display = 'none';
+    pinMore.removeAttribute('href');
+  }
 
-if (isRestaurant && menuLink) {
-  pinMenu.style.display = 'inline-flex';
-  pinMenu.href = menuLink;
-  pinMenu.target = '_blank';
-  pinMenu.rel = 'noopener noreferrer';
-} else {
-  pinMenu.style.display = 'none';
-  pinMenu.removeAttribute('href');
-}
+  // Menu button only for Restaurants (if present)
+  const pinMenu = document.getElementById('pinMenu');
+  if (pinMenu){
+    const isRestaurant = (ev.category || '').toLowerCase().startsWith('restaurant');
+    const menuLink = normalizeLink(ev.menu);
+    if (isRestaurant && menuLink) {
+      pinMenu.style.display = 'inline-flex';
+      pinMenu.href = menuLink;
+      pinMenu.target = '_blank';
+      pinMenu.rel = 'noopener noreferrer';
+    } else {
+      pinMenu.style.display = 'none';
+      pinMenu.removeAttribute('href');
+    }
+  }
 
-// Description (truncate to 500 chars, expand on "…")
-const desc = (ev.desc || '').trim();
-if (desc){
-  pinDesc.style.display = 'block';
-  renderTruncatedDesc(desc, pinDesc, 500);
-} else {
-  pinDesc.style.display = 'none';
-  pinDesc.innerHTML = '';
-}
-
-
-
-  // Center map on selection (gentle)
-  if (ev.lat!=null && ev.lng!=null){
+  // Center map on selection (gentle), but NOT during intro animation
+  if (!window.introAnimating && ev.lat != null && ev.lng != null){
     map.easeTo({
       center:[ev.lng, ev.lat],
       duration: 700,
       zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
-
-// Center map on selection (gentle), but not during intro animation
-if (!introAnimating && ev.lat != null && ev.lng != null){
-  map.easeTo({
-    center:[ev.lng, ev.lat],
-    duration: 700,
-    zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
-  });
-}
-
-      
     });
   }
 }
+
 
 // Clicking the pretty button opens the native picker
 datePretty.addEventListener('click', () => dateFilter.showPicker ? dateFilter.showPicker() : dateFilter.click());
