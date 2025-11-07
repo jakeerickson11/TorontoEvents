@@ -11,6 +11,18 @@
 <!-- PMTiles -->
 <script src="https://unpkg.com/pmtiles@3.0.6/dist/pmtiles.js"></script>
 
+  <script>
+  if (!window.maplibregl) {
+    const el = document.getElementById('map');
+    el.style.display = 'grid';
+    el.style.placeItems = 'center';
+    el.style.color = '#bbb';
+    el.innerHTML = 'Map library failed to load. Try self-hosting MapLibre or check CDN blockers.';
+    throw new Error('MapLibre not loaded');
+  }
+</script>
+
+
 
   <style>
     :root{
@@ -161,20 +173,7 @@
   if (qp.get('hotelLng')) CONFIG.HOTEL_ORIGIN.lng  = parseFloat(qp.get('hotelLng'));
 
   // Always register pmtiles:// protocol so styles can reference pmtiles:// URLs
-  const protocol = new pmtiles.Protocol();
-
-    <script>
-  if (!window.maplibregl) {
-    const el = document.getElementById('map');
-    el.style.display = 'grid';
-    el.style.placeItems = 'center';
-    el.style.color = '#bbb';
-    el.innerHTML = 'Map library failed to load. Try self-hosting MapLibre or check CDN blockers.';
-    throw new Error('MapLibre not loaded');
-  }
-</script>
-
-    
+  const protocol = new pmtiles.Protocol();    
   maplibregl.addProtocol("pmtiles", protocol.tile);
   // Preload for faster first paint (optional)
   if (CONFIG.PMTILES_URL){
