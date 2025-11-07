@@ -170,6 +170,11 @@
   if (qp.get('hotelLat')) CONFIG.HOTEL_ORIGIN.lat  = parseFloat(qp.get('hotelLat'));
   if (qp.get('hotelLng')) CONFIG.HOTEL_ORIGIN.lng  = parseFloat(qp.get('hotelLng'));
 
+
+// Debug: confirm MapLibre loaded and supports custom protocols
+console.log('MapLibre version:', maplibregl && maplibregl.version);
+console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
+    
   // Always register pmtiles:// protocol so styles can reference pmtiles:// URLs
   const protocol = new pmtiles.Protocol();    
   maplibregl.addProtocol("pmtiles", protocol.tile);
@@ -215,7 +220,12 @@
     const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.SHEET_TAB)}`;
     const res = await fetch(url, {cache:'no-store'});
     const text = await res.text();
-    const json = JSON.parse(text.replace(/^.*setResponse\(/,'').replace(/\);?$/,''));
+    const json = JSON.parse(
+  text
+    .replace(/^[\s\S]*setResponse\(/, '') // strip everything up to setResponse(
+    .replace(/\);\s*$/, '')                // strip the trailing );
+);
+
     return gvizToObjects(json);
   }
 
