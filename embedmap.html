@@ -170,7 +170,7 @@
       center: [-79.39246303205854, 43.66447814738001], // [lng, lat] – Queen's Park default
       zoomDesktop: 12.8,
       zoomMobile: 11.6,
-      pitch: 8,
+      pitch: 0,
       bearing: 15 // subtle clockwise rotation
     }
   };
@@ -212,6 +212,46 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
     hash: false,
   });
 
+// Opening animation (respect reduced-motion + allow opt-out with ?noAnim=1)
+const doAnim =
+  !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+  !qp.get('noAnim');
+
+// Start slightly zoomed out / neutral bearing, then ease into final view
+map.once('load', () => {
+  // Set a calm starting state (no rotation) before animating
+  const startZoom = (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop) - 0.8;
+
+  // Jump immediately so there’s no flash of the final view
+  map.jumpTo({
+    center: CONFIG.MAP.center,
+    zoom: Math.max(3, startZoom),
+    pitch: 0,
+    bearing: 0
+  })
+
+  if (doAnim) {
+    map.easeTo({
+      center: CONFIG.MAP.center,
+      zoom: (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop),
+      bearing: CONFIG.MAP.bearing, // 15°
+      pitch: 10,     // keep your current pitch (0) or bump to 10 if you like
+      duration: 1400,
+      easing: t => 1 - Math.pow(1 - t, 3) // cubic ease-out
+    });
+  } else {
+    // If user prefers reduced motion, just jump to final state
+    map.jumpTo({
+      center: CONFIG.MAP.center,
+      zoom: (isMobile ? CONFIG.MAP.zoomMobile : CONFIG.MAP.zoomDesktop),
+      bearing: CONFIG.MAP.bearing,
+      pitch: CONFIG.MAP.pitch
+    });
+  }
+});
+
+
+    
   // Remove maplibre logo (if desired, keep attribution per license)
   map.addControl(new maplibregl.NavigationControl({showCompass:false, showZoom:false}), 'bottom-right'); // Zoom buttons hidden
 
