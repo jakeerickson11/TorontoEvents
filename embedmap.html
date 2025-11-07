@@ -120,7 +120,7 @@
           <div id="pinDesc" class="desc" style="display:none"></div>
           <div class="btns">
             <a id="pinMore" class="btn" href="#" target="_blank" rel="noopener" style="display:none">More Info</a>
-            <a id="pinDirs" class="btn primary" href="#" target="_blank" rel="noopener" style="display:none">Directions</a>
+            
           </div>
         </div>
       </div>
@@ -215,7 +215,6 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
   const pinMeta  = document.getElementById('pinMeta');
   const pinDesc  = document.getElementById('pinDesc');
   const pinMore  = document.getElementById('pinMore');
-  const pinDirs  = document.getElementById('pinDirs');
   const dateFilter = document.getElementById('dateFilter');
 
   // Sheet -> JSON loader (Google Visualization API, public readable)
@@ -307,12 +306,6 @@ el.className = 'eventMarker' + (
 );
 
 
-      // Optional: numbered markers (index per current render)
-      const num = document.createElement('div');
-      num.className = 'eventMarker__num';
-      num.textContent = String(idx+1);
-      el.appendChild(num);
-
       const marker = new maplibregl.Marker({element: el, anchor:'center'})
         .setLngLat([ev.lng, ev.lat])
         .addTo(map);
@@ -322,6 +315,14 @@ el.className = 'eventMarker' + (
     });
   }
 
+function normalizeLink(u) {
+  if (!u) return '';
+  const s = String(u).trim();
+  if (/^https?:\/\//i.test(s)) return s;          // already absolute
+  if (/^www\./i.test(s)) return 'https://' + s;    // add scheme
+  return s; // leave as-is if author intentionally passed a custom scheme
+}
+    
   function selectEvent(ev){
     // Update the pinned panel
     pinPhoto.src = ev.photo || '';
@@ -335,6 +336,11 @@ el.className = 'eventMarker' + (
 
     const where = ev.address || '';
     pinMeta.textContent = [when, where].filter(Boolean).join('  —  ');
+
+    const metaText = [when, where].filter(Boolean).join('  —  ');
+pinMeta.textContent = metaText;
+pinMeta.style.display = metaText ? 'block' : 'none';
+
 
     if(ev.desc){
       pinDesc.style.display = 'block';
@@ -352,16 +358,6 @@ el.className = 'eventMarker' + (
       pinMore.style.display = 'none';
       pinMore.removeAttribute('href');
     }
-
-    // Build Directions URL from hotel origin
-    const H = CONFIG.HOTEL_ORIGIN;
-    let origin = H.name;
-    if (H.lat!=null && H.lng!=null) origin = `${H.lat},${H.lng}`;
-
-    const dest = (ev.lat!=null && ev.lng!=null) ? `${ev.lat},${ev.lng}` : (ev.address || ev.name);
-
-    pinDirs.style.display = 'inline-flex';
-    pinDirs.href = gmapsDirUrl(origin, dest, 'walking');
 
     // Center map on selection (gentle)
     if (ev.lat!=null && ev.lng!=null){
