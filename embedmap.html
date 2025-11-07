@@ -93,6 +93,9 @@
       .widget{ grid-template-columns: 1fr; height: auto; }
       #map{ height: 54vh; }
     }
+    /* Optional: make the pretty date button look a bit more input-like */
+#datePretty { font-weight:600; }
+
   </style>
 </head>
 <body>
@@ -108,8 +111,12 @@
       </div>
 
       <div class="row">
-        <input id="dateFilter" class="dateFilter" type="date" />
-        <div id="dateLabel" class="muted" style="font-size:13px;"></div>
+        <!-- Pretty date button (visible) -->
+  <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
+        <!-- Real date input (hidden offscreen but accessible) -->
+  <input id="dateFilter" class="dateFilter" type="date"
+         style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
+         aria-hidden="true" />
       </div>
 
       <!-- Pinned event card -->
@@ -121,6 +128,8 @@
           <div id="pinDesc" class="desc" style="display:none"></div>
           <div class="btns">
             <a id="pinMore" class="btn" href="#" target="_blank" rel="noopener" style="display:none">More Info</a>
+            <a id="pinMenu" class="btn" href="#" target="_blank" rel="noopener" style="display:none">Menu</a>
+
             
           </div>
         </div>
@@ -217,6 +226,7 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
   const pinDesc  = document.getElementById('pinDesc');
   const pinMore  = document.getElementById('pinMore');
   const dateFilter = document.getElementById('dateFilter');
+  const datePretty = document.getElementById('datePretty');
 
     // --- Default date selector to today ---
 const today = new Date();
@@ -286,12 +296,24 @@ function normalize(ev){
   const closeH= String(get('Close') || get('Close Hours') || '').trim();
   const lat   = num(get('Lat'));
   const lng   = num(get('Lng'));
+  const menu  = String(get('Menu') || get('Menu URL') || '').trim(); // NEW
 
   const promoted = /^(1|true|yes|y)$/i.test(String(get('Promoted')||'').trim());
   const isStatic = !date; // no Date = static venue (always show)
 
-  return { name, date, start, end, category:cat, link, address:addr, photo, desc, openH, closeH, lat, lng, promoted, isStatic };
+  // Normalize category to one of: Restaurants, Venues, Activities, Shopping, Events
+  const catLC = cat.toLowerCase();
+  let category = 'Other';
+  if (/^restaurant/.test(catLC)) category = 'Restaurants';
+  else if (/^venue/.test(catLC)) category = 'Venues';
+  else if (/^activit/.test(catLC)) category = 'Activities';
+  else if (/^shop/.test(catLC)) category = 'Shopping';
+  else if (/^event/.test(catLC)) category = 'Events';
+  else if (cat) category = cat; // keep custom if provided
+
+  return { name, date, start, end, category, link, address:addr, photo, desc, openH, closeH, lat, lng, promoted, isStatic, menu };
 }
+
 
 
   // Utility: Google Maps directions URL
@@ -372,33 +394,24 @@ function normalizeLink(u) {
   pinTitle.textContent = ev.name || 'Event';
 
   // When (date/time or hours) and where (address)
-  const dateStr = ev.date
-    ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {
-        weekday:'short', month:'short', day:'numeric', year:'numeric'
-      })
-    : '';
+// When/Where line (hide if empty)
+const dateStr = ev.date
+  ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {
+      weekday:'short', month:'short', day:'numeric', year:'numeric'
+    })
+  : '';
 
-  const when = ev.date
-    ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
-    : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
+const when = ev.date
+  ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
+  : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
 
-  const where = ev.address || '';
+const where = ev.address || '';
+const metaText = [when, where].filter(Boolean).join('  —  ');
+pinMeta.textContent = metaText;
+pinMeta.style.display = metaText ? 'block' : 'none';
 
-  const metaText = [when, where].filter(Boolean).join('  —  ');
-  pinMeta.textContent = metaText;
-  pinMeta.style.display = metaText ? 'block' : 'none';
-
-  // Description (hide if empty)
-  if (ev.desc && ev.desc.trim()) {
-    pinDesc.style.display = 'block';
-    pinDesc.textContent = ev.desc;
-  } else {
-    pinDesc.style.display = 'none';
-    pinDesc.textContent = '';
-  }
-
-  // More Info: use the exact URL from the sheet (normalized)
- const direct = normalizeLink(ev.link);
+// More Info (always absolute)
+const direct = normalizeLink(ev.link);
 if (direct) {
   pinMore.style.display = 'inline-flex';
   pinMore.href = direct;
@@ -408,6 +421,22 @@ if (direct) {
   pinMore.style.display = 'none';
   pinMore.removeAttribute('href');
 }
+
+// Menu button only for Restaurants (if present)
+const pinMenu = document.getElementById('pinMenu');
+const isRestaurant = (ev.category || '').toLowerCase().startsWith('restaurant');
+const menuLink = normalizeLink(ev.menu);
+
+if (isRestaurant && menuLink) {
+  pinMenu.style.display = 'inline-flex';
+  pinMenu.href = menuLink;
+  pinMenu.target = '_blank';
+  pinMenu.rel = 'noopener noreferrer';
+} else {
+  pinMenu.style.display = 'none';
+  pinMenu.removeAttribute('href');
+}
+
 
 
   // Center map on selection (gentle)
@@ -421,6 +450,32 @@ if (direct) {
 }
   // Wire date filter
   //dateFilter.addEventListener('change', render);
+
+    // Default date to today
+(function setDefaultToday(){
+  const t = new Date();
+  const yyyy = t.getFullYear();
+  const mm = String(t.getMonth()+1).padStart(2,'0');
+  const dd = String(t.getDate()).padStart(2,'0');
+  dateFilter.value = `${yyyy}-${mm}-${dd}`;
+})();
+
+function updateDatePretty(){
+  const v = dateFilter.value;
+  if (!v){ datePretty.textContent = 'Select date'; return; }
+  const d = new Date(v + 'T00:00:00');
+  datePretty.textContent = d.toLocaleDateString(undefined, {
+    weekday:'short', month:'short', day:'numeric', year:'numeric'
+  });
+}
+updateDatePretty();
+
+// Clicking the pretty button opens the native picker
+datePretty.addEventListener('click', () => dateFilter.showPicker ? dateFilter.showPicker() : dateFilter.click());
+
+// On change, update and re-render
+dateFilter.addEventListener('change', () => { updateDatePretty(); render(); });
+
 
   // Kick off
   (async function init(){
