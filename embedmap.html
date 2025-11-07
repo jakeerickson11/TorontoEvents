@@ -490,26 +490,30 @@ function normalizeLink(u) {
 
 function sanitizeDesc(html){
   if (!html) return '';
+
   // Convert raw URLs to links first (basic)
-  html = html.replace(/(^|\\s)((https?:\\/\\/)?[\\w.-]+\\.[a-z]{2,}(\\/\\S*)?)/ig, (m, pre, url) => {
-    const hasScheme = /^https?:\\/\\//i.test(url);
+  html = html.replace(/(^|\s)((https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/\S*)?)/ig, (m, pre, url) => {
+    const hasScheme = /^https?:\/\//i.test(url);
     const href = hasScheme ? url : 'https://' + url;
     return `${pre}<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`;
   });
+
   // Replace newlines with <br>
-  html = html.replace(/\\n/g, '<br>');
+  html = html.replace(/\n/g, '<br>');
 
   // Very light sanitize: keep only a small set of tags
-  const allowed = /<(\\/)?(br|b|strong|i|em|a)(\\s+[^>]*)?>/gi;
+  const allowed = /<(\/)?(br|b|strong|i|em|a)(\s+[^>]*)?>/gi;
+
   return html
     .replace(/</g, '&lt;')
-    .replace(/&lt;(\\/)?(br|b|strong|i|em|a)(\\s+[^>]*)?&gt;/gi, (m) => {
+    .replace(/&lt;(\/)?(br|b|strong|i|em|a)(\s+[^>]*)?&gt;/gi, (m) => {
       // re-enable allowed tags
       return m
         .replace('&lt;', '<')
         .replace('&gt;', '>');
     });
 }
+
 
     
   function selectEvent(ev){
