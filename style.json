@@ -5,8 +5,9 @@
    "sources": {
     "toronto": {
       "type": "vector",
-      "url": "pmtiles:https://pub-083e9ab60fc847608e085d99437174fb.r2.dev/toronto.pmtiles"
+      "url": "pmtiles://https://pub-083e9ab60fc847608e085d99437174fb.r2.dev/toronto.pmtiles"
     }
+  }
   },
   "layers": [
     {
