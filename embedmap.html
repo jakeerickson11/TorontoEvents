@@ -344,17 +344,28 @@ function normalize(ev){
   const link  = String(get('Link') || get('URL') || '').trim();
   const addr  = String(get('Address') || '').trim();
   const photo = String(get('Photo') || '').trim();
-  const desc  = String(get('Description') || '').trim();
+
+  // Robust description: accept several possible headers
+  const descRaw =
+      get('Description')
+   || get('Desc')
+   || get('About')
+   || get('Details')
+   || get('Summary')
+   || get('Notes')
+   || '';
+  const desc  = String(descRaw ?? '').trim();
+
   const openH = String(get('Open') || get('Open Hours') || '').trim();
   const closeH= String(get('Close') || get('Close Hours') || '').trim();
   const lat   = num(get('Lat'));
   const lng   = num(get('Lng'));
-  const menu  = String(get('Menu') || get('Menu URL') || '').trim(); // NEW
+  const menu  = String(get('Menu') || get('Menu URL') || '').trim();
 
   const promoted = /^(1|true|yes|y)$/i.test(String(get('Promoted')||'').trim());
   const isStatic = !date; // no Date = static venue (always show)
 
-  // Normalize category to one of: Restaurants, Venues, Activities, Shopping, Events
+  // Normalize category to the main 5 buckets
   const catLC = cat.toLowerCase();
   let category = 'Other';
   if (/^restaurant/.test(catLC)) category = 'Restaurants';
@@ -362,10 +373,11 @@ function normalize(ev){
   else if (/^activit/.test(catLC)) category = 'Activities';
   else if (/^shop/.test(catLC)) category = 'Shopping';
   else if (/^event/.test(catLC)) category = 'Events';
-  else if (cat) category = cat; // keep custom if provided
+  else if (cat) category = cat;
 
   return { name, date, start, end, category, link, address:addr, photo, desc, openH, closeH, lat, lng, promoted, isStatic, menu };
 }
+
 
 function openNativeDatePicker(dateInput, anchorEl){
   // Measure the pretty button and overlay the real input there
@@ -476,6 +488,28 @@ function normalizeLink(u) {
   return s;
 }
 
+function sanitizeDesc(html){
+  if (!html) return '';
+  // Convert raw URLs to links first (basic)
+  html = html.replace(/(^|\\s)((https?:\\/\\/)?[\\w.-]+\\.[a-z]{2,}(\\/\\S*)?)/ig, (m, pre, url) => {
+    const hasScheme = /^https?:\\/\\//i.test(url);
+    const href = hasScheme ? url : 'https://' + url;
+    return `${pre}<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+  });
+  // Replace newlines with <br>
+  html = html.replace(/\\n/g, '<br>');
+
+  // Very light sanitize: keep only a small set of tags
+  const allowed = /<(\\/)?(br|b|strong|i|em|a)(\\s+[^>]*)?>/gi;
+  return html
+    .replace(/</g, '&lt;')
+    .replace(/&lt;(\\/)?(br|b|strong|i|em|a)(\\s+[^>]*)?&gt;/gi, (m) => {
+      // re-enable allowed tags
+      return m
+        .replace('&lt;', '<')
+        .replace('&gt;', '>');
+    });
+}
 
     
   function selectEvent(ev){
@@ -530,6 +564,14 @@ if (isRestaurant && menuLink) {
   pinMenu.removeAttribute('href');
 }
 
+const desc = (ev.desc || '').trim();
+if (desc) {
+  pinDesc.style.display = 'block';
+  pinDesc.innerHTML = sanitizeDesc(desc);
+} else {
+  pinDesc.style.display = 'none';
+  pinDesc.innerHTML = '';
+}
 
 
   // Center map on selection (gentle)
