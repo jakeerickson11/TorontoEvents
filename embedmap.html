@@ -608,14 +608,8 @@ function selectEvent(ev){
     zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
   });
 }
+}
 
-
-
-// Clicking the pretty button opens the native picker
-datePretty.addEventListener('click', () => dateFilter.showPicker ? dateFilter.showPicker() : dateFilter.click());
-
-// On change, update and re-render
-dateFilter.addEventListener('change', () => { updateDatePretty(); render(); });
 
 
   // Kick off
