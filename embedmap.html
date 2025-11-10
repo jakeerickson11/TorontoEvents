@@ -84,7 +84,7 @@
   --marker-color: var(--marker);
   width:12px; height:12px; border-radius:999px;
   background: var(--marker-color);
-  position: fixed;           /* ← was absolute */
+  position: absolute;           /* ← was absolute */
   /* remove manual centering; MapLibre handles it with anchor:'center' */
   /* transform: translate(-50%, -50%);  ← delete */
   box-shadow: 0 0 0 2px var(--ring), 0 2px 8px rgba(0,0,0,.2);
@@ -123,6 +123,22 @@
     }
     /* Optional: make the pretty date button look a bit more input-like */
 #datePretty { font-weight:600; }
+
+    /* Category colors */
+.eventMarker--cat-restaurants{ --marker-color:#ff8a00; }  /* orange */
+.eventMarker--cat-venues     { --marker-color:#3b82f6; }  /* blue   */
+.eventMarker--cat-activities { --marker-color:#22c55e; }  /* green  */
+.eventMarker--cat-shopping   { --marker-color:#a855f7; }  /* purple */
+.eventMarker--cat-events     { --marker-color:#e11d48; }  /* red    */
+
+/* (optional) if you still want a subtle cue for static (no date), add a faint outer glow */
+.eventMarker--isStatic{
+  box-shadow:
+    0 0 0 2px var(--ring),
+    0 0 0 6px rgba(255,255,255,.12),      /* subtle extra ring */
+    0 2px 8px rgba(0,0,0,.2);
+}
+
 
   </style>
 </head>
@@ -520,11 +536,18 @@ if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
    ordered.forEach((ev) => {
   if (ev.lat == null || ev.lng == null) return;
 
-  const el = document.createElement('div');
-  el.className = 'eventMarker' + (
-    ev.promoted ? ' eventMarker--promoted' :
-    (!ev.date ? ' eventMarker--static' : '')
-  );
+ const el = document.createElement('div');
+
+// slug for category class
+const catSlug = (ev.category || 'other').toLowerCase().replace(/\s+/g,'-');
+
+// base + category + (optional) promoted + (optional) static cue
+el.className =
+  'eventMarker' +
+  ` eventMarker--cat-${catSlug}` +
+  (ev.promoted ? ' eventMarker--promoted' : '') +
+  (!ev.date ? ' eventMarker--isStatic' : '');
+
 
   const m = new maplibregl.Marker({ element: el, anchor: 'center' })
     .setLngLat([ev.lng, ev.lat])
@@ -695,7 +718,8 @@ function selectEvent(ev){
 // Highlight the corresponding marker if it exists
 const key = makeKey(ev);
 const found = markers.find(o => o.key === key);
-if (found) highlightMarker(found.el, found.key);
+if (found) highlightMarker(found.core, found.key);
+
 
   
 }
