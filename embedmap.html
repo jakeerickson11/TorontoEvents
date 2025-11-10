@@ -91,22 +91,20 @@
 /* Base marker – let MapLibre position it */
 .eventMarker{
   --marker-color: var(--marker);
-  width:12px; height:12px; border-radius:999px;
+  width:12px; height:12px;
+  border-radius:999px;
   background: var(--marker-color);
-  position: relative;              /* ← was absolute */
+  position: relative;
   box-shadow: 0 0 0 2px var(--ring), 0 2px 8px rgba(0,0,0,.2);
-  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-  /* NO translate() here */
+  /* remove transform transition to prevent drift */
+  transition: box-shadow .15s ease, filter .15s ease;
 }
+
 
 /* Active highlight: scale only (no translate) */
 .eventMarker.is-active{
-  transform: scale(1.35);          /* ← remove translate(...) */
-  box-shadow:
-    0 0 0 3px var(--ring),
-    0 0 0 6px rgba(255,255,255,.22),
-    0 6px 18px rgba(0,0,0,.45);
-  z-index: 10;
+  transform: scale(1.35);
+  transition: transform .1s ease, box-shadow .15s ease;
 }
 
 /* Leave your category/promoted classes as-is */
