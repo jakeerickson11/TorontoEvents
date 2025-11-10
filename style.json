@@ -112,8 +112,8 @@
         "text-size": ["interpolate", ["linear"], ["zoom"], 12, 12, 16, 20]
       },
       "paint": {
-        "text-color": "#5a5f66",
-        "text-halo-color": "#ffffff",
+        "text-color": "#ffffff",
+        "text-halo-color": "#5a5f66",
         "text-halo-width": 0.2
       }
     },
