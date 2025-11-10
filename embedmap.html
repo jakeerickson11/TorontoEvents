@@ -270,6 +270,14 @@ map.once('load', () => {
 });
 
 
+map.on('load', () => {
+  const keep = ['road', 'highway', 'street'];
+  map.getStyle().layers.forEach(l => {
+    if (l.type === 'symbol' && !keep.some(k => l.id.toLowerCase().includes(k))) {
+      map.setLayoutProperty(l.id, 'visibility', 'none');
+    }
+  });
+});
 
     
   // Remove maplibre logo (if desired, keep attribution per license)
