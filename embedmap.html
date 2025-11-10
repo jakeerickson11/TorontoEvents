@@ -84,11 +84,27 @@
       width:12px; height:12px; border-radius:999px; background: var(--marker-color);
       position:absolute; box-shadow: 0 0 0 2px var(--ring), 0 2px 8px rgba(0,0,0,.2);
       transform: translate(-50%, -50%);
+      transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
     }
     .eventMarker--promoted{ --marker-color: var(--marker-promoted); width:10px; height:10px; box-shadow: 0 0 0 3px var(--ring), 0 2px 10px rgba(0,0,0,.35); filter: drop-shadow(0 0 10px var(--marker-promoted)); }
     /* Centered number (optional) */
     .eventMarker__num{ position:absolute; inset:0; display:grid; place-items:center; color:#000; font-weight:800; font-size:11px; text-shadow:0 1px 0 rgba(255,255,255,.6); }
     .eventMarker--static{ --marker-color: #14b8a6; } /* teal */
+
+/* Highlighted (clicked/selected) marker */
+.eventMarker.is-active{
+  transform: translate(-50%, -50%) scale(1.35);
+  box-shadow:
+    0 0 0 3px var(--ring),
+    0 0 0 6px rgba(255,255,255,.22),
+    0 6px 18px rgba(0,0,0,.45);
+  z-index: 10;
+}
+
+/* Extra glow for promoted when active */
+.eventMarker--promoted.is-active{
+  filter: drop-shadow(0 0 14px var(--marker-promoted));
+}
 
 
 
@@ -161,6 +177,7 @@
     }
 
     
+    
   const CONFIG = {
     SHEET_ID: "11ypk6inWH_ssq1giGnHOhOJg8_sVjlzExoKoWWXt_RU",     // Google Sheet ID (viewable/Published to web)
     SHEET_TAB: "Events",                   // Sheet/tab name
@@ -179,6 +196,20 @@
       bearing: -15 // subtle clockwise rotation
     }
   };
+
+let activeKey = null;
+let activeMarkerEl = null;
+
+const makeKey = (e) => [e.name, e.date || '', e.lat, e.lng].join('|');
+
+function highlightMarker(el, key){
+  if (activeMarkerEl) activeMarkerEl.classList.remove('is-active');
+  activeMarkerEl = el;
+  activeKey = key;
+  el.classList.add('is-active');
+}
+
+    
 
   // Allow overrides by query params for easy per-hotel embeds
   const qp = new URLSearchParams(location.search);
@@ -455,7 +486,8 @@ function openNativeDatePicker(dateInput, anchorEl){
   // Render markers for current filter
   function render(){
     // clear old markers
-    markers.splice(0).forEach(m => m.remove());
+    markers.splice(0).forEach(obj => obj.marker.remove());
+
 
     const chosenDate = dateFilter.value ? dateFilter.value : '';
     const filtered = allEvents.filter(e => {
@@ -464,6 +496,13 @@ function openNativeDatePicker(dateInput, anchorEl){
   return e.date === chosenDate;   // dated events must match
 });
 
+    // If current activeKey won't be in this render, clear it
+if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
+  activeKey = null;
+  activeMarkerEl = null;
+}
+
+
 
     // Promoted first for z-index layering
     const ordered = [
@@ -471,23 +510,33 @@ function openNativeDatePicker(dateInput, anchorEl){
       ...filtered.filter(e => !e.promoted)
     ];
 
-    ordered.forEach((ev, idx) => {
-      if(ev.lat==null || ev.lng==null) return; // skip if no coords
+   ordered.forEach((ev) => {
+  if (ev.lat == null || ev.lng == null) return;
 
-      const el = document.createElement('div');
-el.className = 'eventMarker' + (
-  ev.promoted ? ' eventMarker--promoted' :
-  (!ev.date ? ' eventMarker--static' : '')
-);
+  const el = document.createElement('div');
+  el.className = 'eventMarker' + (
+    ev.promoted ? ' eventMarker--promoted' :
+    (!ev.date ? ' eventMarker--static' : '')
+  );
 
+  const m = new maplibregl.Marker({ element: el, anchor: 'center' })
+    .setLngLat([ev.lng, ev.lat])
+    .addTo(map);
 
-      const marker = new maplibregl.Marker({element: el, anchor:'center'})
-        .setLngLat([ev.lng, ev.lat])
-        .addTo(map);
-      markers.push(marker);
+  const key = makeKey(ev);
 
-      el.addEventListener('click', () => selectEvent(ev));
-    });
+  // Restore active highlight if this is the selected one
+  if (activeKey && key === activeKey) {
+    el.classList.add('is-active');
+    activeMarkerEl = el;
+  }
+
+  markers.push({ marker: m, el, ev, key });
+
+  el.addEventListener('click', () => {
+    highlightMarker(el, key);
+    selectEvent(ev);
+  });
   }
     
 
@@ -635,6 +684,13 @@ function selectEvent(ev){
     zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
   });
 }
+
+// Highlight the corresponding marker if it exists
+const key = makeKey(ev);
+const found = markers.find(o => o.key === key);
+if (found) highlightMarker(found.el, found.key);
+
+  
 }
 
 
