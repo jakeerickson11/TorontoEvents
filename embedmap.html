@@ -537,8 +537,8 @@ if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
     highlightMarker(el, key);
     selectEvent(ev);
   });
-  })
-    
+  });
+  }
 
 function normalizeLink(u) {
   if (!u) return '';
@@ -731,7 +731,7 @@ if (found) highlightMarker(found.el, found.key);
   } catch (err) {
     console.error('Sheet load failed', err);
     pinTitle.textContent = 'Could not load events';
-    pinMeta.textContent  = 'Please check the Sheet ID & permissions (Publish to web).';
+    pinMeta.textContent  = 'Not Available';
   }
 })();
 
