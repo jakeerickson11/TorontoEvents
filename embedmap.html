@@ -204,7 +204,17 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
     protocol.add(CONFIG.PMTILES_URL, p);
   }
 
-
+// Compute a ~km-based bounding box around [lng,lat]
+function kmBounds([lng, lat], km){
+  const R_LAT = 111.32;                  // km per degree latitude
+  const rad   = lat * Math.PI / 180;
+  const dLat  = km / R_LAT;
+  const dLng  = km / (R_LAT * Math.cos(rad));
+  return [
+    [lng - dLng, lat - dLat],            // [west, south]
+    [lng + dLng, lat + dLat]             // [east, north]
+  ];
+}   
     // build map 
 // build map
 // build map (start view so there's no flash)
@@ -216,13 +226,22 @@ const map = new maplibregl.Map({
   container: 'map',
   style: CONFIG.STYLE_URL,
   center: CONFIG.MAP.center,
-  zoom: startZoom,   // start slightly zoomed out
+  zoom: startZoom,
+  minZoom: 10,
+  maxZoom: 18,// start slightly zoomed out
   pitch: 0,          // flat at start
   bearing: 0,        // no rotation at start
   attributionControl: true,
   hash: false
 });
 
+// Lock panning to 5km around SoHo Hotel
+const hotelCenter = [CONFIG.HOTEL_ORIGIN.lng, CONFIG.HOTEL_ORIGIN.lat];
+const lockBounds  = kmBounds(hotelCenter, 5);
+map.setMaxBounds(lockBounds);
+
+
+    
 let introAnimating = false;
 const doAnim =
   !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
