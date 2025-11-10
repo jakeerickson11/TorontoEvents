@@ -94,7 +94,7 @@
   width:12px; height:12px;
   border-radius:999px;
   background: var(--marker-color);
-  position: relative;
+  position: absolute;
   box-shadow: 0 0 0 2px var(--ring), 0 2px 8px rgba(0,0,0,.2);
   /* remove transform transition to prevent drift */
   transition: box-shadow .15s ease, filter .15s ease;
@@ -305,7 +305,7 @@ map.once('load', () => {
     introAnimating = true;
     map.easeTo({
       center:  CONFIG.MAP.center,
-      zoom:    15,
+      zoom:    14,
       bearing: -15, // use +15 for clockwise
       pitch:   CONFIG.MAP.pitch,
       duration: 1400,
