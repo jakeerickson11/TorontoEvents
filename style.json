@@ -114,7 +114,7 @@
       "paint": {
         "text-color": "#5a5f66",
         "text-halo-color": "#ffffff",
-        "text-halo-width": 1
+        "text-halo-width": 0.5
       }
     },
 
