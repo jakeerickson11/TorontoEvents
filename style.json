@@ -109,7 +109,7 @@
         "symbol-placement": "line",
         "text-field": ["get", "name"],
         "text-font": ["Noto Sans Regular"],
-        "text-size": ["interpolate", ["linear"], ["zoom"], 10, 10, 14, 12]
+        "text-size": ["interpolate", ["linear"], ["zoom"], 12, 12, 16, 20]
       },
       "paint": {
         "text-color": "#5a5f66",
