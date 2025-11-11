@@ -138,6 +138,28 @@
     0 2px 8px rgba(0,0,0,.2);
 }
 
+/* Hotel marker (bigger, gold, star icon) */
+.eventMarker--hotel{
+  --marker-color:#fbbf24; /* amber-400 */
+  width:22px; height:22px;
+  border-radius:999px;
+  background: var(--marker-color);
+  box-shadow:
+    0 0 0 3px var(--ring),
+    0 4px 14px rgba(0,0,0,.35);
+  display:grid; place-items:center;
+}
+.eventMarker--hotel svg{
+  width:14px; height:14px; display:block;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,.35));
+}
+
+/* keep active pop */
+.eventMarker--hotel.is-active{
+  transform: scale(1.25);
+}
+    
+
 
   </style>
 </head>
@@ -221,6 +243,8 @@
 
 let activeKey = null;
 let activeMarkerEl = null;
+let hotelKey = null; // add near your other globals (activeKey, etc.)
+
 
 const makeKey = (e) => [e.name, e.date || '', e.lat, e.lng].join('|');
 
@@ -505,70 +529,81 @@ function openNativeDatePicker(dateInput, anchorEl){
     return (s||e) ? `${s}${e}` : '';
   }
 
-  // Render markers for current filter
-  function render(){
-    // clear old markers
-    markers.splice(0).forEach(obj => obj.marker.remove());
-
-
-    const chosenDate = dateFilter.value ? dateFilter.value : '';
-    const filtered = allEvents.filter(e => {
-  if (!chosenDate) return true;   // no filter → show all
-  if (!e.date) return true;       // static (no date) → always show
-  return e.date === chosenDate;   // dated events must match
-});
-
-    // If current activeKey won't be in this render, clear it
-if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
-  activeKey = null;
-  activeMarkerEl = null;
+function hotelSVG(){
+  // simple star; swap path if you prefer a “hotel” pictogram
+  return `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 2.5l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 2.5z" fill="#7c4d00"/>
+    </svg>`;
 }
 
 
+    
+// Render markers for current filter
+function render(){
+  // clear old markers
+  markers.splice(0).forEach(obj => obj.marker.remove());
 
-    // Promoted first for z-index layering
-    const ordered = [
-      ...filtered.filter(e => e.promoted),
-      ...filtered.filter(e => !e.promoted)
-    ];
+  const chosenDate = dateFilter.value ? dateFilter.value : '';
+  const filtered = allEvents.filter(e => {
+    if (!chosenDate) return true;   // no filter → show all
+    if (!e.date) return true;       // static (no date) → always show
+    return e.date === chosenDate;   // dated events must match
+  });
 
-   ordered.forEach((ev) => {
-  if (ev.lat == null || ev.lng == null) return;
-
- const el = document.createElement('div');
-
-// slug for category class
-const catSlug = (ev.category || 'other').toLowerCase().replace(/\s+/g,'-');
-
-// base + category + (optional) promoted + (optional) static cue
-el.className =
-  'eventMarker' +
-  ` eventMarker--cat-${catSlug}` +
-  (ev.promoted ? ' eventMarker--promoted' : '') +
-  (!ev.date ? ' eventMarker--isStatic' : '');
-
-
-  const m = new maplibregl.Marker({ element: el, anchor: 'center' })
-  .setLngLat([ev.lng, ev.lat])
-  .addTo(map);
-
-
-  const key = makeKey(ev);
-
-  // Restore active highlight if this is the selected one
-  if (activeKey && key === activeKey) {
-    el.classList.add('is-active');
-    activeMarkerEl = el;
+  // If current activeKey won't be in this render, clear it
+  if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
+    activeKey = null;
+    activeMarkerEl = null;
   }
 
-  markers.push({ marker: m, el, ev, key });
+  // Promoted first for z-index layering
+  const ordered = [
+    ...filtered.filter(e => e.promoted),
+    ...filtered.filter(e => !e.promoted)
+  ];
 
-  el.addEventListener('click', () => {
-    highlightMarker(el, key);
-    selectEvent(ev);
+  ordered.forEach((ev) => {
+    if (ev.lat == null || ev.lng == null) return;
+
+    const key = makeKey(ev);
+    const isHotel = (typeof hotelKey === 'string' && hotelKey === key);
+
+    // Build element
+    const el = document.createElement('div');
+    if (isHotel){
+      // hotel gets its own look (gold star)
+      el.className = 'eventMarker eventMarker--hotel';
+      if (typeof hotelSVG === 'function') el.innerHTML = hotelSVG();
+    } else {
+      // category color + optional promoted + optional static cue
+      const catSlug = (ev.category || 'other').toLowerCase().replace(/\s+/g,'-');
+      el.className =
+        'eventMarker' +
+        ` eventMarker--cat-${catSlug}` +
+        (ev.promoted ? ' eventMarker--promoted' : '') +
+        (!ev.date ? ' eventMarker--isStatic' : '');
+    }
+
+    const m = new maplibregl.Marker({ element: el, anchor: 'center' })
+      .setLngLat([ev.lng, ev.lat])
+      .addTo(map);
+
+    // Restore active highlight if this is the selected one
+    if (activeKey && key === activeKey) {
+      el.classList.add('is-active');
+      activeMarkerEl = el;
+    }
+
+    markers.push({ marker: m, el, ev, key });
+
+    el.addEventListener('click', () => {
+      highlightMarker(el, key);
+      selectEvent(ev);
+    });
   });
-  });
-  }
+}
+
 
 function normalizeLink(u) {
   if (!u) return '';
@@ -731,6 +766,11 @@ if (found) highlightMarker(found.core, found.key);
   try {
     const raw = await loadSheet();
     allEvents = raw.map(normalize).filter(e => e.name && (e.lat!=null && e.lng!=null));
+    
+    if (allEvents.length) {
+  hotelKey = makeKey(allEvents[0]); // first listed item is the hotel
+}
+
 
     render();
 
