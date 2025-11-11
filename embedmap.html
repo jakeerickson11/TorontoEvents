@@ -195,27 +195,12 @@
 /* Ensure clicks on the hotel SVG pass through to the wrapper */
 .eventMarker--hotel svg { pointer-events: none; }
 
-    #map { position: relative; }
-.dirbar{
-  position:absolute; left:10px; right:auto; bottom:10px;
-  background: rgba(20,20,20,.9);
-  color:#fff; border:1px solid #2a2a2a; border-radius:12px;
-  padding:8px 10px; font-size:13px; box-shadow:0 2px 10px rgba(0,0,0,.25);
-  backdrop-filter: blur(4px);
-}
-
 
   </style>
 </head>
 <body>
   <div class="widget" id="widgetRoot">
     <div id="map"></div>
-    <div id="map">
-  <div id="dirBar" class="dirbar" style="display:none">
-    <span id="dirText"></span>
-  </div>
-</div>
-
 
     <aside class="panel">
       <div class="header">
@@ -402,7 +387,6 @@ map.once('load', () => {
   }
 });
 
-    
 
 map.on('load', () => {
   const keep = ['road', 'highway', 'street'];
@@ -411,27 +395,6 @@ map.on('load', () => {
       map.setLayoutProperty(l.id, 'visibility', 'none');
     }
   });
-
-   if (!map.getSource('walk-route')) {
-    map.addSource('walk-route', {
-      type: 'geojson',
-      data: { type:'FeatureCollection', features:[] }
-    });
-  }
-  // Draw the route line
-  if (!map.getLayer('walk-route-line')) {
-    map.addLayer({
-      id: 'walk-route-line',
-      type: 'line',
-      source: 'walk-route',
-      paint: {
-        'line-color': '#0ea5e9',
-        'line-width': 4,
-        'line-opacity': 0.9
-      },
-      layout: { 'line-cap':'round', 'line-join':'round' }
-    });
-  }
 });
 
     
@@ -615,78 +578,6 @@ function hotelSVG(){
     </svg>`;
 }
 
-const dirBar  = document.getElementById('dirBar');
-const dirText = document.getElementById('dirText');
-let routeAbort = null;
-
-function metersToKm(m){ return m/1000; }
-function formatDistance(m){
-  const km = metersToKm(m);
-  return km < 1 ? `${Math.round(m/10)*10} m` : `${km.toFixed(km<10?1:0)} km`;
-}
-function formatDuration(sec){
-  const m = Math.round(sec/60);
-  if (m < 60) return `${m} min`;
-  const h = Math.floor(m/60), mm = m%60;
-  return mm ? `${h} hr ${mm} min` : `${h} hr`;
-}
-
-// Clear the route from the map + UI
-function clearRoute(){
-  const src = map.getSource('walk-route');
-  if (src) src.setData({ type:'FeatureCollection', features:[] });
-  dirBar.style.display = 'none';
-  if (routeAbort) { routeAbort.abort(); routeAbort = null; }
-}
-
-// Fetch a walking route from OSRM demo and draw it
-async function drawWalkingRoute(originLng, originLat, destLng, destLat){
-  // cancel any in-flight request
-  if (routeAbort) routeAbort.abort();
-  routeAbort = new AbortController();
-
-  const url = `https://router.project-osrm.org/route/v1/foot/` +
-              `${originLng},${originLat};${destLng},${destLat}` +
-              `?overview=full&geometries=geojson&alternatives=false&steps=false`;
-
-  try{
-    const res = await fetch(url, { signal: routeAbort.signal });
-    if (!res.ok) throw new Error('Route fetch failed');
-    const data = await res.json();
-    if (data.code !== 'Ok' || !data.routes?.[0]) throw new Error('No route');
-
-    const r = data.routes[0];
-    const line = {
-      type: 'FeatureCollection',
-      features: [{
-        type:'Feature',
-        properties:{},
-        geometry: r.geometry
-      }]
-    };
-
-    const src = map.getSource('walk-route');
-    if (src) src.setData(line);
-
-    // Show ETA + distance
-    dirText.textContent = `Walking ${formatDistance(r.distance)} • ${formatDuration(r.duration)}`;
-    dirBar.style.display = 'block';
-
-    // Optionally fit bounds to route (comment out if you prefer no move)
-    const coords = r.geometry.coordinates;
-    const lons = coords.map(c=>c[0]), lats = coords.map(c=>c[1]);
-    const sw = [Math.min(...lons), Math.min(...lats)];
-    const ne = [Math.max(...lons), Math.max(...lats)];
-    // Respect your maxBounds by padding modestly:
-    map.fitBounds([sw, ne], { padding: {top:20,right:20,bottom:60,left:20}, duration: 600 });
-
-  }catch(err){
-    clearRoute(); // hide bar if it fails
-    console.warn('Walking route error:', err.message || err);
-  } finally {
-    routeAbort = null;
-  }
-}
 
     
 // Render markers for current filter
@@ -831,7 +722,6 @@ function renderTruncatedDesc(raw, el, limit = 500){
 
     
 function selectEvent(ev){
-  clearRoute();
   // Photo
   pinPhoto.src = ev.photo || '';
   pinPhoto.style.display = ev.photo ? 'block' : 'none';
@@ -892,17 +782,7 @@ function selectEvent(ev){
       pinMenu.removeAttribute('href');
     }
   }
-// Build walking directions from hotel to the selected pin
-const H = CONFIG.HOTEL_ORIGIN;
-if (ev.lat != null && ev.lng != null && H.lat != null && H.lng != null) {
-  drawWalkingRoute(H.lng, H.lat, ev.lng, ev.lat);
-} else {
-  clearRoute();
-}
 
-
-
-  
   // Center map on selection (gentle), but NOT during intro animation
   if (!introAnimating && ev.lat != null && ev.lng != null) {
   map.easeTo({
