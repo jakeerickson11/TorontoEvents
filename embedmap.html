@@ -167,7 +167,12 @@
     /* Make sure clicking the hotel icon still clicks the marker */
 .eventMarker--hotel svg { pointer-events: none; }
 
-    
+    /* markers must be click-through targets */
+.maplibregl-marker{ pointer-events:auto; }
+.eventMarker{ pointer-events:auto; cursor:pointer; }
+/* hotel icon should not eat clicks */
+.eventMarker--hotel svg{ pointer-events:none; }
+
 
 
   </style>
@@ -258,11 +263,14 @@ let hotelKey = null; // add near your other globals (activeKey, etc.)
 const makeKey = (e) => [e.name, e.date || '', e.lat, e.lng].join('|');
 
 function highlightMarker(el, key){
-  if (activeMarkerEl) activeMarkerEl.classList.remove('is-active');
+  if (activeMarkerEl && document.body.contains(activeMarkerEl)) {
+    activeMarkerEl.classList.remove('is-active');
+  }
   activeMarkerEl = el;
   activeKey = key;
   el.classList.add('is-active');
 }
+
 
     
 
@@ -575,7 +583,7 @@ function render(){
   ordered.forEach((ev) => {
     if (ev.lat == null || ev.lng == null) return;
 
-    const key = makeKey(ev);
+    
     const isHotel = (typeof hotelKey === 'string' && hotelKey === key);
 
     // Build the visible marker element
@@ -597,6 +605,7 @@ function render(){
       .setLngLat([ev.lng, ev.lat])
       .addTo(map);
 
+    const key = makeKey(ev);
     const wrapperEl = m.getElement(); // MapLibre's DOM wrapper for the marker
 
     // Restore active highlight if this is the selected one
@@ -607,14 +616,16 @@ function render(){
 
     markers.push({ marker: m, el, ev, key });
 
+    const onPick = (e) => {
+  e.stopPropagation();
+  highlightMarker(el, key);
+  selectEvent(ev);
+};
+
+
     // Click anywhere on the marker (wrapper OR inner content)
-    wrapperEl.addEventListener('click', (e) => {
-      e.stopPropagation();
-      highlightMarker(el, key);   // add .is-active; clear previous
-      selectEvent(ev);            // update the pinned card and (maybe) center
-    }, { passive: true });
-  });
-}
+wrapperEl.addEventListener('click', onPick, { capture:false });
+el.addEventListener('click', onPick, { capture:false });
 
 
 
