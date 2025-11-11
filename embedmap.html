@@ -103,9 +103,14 @@
 
 /* Active highlight: scale only (no translate) */
 .eventMarker.is-active{
-  transform: scale(1.35);
-  transition: transform .1s ease, box-shadow .15s ease;
+  transform: scale(1.45); /* was 1.35 */
+  box-shadow:
+    0 0 0 3px var(--ring),
+    0 0 0 6px rgba(255,255,255,.22),
+    0 6px 18px rgba(0,0,0,.45);
+  z-index: 10;
 }
+
 
 /* Leave your category/promoted classes as-is */
 
@@ -158,6 +163,10 @@
 .eventMarker--hotel.is-active{
   transform: scale(1.25);
 }
+
+    /* Make sure clicking the hotel icon still clicks the marker */
+.eventMarker--hotel svg { pointer-events: none; }
+
     
 
 
@@ -569,14 +578,12 @@ function render(){
     const key = makeKey(ev);
     const isHotel = (typeof hotelKey === 'string' && hotelKey === key);
 
-    // Build element
+    // Build the visible marker element
     const el = document.createElement('div');
     if (isHotel){
-      // hotel gets its own look (gold star)
       el.className = 'eventMarker eventMarker--hotel';
       if (typeof hotelSVG === 'function') el.innerHTML = hotelSVG();
     } else {
-      // category color + optional promoted + optional static cue
       const catSlug = (ev.category || 'other').toLowerCase().replace(/\s+/g,'-');
       el.className =
         'eventMarker' +
@@ -585,9 +592,12 @@ function render(){
         (!ev.date ? ' eventMarker--isStatic' : '');
     }
 
+    // Create MapLibre marker and add to map
     const m = new maplibregl.Marker({ element: el, anchor: 'center' })
       .setLngLat([ev.lng, ev.lat])
       .addTo(map);
+
+    const wrapperEl = m.getElement(); // MapLibre's DOM wrapper for the marker
 
     // Restore active highlight if this is the selected one
     if (activeKey && key === activeKey) {
@@ -597,12 +607,15 @@ function render(){
 
     markers.push({ marker: m, el, ev, key });
 
-    el.addEventListener('click', () => {
-      highlightMarker(el, key);
-      selectEvent(ev);
-    });
+    // Click anywhere on the marker (wrapper OR inner content)
+    wrapperEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      highlightMarker(el, key);   // add .is-active; clear previous
+      selectEvent(ev);            // update the pinned card and (maybe) center
+    }, { passive: true });
   });
 }
+
 
 
 function normalizeLink(u) {
