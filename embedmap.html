@@ -563,9 +563,9 @@ function render(){
 
   const chosenDate = dateFilter.value ? dateFilter.value : '';
   const filtered = allEvents.filter(e => {
-    if (!chosenDate) return true;   // no filter → show all
-    if (!e.date) return true;       // static (no date) → always show
-    return e.date === chosenDate;   // dated events must match
+    if (!chosenDate) return true;     // no filter → show all
+    if (!e.date) return true;         // static (no date) → always show
+    return e.date === chosenDate;     // dated events must match
   });
 
   // If current activeKey won't be in this render, clear it
@@ -583,7 +583,7 @@ function render(){
   ordered.forEach((ev) => {
     if (ev.lat == null || ev.lng == null) return;
 
-    
+    const key = makeKey(ev);                                     // ← define key first
     const isHotel = (typeof hotelKey === 'string' && hotelKey === key);
 
     // Build the visible marker element
@@ -605,8 +605,7 @@ function render(){
       .setLngLat([ev.lng, ev.lat])
       .addTo(map);
 
-    const key = makeKey(ev);
-    const wrapperEl = m.getElement(); // MapLibre's DOM wrapper for the marker
+    const wrapperEl = m.getElement(); // MapLibre's DOM wrapper
 
     // Restore active highlight if this is the selected one
     if (activeKey && key === activeKey) {
@@ -616,18 +615,16 @@ function render(){
 
     markers.push({ marker: m, el, ev, key });
 
-    const onPick = (e) => {
-  e.stopPropagation();
-  highlightMarker(el, key);
-  selectEvent(ev);
-};
-
-
     // Click anywhere on the marker (wrapper OR inner content)
-wrapperEl.addEventListener('click', onPick, { capture:false });
-el.addEventListener('click', onPick, { capture:false });
+    const onPick = (e) => {
+      e.stopPropagation();
+      highlightMarker(el, key);
+      selectEvent(ev);
+    };
+    wrapperEl.addEventListener('click', onPick, { capture:false });
+  });
+}     
 
-}
 
 function normalizeLink(u) {
   if (!u) return '';
