@@ -357,22 +357,26 @@ map.setMaxBounds(lockBounds);
 
     
 let introAnimating = false;
-const doAnim =
-  !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
-  !qp.get('noAnim');
+// Respect prefers-reduced-motion, allow ?forceAnim=1 to override, ?noAnim=1 to disable
+const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const forceAnim = (qp.get('forceAnim') === '1');
+const doAnim = forceAnim || (!prefersReduced && !qp.get('noAnim'));
 
 map.once('load', () => {
   if (doAnim) {
     introAnimating = true;
-    map.easeTo({
-      center:  CONFIG.MAP.center,
-      zoom:    14,
-      bearing: -15, // use +15 for clockwise
-      pitch:   CONFIG.MAP.pitch,
-      duration: 1400,
-      easing: t => 1 - Math.pow(1 - t, 3)
+    // small raf ensures layout is ready, avoids rare jump/cancel
+    requestAnimationFrame(() => {
+      map.easeTo({
+        center:  CONFIG.MAP.center,
+        zoom:    finalZoom,
+        bearing: -15,   // ← final rotation
+        pitch:   CONFIG.MAP.pitch,
+        duration: 1400,
+        easing: t => 1 - Math.pow(1 - t, 3)
+      });
+      map.once('moveend', () => { introAnimating = false; });
     });
-    map.once('moveend', () => { introAnimating = false; });
   } else {
     map.jumpTo({
       center:  CONFIG.MAP.center,
