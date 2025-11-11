@@ -54,8 +54,8 @@
         "line-color": [
           "match", ["get","class"],
           ["path","track","cycleway","footway","pedestrian"], "#000000",
-          ["service","residential","minor"], "#707070",
-          "#707070"
+          ["service","residential","minor"], "#c4c4c4",
+          "#c4c4c4"
         ],
         "line-opacity": [
           "interpolate", ["linear"], ["zoom"],
