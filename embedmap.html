@@ -369,7 +369,7 @@ map.once('load', () => {
     requestAnimationFrame(() => {
       map.easeTo({
         center:  CONFIG.MAP.center,
-        zoom:    finalZoom,
+        zoom:    15,
         bearing: -15,   // ← final rotation
         pitch:   CONFIG.MAP.pitch,
         duration: 1400,
