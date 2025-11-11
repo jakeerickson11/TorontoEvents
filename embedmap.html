@@ -173,6 +173,27 @@
 /* hotel icon should not eat clicks */
 .eventMarker--hotel svg{ pointer-events:none; }
 
+/* Click highlight applied to the MapLibre wrapper */
+.maplibregl-marker.is-active .eventMarker{
+  transform: scale(1.6);
+  box-shadow:
+    0 0 0 3px var(--ring),
+    0 0 0 8px rgba(255,255,255,.22),
+    0 8px 24px rgba(0,0,0,.50);
+  z-index: 10;
+}
+
+/* Hotel stays extra glowy when active */
+.maplibregl-marker.is-active .eventMarker--hotel{
+  transform: scale(1.4);
+  box-shadow:
+    0 0 0 4px var(--ring),
+    0 0 0 10px rgba(251,191,36,.28),
+    0 10px 28px rgba(0,0,0,.55);
+}
+
+/* Ensure clicks on the hotel SVG pass through to the wrapper */
+.eventMarker--hotel svg { pointer-events: none; }
 
 
   </style>
@@ -256,19 +277,18 @@
   };
 
 let activeKey = null;
+let activeWrapperEl = null;
 let activeMarkerEl = null;
 let hotelKey = null; // add near your other globals (activeKey, etc.)
 
 
 const makeKey = (e) => [e.name, e.date || '', e.lat, e.lng].join('|');
 
-function highlightMarker(el, key){
-  if (activeMarkerEl && document.body.contains(activeMarkerEl)) {
-    activeMarkerEl.classList.remove('is-active');
-  }
-  activeMarkerEl = el;
+function highlightMarker(wrapperEl, key){
+  if (activeWrapperEl) activeWrapperEl.classList.remove('is-active');
+  activeWrapperEl = wrapperEl;
   activeKey = key;
-  el.classList.add('is-active');
+  wrapperEl.classList.add('is-active');
 }
 
 
@@ -563,18 +583,17 @@ function render(){
 
   const chosenDate = dateFilter.value ? dateFilter.value : '';
   const filtered = allEvents.filter(e => {
-    if (!chosenDate) return true;     // no filter → show all
-    if (!e.date) return true;         // static (no date) → always show
-    return e.date === chosenDate;     // dated events must match
+    if (!chosenDate) return true;
+    if (!e.date) return true;
+    return e.date === chosenDate;
   });
 
-  // If current activeKey won't be in this render, clear it
+  // If selected pin won't be in this render, clear highlight pointer
   if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
     activeKey = null;
-    activeMarkerEl = null;
+    activeWrapperEl = null;
   }
 
-  // Promoted first for z-index layering
   const ordered = [
     ...filtered.filter(e => e.promoted),
     ...filtered.filter(e => !e.promoted)
@@ -583,10 +602,10 @@ function render(){
   ordered.forEach((ev) => {
     if (ev.lat == null || ev.lng == null) return;
 
-    const key = makeKey(ev);                                     // ← define key first
+    const key = makeKey(ev);
     const isHotel = (typeof hotelKey === 'string' && hotelKey === key);
 
-    // Build the visible marker element
+    // Build marker element
     const el = document.createElement('div');
     if (isHotel){
       el.className = 'eventMarker eventMarker--hotel';
@@ -600,30 +619,28 @@ function render(){
         (!ev.date ? ' eventMarker--isStatic' : '');
     }
 
-    // Create MapLibre marker and add to map
-    const m = new maplibregl.Marker({ element: el, anchor: 'center' })
+    const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
       .setLngLat([ev.lng, ev.lat])
       .addTo(map);
 
-    const wrapperEl = m.getElement(); // MapLibre's DOM wrapper
+    const wrapperEl = marker.getElement(); // MapLibre wrapper <div class="maplibregl-marker">
 
-    // Restore active highlight if this is the selected one
+    // Restore highlight if this is the selected one
     if (activeKey && key === activeKey) {
-      el.classList.add('is-active');
-      activeMarkerEl = el;
+      wrapperEl.classList.add('is-active');
+      activeWrapperEl = wrapperEl;
     }
 
-    markers.push({ marker: m, el, ev, key }); 
-    const onPick = (e) => { 
-      e.stopPropagation(); 
-      highlightMarker(el, key); 
-      selectEvent(ev); 
-    };  
-    
-    wrapperEl.addEventListener('click', onPick, { capture:false }); 
-    el.addEventListener('click', onPick, { capture:false }); 
+    markers.push({ marker, wrapperEl, el, ev, key });
+
+    // Any click on the wrapper (or its children) will highlight + select
+    wrapperEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      highlightMarker(wrapperEl, key);
+      selectEvent(ev);
+    }, { passive: true });
   });
-}     
+}
 
 
 function normalizeLink(u) {
@@ -774,10 +791,7 @@ function selectEvent(ev){
 // Highlight the corresponding marker if it exists
 const key = makeKey(ev);
 const found = markers.find(o => o.key === key);
-if (found) highlightMarker(found.core, found.key);
-
-
-  
+if (found) highlightMarker(found.wrapperEl, key);  
 }
 
 
