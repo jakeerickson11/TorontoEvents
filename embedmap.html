@@ -613,15 +613,15 @@ function render(){
       activeMarkerEl = el;
     }
 
-    markers.push({ marker: m, el, ev, key });
-
-    // Click anywhere on the marker (wrapper OR inner content)
-    const onPick = (e) => {
-      e.stopPropagation();
-      highlightMarker(el, key);
-      selectEvent(ev);
-    };
-    wrapperEl.addEventListener('click', onPick, { capture:false });
+    markers.push({ marker: m, el, ev, key }); 
+    const onPick = (e) => { 
+      e.stopPropagation(); 
+      highlightMarker(el, key); 
+      selectEvent(ev); 
+    };  
+    
+    wrapperEl.addEventListener('click', onPick, { capture:false }); 
+    el.addEventListener('click', onPick, { capture:false }); }
   });
 }     
 
