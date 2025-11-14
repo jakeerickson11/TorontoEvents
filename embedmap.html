@@ -364,6 +364,19 @@
   background: transparent;
 }
 
+/* breathing room + smooth scroll */
+.list{
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 0 4px 8px 0;   /* bottom pad helps when aligning to bottom */
+  scroll-behavior: smooth;
+  scroll-padding-bottom: 8px; /* extra safety for any scrollIntoView usage */
+}
+
 
 
   </style>
@@ -883,12 +896,30 @@ function makeCard(ev){
   return card;
 }
 
-function scrollCardIntoList(card){
+function scrollCardIntoList(card, align='bottom'){
   if (!eventList || !card) return;
-  // Scroll the list container, not the page
-  const top = card.offsetTop - 8; // small padding
-  eventList.scrollTo({ top, behavior: 'smooth' });
+
+  const list = eventList;
+  const cardTop = card.offsetTop;                 // card is a direct child
+  const cardBottom = cardTop + card.offsetHeight;
+  let targetTop;
+
+  if (align === 'bottom'){
+    // place the card’s bottom at the list’s bottom edge
+    targetTop = cardBottom - list.clientHeight;
+  } else if (align === 'center'){
+    targetTop = cardTop - (list.clientHeight - card.offsetHeight)/2;
+  } else { // 'top'
+    targetTop = cardTop;
+  }
+
+  // clamp so we never overscroll past bounds
+  const maxTop = Math.max(0, list.scrollHeight - list.clientHeight);
+  targetTop = Math.max(0, Math.min(targetTop, maxTop));
+
+  list.scrollTo({ top: targetTop, behavior: 'smooth' });
 }
+
 
 function scrollCardToTop(card){
   if (!eventList || !card) return;
@@ -990,40 +1021,40 @@ function render(){
     markers.push({ marker, wrapperEl, el, ev, key, card });
 
     // Click on marker → highlight + select + sync card
-   wrapperEl.addEventListener('click', (e) => {
+wrapperEl.addEventListener('click', (e) => {
   e.stopPropagation();
-
-  // list highlight
   if (activeListEl) activeListEl.classList.remove('is-active');
   if (card){
     card.classList.add('is-active');
     activeListEl = card;
-    scrollCardToTop(card);      // ⬅ align to top of the list
+    scrollCardIntoList(card, 'bottom');   // ⬅ align to bottom of list
   }
-
-  // marker highlight + map center
   highlightMarker(wrapperEl, key);
   selectEvent(ev);
 }, { passive: true });
 
 
 
+
     // Click on card → highlight + select + center map
     if (card){
-      card.addEventListener('click', () => {
-        if (activeListEl) activeListEl.classList.remove('is-active');
-        card.classList.add('is-active');
-        activeListEl = card;
+     card.addEventListener('click', () => {
+  if (activeListEl) activeListEl.classList.remove('is-active');
+  card.classList.add('is-active');
+  activeListEl = card;
 
-        highlightMarker(wrapperEl, key);
-        selectEvent(ev);
+  highlightMarker(wrapperEl, key);
+  selectEvent(ev);
 
-        map.easeTo({
-          center:[ev.lng, ev.lat],
-          duration: 600,
-          zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
-        });
-      });
+  // keep the selected card fully visible
+  scrollCardIntoList(card, 'bottom');
+  map.easeTo({
+    center:[ev.lng, ev.lat],
+    duration: 600,
+    zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
+  });
+});
+
     }
   });
 }
