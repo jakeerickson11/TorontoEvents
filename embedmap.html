@@ -907,7 +907,7 @@ function scrollCardIntoList(card, align='bottom'){
   if (align === 'bottom'){
     // place the card’s bottom at the list’s bottom edge
     targetTop = cardBottom - list.clientHeight;
-  } else if (align === 'center'){
+  } else if (align === 'bottom'){
     targetTop = cardTop - (list.clientHeight - card.offsetHeight)/2;
   } else { // 'top'
     targetTop = cardTop;
