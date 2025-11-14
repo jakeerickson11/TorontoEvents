@@ -252,7 +252,7 @@
         </div>
       </div>
 
-      <div class="row" id="catPills"></div>
+<div class="row" id="catPills"></div>
 
 <div class="row">
   <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
@@ -261,23 +261,23 @@
          aria-hidden="true" />
 </div>
 
-
-
+<!-- Scrollable list -->
 <div id="eventList" class="list"></div>
 
-        <img id="pinPhoto" class="media" alt="Event photo" />
-        <div class="body">
-          <h3 id="pinTitle" class="title">Select a marker</h3>
-          <div id="pinMeta" class="muted">Pick a date (optional) and click a marker on the map.</div>
-          <div id="pinDesc" class="desc" style="display:none"></div>
-          <div class="btns">
-            <a id="pinMore" class="btn" href="#" target="_blank" rel="noopener" style="display:none">More Info</a>
-            <a id="pinMenu" class="btn" href="#" target="_blank" rel="noopener" style="display:none">Menu</a>
+<!-- ✅ Pinned card wrapper restored -->
+<div class="card" id="pinned">
+  <img id="pinPhoto" class="media" alt="Event photo" />
+  <div class="body">
+    <h3 id="pinTitle" class="title">Select a marker</h3>
+    <div id="pinMeta" class="muted">Pick a date (optional) and click a marker on the map.</div>
+    <div id="pinDesc" class="desc" style="display:none"></div>
+    <div class="btns">
+      <a id="pinMore" class="btn" href="#" target="_blank" rel="noopener" style="display:none">More Info</a>
+      <a id="pinMenu" class="btn" href="#" target="_blank" rel="noopener" style="display:none">Menu</a>
+    </div>
+  </div>
+</div>
 
-            
-          </div>
-        </div>
-      </div>
     </aside>
   </div>
 
@@ -502,6 +502,7 @@ const yyyy = today.getFullYear();
 const mm = String(today.getMonth() + 1).padStart(2, '0');
 const dd = String(today.getDate()).padStart(2, '0');
 dateFilter.value = `${yyyy}-${mm}-${dd}`;
+    updateDatePretty();
 
   // Sheet -> JSON loader (Google Visualization API, public readable)
   async function loadSheet(){
@@ -1034,7 +1035,7 @@ if (found){
   activeListEl = found.card;
 }
 
-
+}
 
 
   // Kick off
