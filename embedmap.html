@@ -853,10 +853,23 @@ function scrollCardIntoList(card){
 
 function scrollCardToTop(card){
   if (!eventList || !card) return;
-  // align the card just below the sticky filters
-  const top = Math.max(card.offsetTop - filtersH - 8, 0);
-  eventList.scrollTo({ top, behavior: 'smooth' });
+
+  const list       = eventList;
+  const cardTop    = card.offsetTop;        // distance from list top
+  const cardHeight = card.offsetHeight;
+  const viewH      = list.clientHeight;
+
+  // If the card is taller than the viewport, just show its top
+  if (cardHeight >= viewH) {
+    list.scrollTo({ top: Math.max(cardTop - 4, 0), behavior: 'smooth' });
+    return;
+  }
+
+  // Target so the card's BOTTOM sits on the viewport bottom (with tiny padding)
+  const target = Math.max(cardTop - (viewH - cardHeight) - 8, 0);
+  list.scrollTo({ top: target, behavior: 'smooth' });
 }
+
 
 
 
