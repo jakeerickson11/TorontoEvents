@@ -217,6 +217,25 @@
 .swatch--shopping   { background:#a855f7; }
 .swatch--events     { background:#e11d48; }
 
+/* Right panel list */
+.list{
+  display:flex; flex-direction:column; gap:10px;
+  overflow:auto; min-height:0; /* allow scrolling inside panel */
+  padding-right:2px;           /* keep scrollbar off the text */
+}
+
+/* Reuse your .card styles; add an active/selected look */
+.card.is-active{
+  border-color:#3a93c9;
+  box-shadow: 0 0 0 2px rgba(14,165,233,.35);
+}
+
+.card .actions{
+  display:flex; gap:8px; margin-top:10px;
+}
+
+/* (small visual) tighten meta/desc spacing inside list cards */
+.card .title{ margin-bottom:4px; }
 
 
   </style>
@@ -244,8 +263,8 @@
 
 
 
-      <!-- Pinned event card -->
-      <div class="card" id="pinned">
+<div id="eventList" class="list"></div>
+
         <img id="pinPhoto" class="media" alt="Event photo" />
         <div class="body">
           <h3 id="pinTitle" class="title">Select a marker</h3>
@@ -617,6 +636,8 @@ function hotelSVG(){
     </svg>`;
 }
 
+const pillEls = {}; // cat -> {root, labelEl, countEl}
+
 function buildCatPills(){
   catPillsRoot.innerHTML = '';
   CAT_ORDER.forEach(cat => {
@@ -631,20 +652,113 @@ function buildCatPills(){
     const label = document.createElement('span');
     label.textContent = cat;
 
-    pill.appendChild(sw);
-    pill.appendChild(label);
+    const count = document.createElement('span');
+    count.textContent = '(0)';
+    count.style.opacity = .8;
+
+    pill.append(sw, label, count);
     catPillsRoot.appendChild(pill);
 
     pill.addEventListener('click', () => {
       if (activeCats.has(cat)) activeCats.delete(cat);
       else activeCats.add(cat);
       pill.classList.toggle('is-off', !activeCats.has(cat));
-      render();
+      render();                         // re-render markers + list
     });
+
+    pillEls[cat] = { root:pill, labelEl:label, countEl:count };
   });
 }
 buildCatPills();
 
+// Recompute pill counts given a set of rows (usually filtered by date)
+function updatePillCounts(rows){
+  // count by category in the supplied rows
+  const counts = CAT_ORDER.reduce((acc, c) => (acc[c]=0, acc), {});
+  rows.forEach(e => { if (counts[e.category] != null) counts[e.category]++; });
+
+  // write counts and "off" state
+  CAT_ORDER.forEach(cat => {
+    const { root, countEl } = pillEls[cat] || {};
+    if (!root) return;
+    countEl.textContent = `(${counts[cat] || 0})`;
+    root.classList.toggle('is-off', !activeCats.has(cat));
+  });
+}
+
+buildCatPills();
+
+const eventList = document.getElementById('eventList');
+let activeListEl = null;
+
+function makeCard(ev){
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  if (ev.photo){
+    const img = document.createElement('img');
+    img.className = 'media';
+    img.alt = ev.name || 'Photo';
+    img.src = ev.photo;
+    card.appendChild(img);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'body';
+
+  const h = document.createElement('h3');
+  h.className = 'title';
+  h.textContent = ev.name || 'Event';
+  body.appendChild(h);
+
+  // When / where line
+  const meta = document.createElement('div');
+  meta.className = 'muted';
+  const dateStr = ev.date
+    ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric', year:'numeric'})
+    : '';
+  const when = ev.date
+    ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
+    : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
+  const where = ev.address || '';
+  meta.textContent = [when, where].filter(Boolean).join('  —  ');
+  if (meta.textContent) body.appendChild(meta);
+
+  // Description (truncated)
+  if (ev.desc){
+    const d = document.createElement('div');
+    d.className = 'desc';
+    renderTruncatedDesc(ev.desc, d, 500);
+    body.appendChild(d);
+  }
+
+  // Buttons
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  const more = document.createElement('a');
+  more.className = 'btn';
+  const direct = normalizeLink(ev.link);
+  if (direct){
+    more.href = direct; more.target = '_blank'; more.rel = 'noopener';
+    more.textContent = 'More Info';
+    actions.appendChild(more);
+  }
+  // Menu button for Restaurants
+  if ((ev.category || '').toLowerCase() === 'restaurants'){
+    const menuLink = normalizeLink(ev.menu);
+    if (menuLink){
+      const menuA = document.createElement('a');
+      menuA.className = 'btn';
+      menuA.href = menuLink; menuA.target = '_blank'; menuA.rel = 'noopener';
+      menuA.textContent = 'Menu';
+      actions.appendChild(menuA);
+    }
+  }
+  if (actions.children.length) body.appendChild(actions);
+
+  card.appendChild(body);
+  return card;
+}
 
 
     
@@ -874,8 +988,13 @@ if ((ev.category || '').toLowerCase() === 'restaurants' && ev.cuisine){
 // Highlight the corresponding marker if it exists
 const key = makeKey(ev);
 const found = markers.find(o => o.key === key);
-if (found) highlightMarker(found.wrapperEl, key);  
+if (found){
+  highlightMarker(found.wrapperEl, key);
+  if (activeListEl) activeListEl.classList.remove('is-active');
+  found.card.classList.add('is-active');
+  activeListEl = found.card;
 }
+
 
 
 
