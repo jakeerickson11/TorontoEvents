@@ -764,21 +764,25 @@ function makeCard(ev){
     
     
 // Render markers for current filter
+// Render markers + list for current filters
 function render(){
-  // clear old markers
+  // clear old markers & list
   markers.splice(0).forEach(obj => obj.marker.remove());
+  if (eventList) eventList.innerHTML = '';
+  activeListEl = null;
 
   const chosenDate = dateFilter.value ? dateFilter.value : '';
-const filtered = allEvents.filter(e => {
-  // category filter first
-  if (!activeCats.has(e.category)) return false;
 
-  // date behavior (static rows always show)
-  if (!chosenDate) return true;
-  if (!e.date) return true;
-  return e.date === chosenDate;
-});
+  // Category + date filter (static rows always show for date)
+  const filtered = allEvents.filter(e => {
+    if (!activeCats.has(e.category)) return false; // category pill
+    if (!chosenDate) return true;
+    if (!e.date) return true;
+    return e.date === chosenDate;
+  });
 
+  // Update dynamic pill counts for what’s visible under current date
+  if (typeof updatePillCounts === 'function') updatePillCounts(filtered);
 
   // If selected pin won't be in this render, clear highlight pointer
   if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
@@ -786,6 +790,7 @@ const filtered = allEvents.filter(e => {
     activeWrapperEl = null;
   }
 
+  // Promoted first for z-index layering
   const ordered = [
     ...filtered.filter(e => e.promoted),
     ...filtered.filter(e => !e.promoted)
@@ -797,7 +802,7 @@ const filtered = allEvents.filter(e => {
     const key = makeKey(ev);
     const isHotel = (typeof hotelKey === 'string' && hotelKey === key);
 
-    // Build marker element
+    // ----- Marker element
     const el = document.createElement('div');
     if (isHotel){
       el.className = 'eventMarker eventMarker--hotel';
@@ -815,22 +820,56 @@ const filtered = allEvents.filter(e => {
       .setLngLat([ev.lng, ev.lat])
       .addTo(map);
 
-    const wrapperEl = marker.getElement(); // MapLibre wrapper <div class="maplibregl-marker">
+    const wrapperEl = marker.getElement(); // <div class="maplibregl-marker">
 
-    // Restore highlight if this is the selected one
+    // ----- List card
+    const card = (typeof makeCard === 'function') ? makeCard(ev) : null;
+    if (eventList && card) eventList.appendChild(card);
+
+    // Restore active highlight if this is selected
     if (activeKey && key === activeKey) {
       wrapperEl.classList.add('is-active');
       activeWrapperEl = wrapperEl;
+      if (card){
+        card.classList.add('is-active');
+        activeListEl = card;
+      }
     }
 
-    markers.push({ marker, wrapperEl, el, ev, key });
+    // Store
+    markers.push({ marker, wrapperEl, el, ev, key, card });
 
-    // Any click on the wrapper (or its children) will highlight + select
+    // Click on marker → highlight + select + sync card
     wrapperEl.addEventListener('click', (e) => {
       e.stopPropagation();
-      highlightMarker(wrapperEl, key);
-      selectEvent(ev);
+      if (activeListEl) activeListEl.classList.remove('is-active');
+      if (card){
+        card.classList.add('is-active');
+        activeListEl = card;
+        // keep the selected card in view
+        card.scrollIntoView({ block:'nearest', behavior:'smooth' });
+      }
+      highlightMarker(wrapperEl, key);   // toggles wrapper .is-active
+      selectEvent(ev);                   // updates details + (maybe) centers
     }, { passive: true });
+
+    // Click on card → highlight + select + center map
+    if (card){
+      card.addEventListener('click', () => {
+        if (activeListEl) activeListEl.classList.remove('is-active');
+        card.classList.add('is-active');
+        activeListEl = card;
+
+        highlightMarker(wrapperEl, key);
+        selectEvent(ev);
+
+        map.easeTo({
+          center:[ev.lng, ev.lat],
+          duration: 600,
+          zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
+        });
+      });
+    }
   });
 }
 
