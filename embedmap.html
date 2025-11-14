@@ -328,6 +328,42 @@
 .list { scroll-padding-top: var(--filters-h, 12px); }
 .list .card { scroll-margin-top: var(--filters-h, 12px); }
 
+    /* --------- Custom Scrollbar for the event list ---------- */
+.list {
+  scrollbar-width: thin;             /* Firefox */
+  scrollbar-color: rgba(255,255,255,0.25) transparent;  /* Firefox track/thumb colors */
+}
+
+/* Chrome / Edge / Safari */
+.list::-webkit-scrollbar {
+  width: 10px;                       /* scrollbar width */
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;           /* invisible background */
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25); /* subtle white thumb */
+  border-radius: 999px;               /* makes it a round “ball” */
+  border: 2px solid transparent;      /* creates spacing around thumb */
+  background-clip: padding-box;       /* ensures border acts as gap */
+  transition: background 0.2s ease;
+}
+
+.list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.45); /* brighter on hover */
+}
+
+.list::-webkit-scrollbar-thumb:active {
+  background: rgba(14,165,233,0.6);   /* accent color when grabbing (blue-ish) */
+}
+
+/* Optional: slightly round the ends of the track for a softer look */
+.list::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 
 
   </style>
