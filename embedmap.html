@@ -335,15 +335,7 @@
 
     <aside class="panel">
      <div class="filters" id="filters">
-  <div class="header">
-    <div>
-      <div style="font-weight:700">Local Events</div>
-      <div class="legend"><span class="dot"></span> Nearby <span class="dot promo"></span> Promoted</div>
-    </div>
-  </div>
-
   <div class="row pillsRow" id="catPills"></div>
-
   <div class="row">
     <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
     <input id="dateFilter" class="dateFilter" type="date"
@@ -351,6 +343,7 @@
            aria-hidden="true" />
   </div>
 </div>
+
 
 
 <!-- Scrollable list -->
@@ -543,7 +536,23 @@ map.on('load', () => {
 //Elements//
   const dateFilter = document.getElementById('dateFilter');
   const datePretty = document.getElementById('datePretty');
-  
+  const filtersEl  = document.getElementById('filters');
+const eventList  = document.getElementById('eventList');
+let   filtersH   = 0;
+
+function updateFiltersHeight(){
+  if (!filtersEl || !eventList) return;
+  // measure and store
+  filtersH = filtersEl.offsetHeight || 0;
+  // expose to CSS and built-in scrolling offsets
+  eventList.style.setProperty('--filters-h', filtersH + 'px');
+  eventList.style.scrollPaddingTop = filtersH + 'px';
+}
+
+// run on load + when layout might change
+updateFiltersHeight();
+window.addEventListener('resize', updateFiltersHeight);
+
 
 
 function updateDatePretty(){
@@ -844,11 +853,11 @@ function scrollCardIntoList(card){
 
 function scrollCardToTop(card){
   if (!eventList || !card) return;
-  const sticky = document.getElementById('filters');
-  const stickyH = sticky ? sticky.offsetHeight : 0;
-  const top = Math.max(card.offsetTop - stickyH - 8, 0); // 8px breathing room
+  // align the card just below the sticky filters
+  const top = Math.max(card.offsetTop - filtersH - 8, 0);
   eventList.scrollTo({ top, behavior: 'smooth' });
 }
+
 
 
     
