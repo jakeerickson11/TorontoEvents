@@ -218,11 +218,19 @@
 .swatch--events     { background:#e11d48; }
 
 /* Right panel list */
+/* The scrollable list */
 .list{
-  display:flex; flex-direction:column; gap:10px;
-  overflow:auto; min-height:0; /* allow scrolling inside panel */
-  padding-right:2px;           /* keep scrollbar off the text */
+  flex: 1 1 auto;           /* grow to fill the panel */
+  overflow-y: auto;         /* vertical scroll */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;            /* IMPORTANT: allow flex child to actually shrink */
+  padding-right: 2px;       /* keep scrollbar off the text */
 }
+
+/* Let list cards be comfortably tall */
+.list .card{ padding-bottom: 4px; }
 
 /* Reuse your .card styles; add an active/selected look */
 .card.is-active{
@@ -761,6 +769,12 @@ function makeCard(ev){
   return card;
 }
 
+function scrollCardIntoList(card){
+  if (!eventList || !card) return;
+  // Scroll the list container, not the page
+  const top = card.offsetTop - 8; // small padding
+  eventList.scrollTo({ top, behavior: 'smooth' });
+}
 
     
     
@@ -842,17 +856,17 @@ function render(){
 
     // Click on marker → highlight + select + sync card
     wrapperEl.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (activeListEl) activeListEl.classList.remove('is-active');
-      if (card){
-        card.classList.add('is-active');
-        activeListEl = card;
-        // keep the selected card in view
-        card.scrollIntoView({ block:'nearest', behavior:'smooth' });
-      }
-      highlightMarker(wrapperEl, key);   // toggles wrapper .is-active
-      selectEvent(ev);                   // updates details + (maybe) centers
-    }, { passive: true });
+  e.stopPropagation();
+  if (activeListEl) activeListEl.classList.remove('is-active');
+  if (card){
+    card.classList.add('is-active');
+    activeListEl = card;
+    scrollCardIntoList(card);        // ← use this instead of scrollIntoView
+  }
+  highlightMarker(wrapperEl, key);
+  selectEvent(ev);
+}, { passive: true });
+
 
     // Click on card → highlight + select + center map
     if (card){
