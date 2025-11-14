@@ -217,21 +217,6 @@
 .swatch--shopping   { background:#a855f7; }
 .swatch--events     { background:#e11d48; }
 
-/* Right panel list */
-/* The scrollable list */
-.list{
-  flex: 1 1 auto;           /* grow to fill the panel */
-  overflow-y: auto;         /* vertical scroll */
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-height: 0;            /* IMPORTANT: allow flex child to actually shrink */
-  padding-right: 2px;       /* keep scrollbar off the text */
-}
-
-/* Let list cards be comfortably tall */
-.list .card{ padding-bottom: 4px; }
-
 /* Reuse your .card styles; add an active/selected look */
 .card.is-active{
   border-color:#3a93c9;
@@ -244,6 +229,55 @@
 
 /* (small visual) tighten meta/desc spacing inside list cards */
 .card .title{ margin-bottom:4px; }
+
+    /* Scrollable list that fills the panel */
+.list{
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;              /* a bit more space between cards */
+  min-height: 0;
+  padding-right: 4px;
+}
+
+/* Full-size cards that look like the old pinned layout */
+.list .card{
+  background:#1a1a1a;
+  border:1px solid #2a2a2a;
+  border-radius:12px;
+  overflow:hidden;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Make sure the image is big enough to show detail */
+.list .card .media{
+  aspect-ratio:16/9;
+  width:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* Body spacing just like your pinned event */
+.list .card .body{
+  padding:14px 14px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+/* Meta + description comfortably visible */
+.list .card .muted{ color:var(--muted); font-size:13px; }
+.list .card .desc{ font-size:14px; line-height:1.45; color:#e7e7e7; }
+.list .card .actions{ display:flex; gap:8px; margin-top:8px; }
+
+/* Highlighted card */
+.card.is-active{
+  border-color:#3a93c9;
+  box-shadow:0 0 0 2px rgba(14,165,233,.35);
+}
 
 
   </style>
