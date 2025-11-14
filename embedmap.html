@@ -711,7 +711,7 @@ function updatePillCounts(rows){
   });
 }
 
-buildCatPills();
+
 
 const eventList = document.getElementById('eventList');
 let activeListEl = null;
@@ -991,6 +991,7 @@ function renderTruncatedDesc(raw, el, limit = 500){
 
     
 function selectEvent(ev){
+  // center map gently (skip during intro anim)
   if (!introAnimating && ev.lat != null && ev.lng != null){
     map.easeTo({
       center: [ev.lng, ev.lat],
@@ -998,20 +999,23 @@ function selectEvent(ev){
       zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
     });
   }
+
+  // highlight the corresponding marker + list card
+  const key   = makeKey(ev);
+  const found = markers.find(o => o.key === key);
+  if (found){
+    highlightMarker(found.wrapperEl, key);
+    if (activeListEl) activeListEl.classList.remove('is-active');
+    if (found.card){
+      found.card.classList.add('is-active');
+      activeListEl = found.card;
+      // keep the selected card aligned to the top of the list
+      const top = found.card.offsetTop;
+      eventList.scrollTo({ top, behavior: 'smooth' });
+    }
+  }
 }
 
-
-// Highlight the corresponding marker if it exists
-const key = makeKey(ev);
-const found = markers.find(o => o.key === key);
-if (found){
-  highlightMarker(found.wrapperEl, key);
-  if (activeListEl) activeListEl.classList.remove('is-active');
-  found.card.classList.add('is-active');
-  activeListEl = found.card;
-}
-
-}
 
 
   // Kick off
@@ -1053,10 +1057,10 @@ if (found){
       }
     }
   } catch (err) {
-    console.error('Sheet load failed', err);
-    pinTitle.textContent = 'Could not load events';
-    pinMeta.textContent  = 'Not Available';
-  }
+  console.error('Sheet load failed', err);
+  // optionally show a small inline message somewhere if you want
+}
+
 })();
 
 
