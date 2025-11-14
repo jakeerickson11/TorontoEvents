@@ -196,6 +196,28 @@
 /* Ensure clicks on the hotel SVG pass through to the wrapper */
 .eventMarker--hotel svg { pointer-events: none; }
 
+    /* Pills */
+.pill {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:999px; border:1px solid #2a2a2a;
+  background:#141414; color:#eaeaea; cursor:pointer; user-select:none;
+  font-size:12px; line-height:1; transition:background .15s, border-color .15s, color .15s;
+}
+.pill:hover { border-color:#3a3a3a; }
+.pill.is-off { opacity:.55; color:#bdbdbd; background:#0e0e0e; }
+
+.pill .swatch{
+  width:10px; height:10px; border-radius:999px; box-shadow:0 0 0 2px #fff;
+}
+
+/* match marker colors for quick recognition */
+.swatch--restaurants{ background:#ff8a00; }
+.swatch--venues     { background:#3b82f6; }
+.swatch--activities { background:#22c55e; }
+.swatch--shopping   { background:#a855f7; }
+.swatch--events     { background:#e11d48; }
+
+
 
   </style>
 </head>
@@ -211,14 +233,15 @@
         </div>
       </div>
 
-      <div class="row">
-  <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
+      <div class="row" id="catPills"></div>
 
-  <!-- Real date input (we’ll reposition it in JS when needed) -->
+<div class="row">
+  <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
   <input id="dateFilter" class="dateFilter" type="date"
          style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
          aria-hidden="true" />
 </div>
+
 
 
       <!-- Pinned event card -->
@@ -276,11 +299,23 @@
       bearing: -15 // subtle clockwise rotation
     }
   };
-
+//GLOBALS//
 let activeKey = null;
 let activeWrapperEl = null;
 let activeMarkerEl = null;
 let hotelKey = null; // add near your other globals (activeKey, etc.)
+// Category palette + order
+const CAT_ORDER = ['Restaurants','Venues','Activities','Shopping','Events'];
+const CAT_COLORS = {
+  Restaurants:'#ff8a00', Venues:'#3b82f6', Activities:'#22c55e', Shopping:'#a855f7', Events:'#e11d48'
+};
+
+// Active category set (start with all on)
+const activeCats = new Set(CAT_ORDER);
+
+// pill root
+const catPillsRoot = document.getElementById('catPills');
+   
 
 
 const makeKey = (e) => [e.name, e.date || '', e.lat, e.lng].join('|');
@@ -414,7 +449,8 @@ map.on('load', () => {
   const pinDesc  = document.getElementById('pinDesc');
   const pinMore  = document.getElementById('pinMore');
   const dateFilter = document.getElementById('dateFilter');
-const datePretty = document.getElementById('datePretty');
+  const datePretty = document.getElementById('datePretty');
+  
 
 
 function updateDatePretty(){
@@ -472,18 +508,25 @@ dateFilter.value = `${yyyy}-${mm}-${dd}`;
 
   // Basic normalizer for expected schema
 function normalize(ev){
-  const get = (k, fallback='') => (ev[k] ?? ev[k?.toLowerCase?.()] ?? fallback);
+    const get = (k, fallback='') => (ev[k] ?? ev[k?.toLowerCase?.()] ?? fallback);
   const num = (n) => (n==null || n==="" ? null : Number(n));
 
   const name  = String(get('Event name') || get('Name') || get('Title') || 'Event').trim();
-  const date  = (get('Date') || '').toString().slice(0,10); // yyyy-mm-dd
+  const date  = (get('Date') || '').toString().slice(0,10);
   const start = (get('Start') || get('Time') || '').toString();
   const end   = (get('End') || '').toString();
-  const cat   = String(get('Category') || 'Other').trim();
+  const rawCat= String(get('Category') || 'Other').trim();
   const link  = String(get('Link') || get('URL') || '').trim();
   const addr  = String(get('Address') || '').trim();
   const photo = String(get('Photo') || '').trim();
+  const desc  = String(get('Description') || get('Desc') || get('About') || get('Details') || get('Summary') || get('Notes') || '').trim();
+  const openH = String(get('Open') || get('Open Hours') || '').trim();
+  const closeH= String(get('Close') || get('Close Hours') || '').trim();
+  const cuisine = String(get('Cuisine') || '').trim();     // ← NEW
+  const menu  = String(get('Menu') || get('Menu URL') || '').trim();
+  const lat   = num(get('Lat'));  const lng = num(get('Lng'));
 
+  
   // Robust description: accept several possible headers
   const descRaw =
       get('Description')
@@ -495,26 +538,22 @@ function normalize(ev){
    || '';
   const desc  = String(descRaw ?? '').trim();
 
-  const openH = String(get('Open') || get('Open Hours') || '').trim();
-  const closeH= String(get('Close') || get('Close Hours') || '').trim();
-  const lat   = num(get('Lat'));
-  const lng   = num(get('Lng'));
-  const menu  = String(get('Menu') || get('Menu URL') || '').trim();
+  
 
   const promoted = /^(1|true|yes|y)$/i.test(String(get('Promoted')||'').trim());
   const isStatic = !date; // no Date = static venue (always show)
 
-  // Normalize category to the main 5 buckets
-  const catLC = cat.toLowerCase();
+  // normalize to 5 buckets (keeps your existing class logic working)
+  const lc = rawCat.toLowerCase();
   let category = 'Other';
-  if (/^restaurant/.test(catLC)) category = 'Restaurants';
-  else if (/^venue/.test(catLC)) category = 'Venues';
-  else if (/^activit/.test(catLC)) category = 'Activities';
-  else if (/^shop/.test(catLC)) category = 'Shopping';
-  else if (/^event/.test(catLC)) category = 'Events';
-  else if (cat) category = cat;
+  if (/^restaurant/.test(lc)) category = 'Restaurants';
+  else if (/^venue/.test(lc)) category = 'Venues';
+  else if (/^activit/.test(lc)) category = 'Activities';
+  else if (/^shop/.test(lc)) category = 'Shopping';
+  else if (/^event/.test(lc)) category = 'Events';
+  else if (rawCat) category = rawCat;
 
-  return { name, date, start, end, category, link, address:addr, photo, desc, openH, closeH, lat, lng, promoted, isStatic, menu };
+  return { name, date, start, end, category, link, address:addr, photo, desc, openH, closeH, cuisine, menu, lat, lng, promoted, isStatic };
 }
 
 
@@ -579,7 +618,37 @@ function hotelSVG(){
     </svg>`;
 }
 
+function buildCatPills(){
+  catPillsRoot.innerHTML = '';
+  CAT_ORDER.forEach(cat => {
+    const pill = document.createElement('button');
+    pill.className = 'pill';
+    pill.dataset.cat = cat;
 
+    const sw = document.createElement('span');
+    sw.className = 'swatch swatch--' + cat.toLowerCase();
+    sw.style.boxShadow = '0 0 0 2px var(--ring)';
+
+    const label = document.createElement('span');
+    label.textContent = cat;
+
+    pill.appendChild(sw);
+    pill.appendChild(label);
+    catPillsRoot.appendChild(pill);
+
+    pill.addEventListener('click', () => {
+      if (activeCats.has(cat)) activeCats.delete(cat);
+      else activeCats.add(cat);
+      pill.classList.toggle('is-off', !activeCats.has(cat));
+      render();
+    });
+  });
+}
+buildCatPills();
+
+
+
+    
     
 // Render markers for current filter
 function render(){
@@ -587,11 +656,16 @@ function render(){
   markers.splice(0).forEach(obj => obj.marker.remove());
 
   const chosenDate = dateFilter.value ? dateFilter.value : '';
-  const filtered = allEvents.filter(e => {
-    if (!chosenDate) return true;
-    if (!e.date) return true;
-    return e.date === chosenDate;
-  });
+const filtered = allEvents.filter(e => {
+  // category filter first
+  if (!activeCats.has(e.category)) return false;
+
+  // date behavior (static rows always show)
+  if (!chosenDate) return true;
+  if (!e.date) return true;
+  return e.date === chosenDate;
+});
+
 
   // If selected pin won't be in this render, clear highlight pointer
   if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
@@ -745,6 +819,11 @@ function selectEvent(ev){
   const metaText = [when, where].filter(Boolean).join('  —  ');
   pinMeta.textContent = metaText;
   pinMeta.style.display = metaText ? 'block' : 'none';
+
+  // Optional: show cuisine next to Restaurants
+if ((ev.category || '').toLowerCase() === 'restaurants' && ev.cuisine){
+  pinMeta.textContent = [metaText, ev.cuisine].filter(Boolean).join('  —  ');
+}
 
   // Description (truncate to 500 chars, expand on "…")
   const desc = (ev.desc || '').trim();
