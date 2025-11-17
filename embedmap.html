@@ -377,6 +377,42 @@
   scroll-padding-bottom: 8px; /* extra safety for any scrollIntoView usage */
 }
 
+    /* ---- Category-specific marker shapes ---- */
+
+/* Restaurants → small square */
+.eventMarker--cat-restaurants {
+  --marker-color: #ff8a00;      /* orange */
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;           /* subtle rounding = squarish */
+  box-shadow:
+    0 0 0 2px var(--ring),
+    0 2px 4px rgba(0,0,0,.25);
+}
+
+/* Venues, Activities, Shopping, Events → standard circles */
+.eventMarker--cat-venues,
+.eventMarker--cat-activities,
+.eventMarker--cat-shopping,
+.eventMarker--cat-events {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+}
+
+/* Keep promoted variants glowing as before */
+.eventMarker--promoted {
+  filter: drop-shadow(0 0 10px var(--marker-color));
+}
+
+    .eventMarker--cat-restaurants.is-active {
+  transform: scale(1.5) rotate(45deg); /* little diamond pop when clicked */
+  box-shadow:
+    0 0 0 3px var(--ring),
+    0 0 0 10px rgba(255,138,0,.25),
+    0 6px 16px rgba(0,0,0,.45);
+}
+
 
 
   </style>
