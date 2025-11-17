@@ -83,8 +83,8 @@
 /* (Keep your promoted/static variants as-is) */
 
     .eventMarker--promoted{ --marker-color: var(--marker-promoted); width:10px; height:10px; box-shadow: 0 0 0 3px var(--ring), 0 2px 10px rgba(0,0,0,.35); filter: drop-shadow(0 0 10px var(--marker-promoted)); }
-    /* Centered number (optional) */
-    .eventMarker__num{ position:absolute; inset:0; display:grid; place-items:center; color:#000; font-weight:800; font-size:11px; text-shadow:0 1px 0 rgba(255,255,255,.6); }
+    /* ed number (optional) */
+    .eventMarker__num{ position:absolute; inset:0; display:grid; place-items:; color:#000; font-weight:800; font-size:11px; text-shadow:0 1px 0 rgba(255,255,255,.6); }
     .eventMarker--static{ --marker-color: #14b8a6; } /* teal */
 
 
@@ -153,7 +153,7 @@
   box-shadow:
     0 0 0 3px var(--ring),
     0 4px 14px rgba(0,0,0,.35);
-  display:grid; place-items:center;
+  display:grid; place-items:;
 }
 .eventMarker--hotel svg{
   width:14px; height:14px; display:block;
@@ -198,7 +198,7 @@
 
     /* Pills */
 .pill {
-  display:inline-flex; align-items:center; gap:8px;
+  display:inline-flex; align-items:; gap:8px;
   padding:6px 10px; border-radius:999px; border:1px solid #2a2a2a;
   background:#141414; color:#eaeaea; cursor:pointer; user-select:none;
   font-size:12px; line-height:1; transition:background .15s, border-color .15s, color .15s;
@@ -907,7 +907,7 @@ function scrollCardIntoList(card, align='bottom'){
   if (align === 'bottom'){
     // place the card’s bottom at the list’s bottom edge
     targetTop = cardBottom - list.clientHeight;
-  } else if (align === 'bottom'){
+  } else if (align === 'center'){
     targetTop = cardTop - (list.clientHeight - card.offsetHeight)/2;
   } else { // 'top'
     targetTop = cardTop;
@@ -919,6 +919,7 @@ function scrollCardIntoList(card, align='bottom'){
 
   list.scrollTo({ top: targetTop, behavior: 'smooth' });
 }
+
 
 
 function scrollCardToTop(card){
@@ -1027,7 +1028,7 @@ wrapperEl.addEventListener('click', (e) => {
   if (card){
     card.classList.add('is-active');
     activeListEl = card;
-    scrollCardIntoList(card, 'bottom');   // ⬅ align to bottom of list
+    scrollCardIntoList(card, 'center');   // ⬅ align to bottom of list
   }
   highlightMarker(wrapperEl, key);
   selectEvent(ev);
