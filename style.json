@@ -1,69 +1,34 @@
 {
   "version": 8,
-  "name": "Toronto Light Muted (Snazzy-ish)",
+  "name": "Toronto Minimal (Calm Roads)",
   "glyphs": "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
-  "sources": {
+   "sources": {
     "toronto": {
       "type": "vector",
       "url": "pmtiles://https://pub-083e9ab60fc847608e085d99437174fb.r2.dev/toronto.pmtiles"
-    }
+    
+  }
   },
   "layers": [
     {
       "id": "background",
       "type": "background",
-      "paint": {
-        "background-color": "#f4f4f1"
-      }
+      "paint": { "background-color": "#171717" }
     },
 
-    {
-      "id": "water",
-      "type": "fill",
-      "source": "toronto",
-      "source-layer": "water",
-      "paint": {
-        "fill-color": "#b5d4f7"
-      }
-    },
+    { "id": "water", "type": "fill", "source": "toronto", "source-layer": "water",
+      "paint": { "fill-color": "#003d75" } },
 
-    {
-      "id": "park",
-      "type": "fill",
-      "source": "toronto",
-      "source-layer": "park",
-      "paint": {
-        "fill-color": "#e6efe6"
-      }
-    },
+    { "id": "park", "type": "fill", "source": "toronto", "source-layer": "park",
+      "paint": { "fill-color": "#171717" } },
 
-    {
-      "id": "landuse",
-      "type": "fill",
-      "source": "toronto",
-      "source-layer": "landuse",
-      "filter": [
-        "in",
-        "class",
-        "residential",
-        "suburban",
-        "rural",
-        "farmland",
-        "meadow",
-        "grass"
-      ],
-      "paint": {
-        "fill-color": "#f7f6f3"
-      }
-    },
+    { "id": "landuse", "type": "fill", "source": "toronto", "source-layer": "landuse",
+      "filter": ["in","class","residential","suburban","rural","farmland","meadow","grass"],
+      "paint": { "fill-color": "#171717" } },
 
-    {
-      "id": "building",
-      "type": "fill",
-      "source": "toronto",
-      "source-layer": "building",
+    { "id": "building", "type": "fill", "source": "toronto", "source-layer": "building",
       "paint": {
-        "fill-color": "#e2e1de",
+        "fill-color": "#1C1C1C",
         "fill-outline-color": "rgba(0,0,0,0)"
       }
     },
@@ -73,9 +38,7 @@
       "type": "line",
       "source": "toronto",
       "source-layer": "transportation",
-      "layout": {
-        "visibility": "none"
-      }
+      "layout": { "visibility": "none" }
     },
 
     {
@@ -83,58 +46,26 @@
       "type": "line",
       "source": "toronto",
       "source-layer": "transportation",
-      "filter": [
-        "in",
-        "class",
-        "minor",
-        "service",
-        "residential",
-        "path",
-        "track",
-        "cycleway",
-        "footway",
-        "pedestrian"
+      "filter": ["in","class",
+        "minor","service","residential","path","track","cycleway","footway","pedestrian"
       ],
-      "layout": {
-        "line-join": "round",
-        "line-cap": "round"
-      },
+      "layout": { "line-join": "round", "line-cap": "round" },
       "paint": {
         "line-color": [
-          "match",
-          ["get", "class"],
-          ["path", "track", "cycleway", "footway", "pedestrian"],
-          "#c5c5c0",
-          ["service", "residential", "minor"],
-          "#d7d7d3",
-          "#d7d7d3"
+          "match", ["get","class"],
+          ["path","track","cycleway","footway","pedestrian"], "#000000",
+          ["service","residential","minor"], "#707070",
+          "#707070"
         ],
         "line-opacity": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          10,
-          0.06,
-          13,
-          0.12,
-          15,
-          0.18,
-          16,
-          0.26,
-          17,
-          0.35
+          "interpolate", ["linear"], ["zoom"],
+          10, 0.00,
+          13, 0.08,
+          15, 0.16,
+          16, 0.28,
+          17, 0.45
         ],
-        "line-width": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          8,
-          0.25,
-          12,
-          1.0,
-          15,
-          2.0
-        ],
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.25, 12, 1.1, 15, 2.2],
         "line-gap-width": 0
       }
     },
@@ -144,62 +75,26 @@
       "type": "line",
       "source": "toronto",
       "source-layer": "transportation",
-      "filter": [
-        "in",
-        "class",
-        "primary",
-        "secondary",
-        "tertiary"
-      ],
-      "layout": {
-        "line-join": "round",
-        "line-cap": "round"
-      },
+      "filter": ["in","class","primary","secondary","tertiary"],
+      "layout": { "line-join": "round", "line-cap": "round" },
       "paint": {
-        "line-color": "#d0d0cc",
-        "line-width": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          8,
-          0.5,
-          12,
-          2.0,
-          15,
-          5.0
-        ],
+        "line-color": "#575353",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.6, 12, 2.2, 15, 5.5],
         "line-gap-width": 0
       }
     },
+
 
     {
       "id": "road-highway",
       "type": "line",
       "source": "toronto",
       "source-layer": "transportation",
-      "filter": [
-        "in",
-        "class",
-        "motorway",
-        "trunk"
-      ],
-      "layout": {
-        "line-join": "round",
-        "line-cap": "round"
-      },
+      "filter": ["in","class","motorway","trunk"],
+      "layout": { "line-join": "round", "line-cap": "round" },
       "paint": {
-        "line-color": "#c9c9c4",
-        "line-width": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          8,
-          0.7,
-          12,
-          2.6,
-          15,
-          6.0
-        ],
+        "line-color": "#c4c4c4",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.8, 12, 3.0, 15, 6.5],
         "line-gap-width": 0
       }
     },
@@ -209,38 +104,17 @@
       "type": "symbol",
       "source": "toronto",
       "source-layer": "transportation_name",
-      "filter": [
-        "in",
-        "class",
-        "primary",
-        "secondary",
-        "tertiary",
-        "trunk",
-        "motorway"
-      ],
+      "filter": ["in","class","primary","secondary","tertiary","trunk","motorway"],
       "layout": {
         "symbol-placement": "line",
-        "text-field": [
-          "get",
-          "name"
-        ],
-        "text-font": [
-          "Noto Sans Regular"
-        ],
-        "text-size": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          12,
-          12,
-          16,
-          20
-        ]
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 12, 12, 16, 20]
       },
       "paint": {
-        "text-color": "#777777",
-        "text-halo-color": "#f7f6f3",
-        "text-halo-width": 1.0
+        "text-color": "#ffffff",
+        "text-halo-color": "#5a5f66",
+        "text-halo-width": 0.2
       }
     },
 
@@ -251,26 +125,12 @@
       "source-layer": "place",
       "minzoom": 5,
       "layout": {
-        "visibility": "none",
-        "text-field": [
-          "get",
-          "name"
-        ],
-        "text-font": [
-          "Noto Sans Regular"
-        ],
-        "text-size": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          6,
-          11,
-          12,
-          16
-        ]
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 6, 11, 12, 16]
       },
       "paint": {
-        "text-color": "#444444",
+        "text-color": "#444",
         "text-halo-color": "#ffffff",
         "text-halo-width": 1.2
       }
@@ -281,7 +141,7 @@
       "type": "line",
       "source": "toronto",
       "source-layer": "boundary",
-      "layout": {
-        "visibility": "none"
-      }
+      "layout": { "visibility": "none" }
     }
+  ]
+}
