@@ -466,6 +466,12 @@
   background: rgba(10,10,10,.35);
 }
 
+/* the list should respect header height when scrolling */
+.list{
+  scroll-padding-top: var(--listHeaderH, 0px);
+}
+
+
 
 
   </style>
@@ -480,18 +486,17 @@
     <aside class="panel">
      <div class="filters" id="filters">
   <!-- <div class="row pillsRow" id="catPills"></div> -->
+<div id="listHeader">
   <div class="row">
     <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
     <input id="dateFilter" class="dateFilter" type="date"
-           style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
-           aria-hidden="true" />
+      style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
+      aria-hidden="true" />
   </div>
 </div>
 
-
-
-<!-- Scrollable list -->
 <div id="eventList" class="list"></div>
+
 
 
 
@@ -1015,23 +1020,18 @@ function scrollCardIntoList(card, align='bottom'){
 
 
 
-function scrollCardToTop(card){
+function scrollCardBelowHeader(card){
   if (!eventList || !card) return;
 
-  const list       = eventList;
-  const cardTop    = card.offsetTop;        // distance from list top
-  const cardHeight = card.offsetHeight;
-  const viewH      = list.clientHeight;
+  const header = document.getElementById('listHeader');
+  const headerH = header ? header.offsetHeight : 0;
 
-  // If the card is taller than the viewport, just show its top
-  if (cardHeight >= viewH) {
-    list.scrollTo({ top: Math.max(cardTop - 4, 0), behavior: 'smooth' });
-    return;
-  }
+  // expose to CSS scroll-padding-top
+  eventList.style.setProperty('--listHeaderH', headerH + 'px');
 
-  // Target so the card's BOTTOM sits on the viewport bottom (with tiny padding)
-  const target = Math.max(cardTop - (viewH - cardHeight) - 8, 0);
-  list.scrollTo({ top: target, behavior: 'smooth' });
+  // Scroll so the card starts right below the header
+  const targetTop = Math.max(0, card.offsetTop - headerH - 8);
+  eventList.scrollTo({ top: targetTop, behavior: 'smooth' });
 }
 
 
@@ -1121,7 +1121,7 @@ wrapperEl.addEventListener('click', (e) => {
   if (card){
     card.classList.add('is-active');
     activeListEl = card;
-    scrollCardIntoList(card, 'center');   // ⬅ align to bottom of list
+    scrollCardBelowHeader(card); // ✅ aligns under date row
   }
   highlightMarker(wrapperEl, key);
   selectEvent(ev);
