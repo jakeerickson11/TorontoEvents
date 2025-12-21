@@ -471,6 +471,30 @@
   scroll-padding-top: var(--listHeaderH, 0px);
 }
 
+/* The whole widget must have a real height for internal scrolling */
+.widget{
+  height: min(80vh, 760px);
+}
+
+/* Panel must be a flex column and allow children to scroll */
+.panel{
+  display:flex;
+  flex-direction:column;
+  min-height:0;      /* CRITICAL for scroll containment */
+}
+
+/* Header area should not grow/shrink weirdly */
+#listHeader{
+  flex: 0 0 auto;
+}
+
+/* The list MUST be the scrolling area */
+#eventList.list{
+  flex: 1 1 auto;    /* take remaining space */
+  min-height: 0;     /* CRITICAL for scroll containment */
+  overflow-y: auto;
+}
+
 
 
 
@@ -994,32 +1018,6 @@ function makeCard(ev){
   return card;
 }
 
-function scrollCardIntoList(card, align='bottom'){
-  if (!eventList || !card) return;
-
-  const list = eventList;
-  const cardTop = card.offsetTop;                 // card is a direct child
-  const cardBottom = cardTop + card.offsetHeight;
-  let targetTop;
-
-  if (align === 'bottom'){
-    // place the card’s bottom at the list’s bottom edge
-    targetTop = cardBottom - list.clientHeight;
-  } else if (align === 'center'){
-    targetTop = cardTop - (list.clientHeight - card.offsetHeight)/2;
-  } else { // 'top'
-    targetTop = cardTop;
-  }
-
-  // clamp so we never overscroll past bounds
-  const maxTop = Math.max(0, list.scrollHeight - list.clientHeight);
-  targetTop = Math.max(0, Math.min(targetTop, maxTop));
-
-  list.scrollTo({ top: targetTop, behavior: 'smooth' });
-}
-
-
-
 function scrollCardBelowHeader(card){
   if (!eventList || !card) return;
 
@@ -1117,15 +1115,20 @@ function render(){
     // Click on marker → highlight + select + sync card
 wrapperEl.addEventListener('click', (e) => {
   e.stopPropagation();
+
   if (activeListEl) activeListEl.classList.remove('is-active');
   if (card){
     card.classList.add('is-active');
     activeListEl = card;
-    scrollCardBelowHeader(card); // ✅ aligns under date row
+
+    // scroll AFTER DOM updates (and after layout settles)
+    requestAnimationFrame(() => scrollCardBelowHeader(card));
   }
+
   highlightMarker(wrapperEl, key);
   selectEvent(ev);
-}, { passive: true });
+}, { passive: false });
+
 
 
 
@@ -1140,15 +1143,8 @@ wrapperEl.addEventListener('click', (e) => {
   highlightMarker(wrapperEl, key);
   selectEvent(ev);
 
-  // keep the selected card fully visible
-  scrollCardIntoList(card, 'bottom');
-  map.easeTo({
-    center:[ev.lng, ev.lat],
-    duration: 600,
-    zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
-  });
+  requestAnimationFrame(() => scrollCardBelowHeader(card));
 });
-
     }
   });
 }
