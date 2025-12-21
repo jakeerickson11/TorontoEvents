@@ -408,17 +408,78 @@
     0 6px 16px rgba(0,0,0,.45);
 }
 
+    /* Make the map area a positioning context */
+#mapWrap{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+#map{
+  width:100%;
+  height:100%;
+}
+
+/* Pills overlay at bottom of map */
+.catPillsOverlay{
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 5;
+
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  padding: 8px 10px;
+  border-radius: 999px;
+
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+/* Make pills a little smaller so they fit */
+.catPillsOverlay .pill{
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* If your list panel scrolls, keep the map overlay from stealing scroll gestures */
+.catPillsOverlay{ touch-action: manipulation; }
+
+/* Optional: keep MapLibre bottom-right controls above the pills */
+.maplibregl-ctrl-bottom-right{ margin-bottom: 58px; }
+
+    .catPillsOverlay .pill{
+  background: rgba(20,20,20,.55);
+  border-color: rgba(255,255,255,.14);
+}
+.catPillsOverlay .pill.is-off{
+  opacity: .55;
+  background: rgba(10,10,10,.35);
+}
+
 
 
   </style>
 </head>
 <body>
   <div class="widget" id="widgetRoot">
-    <div id="map"></div>
+   <div id="mapWrap">
+  <div id="map"></div>
+  <div id="catPillsMap" class="catPillsOverlay"></div>
+</div>
 
     <aside class="panel">
      <div class="filters" id="filters">
-  <div class="row pillsRow" id="catPills"></div>
+  <!-- <div class="row pillsRow" id="catPills"></div> -->
   <div class="row">
     <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
     <input id="dateFilter" class="dateFilter" type="date"
@@ -489,7 +550,8 @@ const CAT_COLORS = {
 const activeCats = new Set(CAT_ORDER);
 
 // pill root
-const catPillsRoot = document.getElementById('catPills');
+const catPillsRoot = document.getElementById('catPillsMap');
+
    
 
 
