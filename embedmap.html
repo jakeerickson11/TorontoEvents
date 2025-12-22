@@ -569,6 +569,8 @@ let activeKey = null;
 let activeWrapperEl = null;
 let activeMarkerEl = null;
 let hotelKey = null; // add near your other globals (activeKey, etc.)
+// Tune this until the image top lines up perfectly under your header/date selector
+let SCROLL_PAD_PX = 12;   // try 12, 20, 28, etc.
 // Category palette + order
 const CAT_ORDER = ['Restaurants','Venues','Activities','Shopping','Events'];
 const CAT_COLORS = {
@@ -1021,14 +1023,19 @@ function makeCard(ev){
 function scrollCardBelowHeader(card){
   if (!eventList || !card) return;
 
-  // this should be the element ABOVE the list (date + pills), not the whole panel
+  // Header area ABOVE the list (date + pills)
   const header = document.getElementById('filters') || document.getElementById('listHeader');
-  const headerH = header ? header.offsetHeight : 0;
+  const headerH = header ? header.getBoundingClientRect().height : 0;
 
-  // card.offsetTop is relative to eventList (since card is a direct child)
-  const targetTop = Math.max(0, card.offsetTop - headerH - 8); // 8px breathing room
+  // Card top relative to the list scroll container
+  const cardTop = card.offsetTop;
+
+  // Scroll so the card's top sits just BELOW the header, with adjustable padding
+  const targetTop = Math.max(0, cardTop - headerH + SCROLL_PAD_PX);
+
   eventList.scrollTo({ top: targetTop, behavior: 'smooth' });
 }
+
 
 
 
