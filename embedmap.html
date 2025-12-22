@@ -1021,16 +1021,15 @@ function makeCard(ev){
 function scrollCardBelowHeader(card){
   if (!eventList || !card) return;
 
-  const header = document.getElementById('listHeader');
+  // this should be the element ABOVE the list (date + pills), not the whole panel
+  const header = document.getElementById('filters') || document.getElementById('listHeader');
   const headerH = header ? header.offsetHeight : 0;
 
-  // expose to CSS scroll-padding-top
-  eventList.style.setProperty('--listHeaderH', headerH + 'px');
-
-  // Scroll so the card starts right below the header
-  const targetTop = Math.max(0, card.offsetTop - headerH - 8);
+  // card.offsetTop is relative to eventList (since card is a direct child)
+  const targetTop = Math.max(0, card.offsetTop - headerH - 8); // 8px breathing room
   eventList.scrollTo({ top: targetTop, behavior: 'smooth' });
 }
+
 
 
 
@@ -1048,7 +1047,7 @@ function render(){
 
   // Category + date filter (static rows always show for date)
   const filtered = allEvents.filter(e => {
-    if (!activeCats.has(e.category)) return false; // category pill
+    if (!activeCats.has(e.category)) return false;
     if (!chosenDate) return true;
     if (!e.date) return true;
     return e.date === chosenDate;
@@ -1059,6 +1058,7 @@ function render(){
 
   // If selected pin won't be in this render, clear highlight pointer
   if (activeKey && !filtered.some(e => makeKey(e) === activeKey)) {
+    if (activeWrapperEl) activeWrapperEl.classList.remove('is-active');
     activeKey = null;
     activeWrapperEl = null;
   }
@@ -1112,43 +1112,38 @@ function render(){
     // Store
     markers.push({ marker, wrapperEl, el, ev, key, card });
 
-    // Click on marker → highlight + select + sync card
-wrapperEl.addEventListener('click', (e) => {
-  e.stopPropagation();
+    // -------- shared picker (marker OR card)
+    const pickThis = (e) => {
+      if (e && e.stopPropagation) e.stopPropagation();
+      if (e && e.preventDefault) e.preventDefault();
 
-  if (activeListEl) activeListEl.classList.remove('is-active');
-  if (card){
-    card.classList.add('is-active');
-    activeListEl = card;
+      // list highlight
+      if (activeListEl) activeListEl.classList.remove('is-active');
+      if (card){
+        card.classList.add('is-active');
+        activeListEl = card;
+      }
 
-    // scroll AFTER DOM updates (and after layout settles)
-    requestAnimationFrame(() => scrollCardBelowHeader(card));
-  }
+      // marker highlight + pinned/map behavior
+      highlightMarker(wrapperEl, key);
+      selectEvent(ev);
 
-  highlightMarker(wrapperEl, key);
-  selectEvent(ev);
-}, { passive: false });
+      // scroll inside list so the card starts BELOW the header
+      if (card){
+        requestAnimationFrame(() => scrollCardBelowHeader(card));
+      }
+    };
 
+    // Click on marker (wrapper + inner element)
+    wrapperEl.addEventListener('click', pickThis, { passive: false });
+    el.addEventListener('click', pickThis, { passive: false });
 
-
-
-
-    // Click on card → highlight + select + center map
+    // Click on card
     if (card){
-     card.addEventListener('click', () => {
-  if (activeListEl) activeListEl.classList.remove('is-active');
-  card.classList.add('is-active');
-  activeListEl = card;
-
-  highlightMarker(wrapperEl, key);
-  selectEvent(ev);
-
-  requestAnimationFrame(() => scrollCardBelowHeader(card));
-});
+      card.addEventListener('click', pickThis, { passive: false });
     }
   });
 }
-
 
 function normalizeLink(u) {
   if (!u) return '';
