@@ -928,6 +928,47 @@ function openNativeDatePicker(dateInput, anchorEl){
     return (s||e) ? `${s}${e}` : '';
   }
 
+function formatHoursTime(val){
+  if (!val) return '';
+
+  // If already a string like "8:00a" / "8:00 AM"
+  if (typeof val === 'string'){
+    const s = val.trim();
+    if (!s) return '';
+    const m = s.match(/^(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?$/i) ||
+              s.match(/^(\d{1,2})(?::(\d{2}))?\s*([ap])m$/i) ||
+              s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (m){
+      const hh = String(parseInt(m[1],10));
+      const mm = String(m[2] ?? '00').padStart(2,'0');
+      const ap = (m[3] || m[4] || '').toString().toLowerCase().startsWith('p') ? 'p' : 'a';
+      return `${hh}:${mm}${ap}`;
+    }
+    return s; // leave as-is
+  }
+
+  // Date object (or timestamp)
+  const d = (val instanceof Date) ? val : new Date(val);
+  if (isNaN(d)) return String(val);
+
+  let h = d.getHours();
+  const m = d.getMinutes();
+  const ap = h >= 12 ? 'p' : 'a';
+  h = h % 12; if (h === 0) h = 12;
+
+  return `${h}:${String(m).padStart(2,'0')}${ap}`;
+}
+
+function formatHoursRange(openVal, closeVal){
+  const o = formatHoursTime(openVal);
+  const c = formatHoursTime(closeVal);
+  if (o && c) return `${o} - ${c}`;
+  return o || c || '';
+}
+
+
+
+    
 function hotelSVG(){
   // simple star; swap path if you prefer a “hotel” pictogram
   return `
@@ -1019,7 +1060,8 @@ function makeCard(ev){
     : '';
   const when = ev.date
     ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
-    : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
+    : (ev.openH || ev.closeH ? `Hours: ${formatHoursRange(ev.openH, ev.closeH)}` : '');
+
   const where = ev.address || '';
   meta.textContent = [when, where].filter(Boolean).join('  —  ');
   if (meta.textContent) body.appendChild(meta);
