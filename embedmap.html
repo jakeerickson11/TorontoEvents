@@ -495,6 +495,51 @@
   overflow-y: auto;
 }
 
+    .panel{
+  position: relative;           /* allows absolute footer */
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;                /* critical for scroll containers */
+  overflow: hidden;             /* keeps footer inside rounded corners */
+}
+
+/* Scrollable list takes remaining height */
+.list{
+  flex: 1 1 auto;
+  min-height: 0;                /* critical */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-right: 4px;
+
+  /* IMPORTANT: leave room so last item isn't under the footer */
+  padding-bottom: 64px;
+}
+
+/* Footer overlay pinned to bottom-right */
+.listFooter{
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 5;
+
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+
+  /* optional: subtle pill background so it looks intentional */
+  background: rgba(18,18,18,.75);
+  border: 1px solid rgba(42,42,42,.9);
+  border-radius: 999px;
+  padding: 8px;
+  backdrop-filter: blur(6px);
+}
+
 
 
 
@@ -507,24 +552,19 @@
   <div id="catPillsMap" class="catPillsOverlay"></div>
 </div>
 
-    <aside class="panel">
-     <div class="filters" id="filters">
-  <!-- <div class="row pillsRow" id="catPills"></div> -->
-<div id="listHeader">
-  <div class="row">
+<aside class="panel">
+  <!-- Scrollable list -->
+  <div id="eventList" class="list"></div>
+
+  <!-- Footer overlay controls -->
+  <div class="listFooter" id="listFooter">
     <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
     <input id="dateFilter" class="dateFilter" type="date"
       style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
       aria-hidden="true" />
   </div>
-</div>
-     </div>
-<div id="eventList" class="list"></div>
+</aside>
 
-
-
-
-    </aside>
   </div>
 
   <script>
@@ -1036,6 +1076,10 @@ function scrollCardBelowHeader(card){
   eventList.scrollTo({ top: targetTop, behavior: 'smooth' });
 }
 
+function scrollCardIntoView(card){
+  if (!card) return;
+  card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
 
 
 
@@ -1138,6 +1182,8 @@ function render(){
       // scroll inside list so the card starts BELOW the header
       if (card){
         requestAnimationFrame(() => scrollCardBelowHeader(card));
+        requestAnimationFrame(() => scrollCardIntoView(card));
+
       }
     };
 
