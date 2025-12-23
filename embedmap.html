@@ -123,9 +123,22 @@
     
     /* Small screens: stack panel under map */
     @media (max-width: 820px){
-      .widget{ grid-template-columns: 1fr; height: auto; }
-      #map{ height: 54vh; }
-    }
+  .widget{
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  /* IMPORTANT: don't rely on height:100% on mobile */
+  #map{
+    height: 62vh;        /* bigger map */
+    min-height: 420px;   /* safety so it never collapses */
+  }
+
+  .panel{
+    min-height: 0;
+  }
+}
+
     /* Optional: make the pretty date button look a bit more input-like */
 #datePretty { font-weight:600; }
 
