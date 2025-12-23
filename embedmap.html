@@ -1361,22 +1361,21 @@ function selectEvent(ev){
   try {
     const raw = await loadSheet();
     allEvents = raw.map(normalize).filter(e => e.name && (e.lat!=null && e.lng!=null));
-
+    
     if (allEvents.length) {
-      hotelKey = makeKey(allEvents[0]); // first listed item is the hotel
-    }
+  hotelKey = makeKey(allEvents[0]); // first listed item is the hotel
+}
+
 
     render();
-
-    // ✅ Step 3: force MapLibre to recalc size after layout changes (mobile especially)
-    requestAnimationFrame(() => map.resize());
-    setTimeout(() => map.resize(), 200);
 
     // Default to first item in the sheet
     const first = allEvents[0];
     if (first) {
+      // show card immediately
       selectEvent(first);
 
+      // center after the intro animation completes (or immediately if none)
       const centerOnFirst = () => {
         if (first.lat != null && first.lng != null) {
           map.easeTo({
@@ -1384,37 +1383,23 @@ function selectEvent(ev){
             duration: 700,
             zoom: Math.max(map.getZoom(), isMobile ? 13 : 14)
           });
-
-          // ✅ After the camera move, resize again (covers iOS/Safari + CSS relayout)
-          requestAnimationFrame(() => map.resize());
-          setTimeout(() => map.resize(), 200);
         }
       };
 
       if (introAnimating) {
-        map.once('moveend', () => {
-          centerOnFirst();
-          // ✅ also resize after intro animation ends
-          requestAnimationFrame(() => map.resize());
-          setTimeout(() => map.resize(), 200);
-        });
+        map.once('moveend', centerOnFirst);  // run after intro ease completes
       } else if (map.loaded()) {
         centerOnFirst();
       } else {
-        map.once('load', () => {
-          centerOnFirst();
-          requestAnimationFrame(() => map.resize());
-          setTimeout(() => map.resize(), 200);
-        });
+        map.once('load', centerOnFirst);
       }
     }
-
   } catch (err) {
-    console.error('Sheet load failed', err);
-    // optionally show a small inline message somewhere if you want
-  }
-})();
+  console.error('Sheet load failed', err);
+  // optionally show a small inline message somewhere if you want
+}
 
+})();
 
 
   </script>
