@@ -545,7 +545,7 @@
   .widget{
     grid-template-columns: 1fr;
     /* give the widget a real height to work with */
-    height: 100vh;
+    height: 150vh;
     min-height: 100vh;
   }
 
@@ -559,6 +559,16 @@
     min-height: 0;       /* allows list to scroll */
   }
 }
+
+    /* Collapsed by default */
+.list .card .details{ display:none; }
+
+/* Expand the selected card */
+.list .card.is-active .details{ display:block; }
+
+/* Optional: make collapsed cards more compact */
+.list .card .body{ padding:12px; }
+.list .card .title{ margin:0; }
 
 
 
@@ -1055,56 +1065,55 @@ function makeCard(ev){
   const card = document.createElement('div');
   card.className = 'card';
 
-  if (ev.photo){
-    const img = document.createElement('img');
-    img.className = 'media';
-    img.alt = ev.name || 'Photo';
-    img.src = ev.photo;
-    card.appendChild(img);
-  }
-
   const body = document.createElement('div');
   body.className = 'body';
 
+  // Header (always visible)
   const h = document.createElement('h3');
   h.className = 'title';
   h.textContent = ev.name || 'Event';
   body.appendChild(h);
 
-  // When / where line
   const meta = document.createElement('div');
   meta.className = 'muted';
-  const dateStr = ev.date
-    ? new Date(ev.date + 'T00:00:00').toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric', year:'numeric'})
-    : '';
-  const when = ev.date
-    ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
-    : (ev.openH || ev.closeH ? `Hours: ${formatHoursRange(ev.openH, ev.closeH)}` : '');
-
+  const dateStr = ev.date ? new Date(ev.date+'T00:00:00').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}) : '';
+  const when = ev.date ? [dateStr, fmtTimeRange(ev.start, ev.end)].filter(Boolean).join(' • ')
+                       : (ev.openH || ev.closeH ? `Hours: ${[ev.openH, ev.closeH].filter(Boolean).join(' – ')}` : '');
   const where = ev.address || '';
   meta.textContent = [when, where].filter(Boolean).join('  —  ');
   if (meta.textContent) body.appendChild(meta);
 
-  // Description (truncated)
+  // Details (only visible when active)
+  const details = document.createElement('div');
+  details.className = 'details';
+
+  if (ev.photo){
+    const img = document.createElement('img');
+    img.className = 'media';
+    img.alt = ev.name || 'Photo';
+    img.src = ev.photo;
+    details.appendChild(img);
+  }
+
   if (ev.desc){
     const d = document.createElement('div');
     d.className = 'desc';
     renderTruncatedDesc(ev.desc, d, 500);
-    body.appendChild(d);
+    details.appendChild(d);
   }
 
-  // Buttons
   const actions = document.createElement('div');
   actions.className = 'actions';
-  const more = document.createElement('a');
-  more.className = 'btn';
+
   const direct = normalizeLink(ev.link);
   if (direct){
+    const more = document.createElement('a');
+    more.className = 'btn';
     more.href = direct; more.target = '_blank'; more.rel = 'noopener';
     more.textContent = 'More Info';
     actions.appendChild(more);
   }
-  // Menu button for Restaurants
+
   if ((ev.category || '').toLowerCase() === 'restaurants'){
     const menuLink = normalizeLink(ev.menu);
     if (menuLink){
@@ -1115,11 +1124,14 @@ function makeCard(ev){
       actions.appendChild(menuA);
     }
   }
-  if (actions.children.length) body.appendChild(actions);
 
+  if (actions.children.length) details.appendChild(actions);
+
+  body.appendChild(details);
   card.appendChild(body);
   return card;
 }
+
 
 function scrollCardBelowHeader(card){
   if (!eventList || !card) return;
