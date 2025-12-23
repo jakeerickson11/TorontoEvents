@@ -131,7 +131,13 @@
   /* IMPORTANT: don't rely on height:100% on mobile */
 #map{
   position: relative;
-  padding-bottom: 64px; /* space for pills overlay */
+}
+
+/* adjust this to match the overlay height */
+@media (max-width: 820px){
+  #map{
+    padding-bottom: 64px; /* space for pills overlay */
+  }
 }
 
     /* Optional: make the pretty date button look a bit more input-like */
