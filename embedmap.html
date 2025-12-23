@@ -645,13 +645,38 @@ const CAT_ORDER = ['Restaurants','Venues','Activities','Shopping','Events'];
 const CAT_COLORS = {
   Restaurants:'#ff8a00', Venues:'#3b82f6', Activities:'#22c55e', Shopping:'#a855f7', Events:'#e11d48'
 };
-
 // Active category set (start with all on)
 const activeCats = new Set(CAT_ORDER);
-
 // pill root
 const catPillsRoot = document.getElementById('catPillsMap');
 
+let activeListEl = null;
+// removes old active card, sets new one, and expands it (if you add CSS for collapse)
+function setActiveCard(card){
+  if (activeListEl) activeListEl.classList.remove('is-active');
+  activeListEl = card || null;
+  if (activeListEl) activeListEl.classList.add('is-active');
+}
+// scroll so the card's TOP sits just below your header/footer controls
+function scrollCardBelowHeader(card){
+  if (!eventList || !card) return;
+
+  const header = document.getElementById('listHeader'); // your date control container
+  const headerH = header ? header.offsetHeight : 0;
+
+  // ✅ tweak this number to fine-tune the spacing
+  const EXTRA_PAD = 10;
+
+  // compute desired scrollTop so card's top aligns under header
+  const target = card.offsetTop - headerH - EXTRA_PAD;
+
+  eventList.scrollTo({
+    top: Math.max(0, target),
+    behavior: 'smooth'
+  });
+}
+
+    
    
 
 
@@ -1061,6 +1086,17 @@ function updatePillCounts(rows){
 
 let activeListEl = null;
 
+function setActiveCard(card){
+  if (activeListEl) activeListEl.classList.remove('is-active');
+  if (card){
+    card.classList.add('is-active');
+    activeListEl = card;
+  } else {
+    activeListEl = null;
+  }
+}
+
+
 function makeCard(ev){
   const card = document.createElement('div');
   card.className = 'card';
@@ -1149,10 +1185,7 @@ function scrollCardBelowHeader(card){
   eventList.scrollTo({ top: targetTop, behavior: 'smooth' });
 }
 
-function scrollCardIntoView(card){
-  if (!card) return;
-  card.scrollIntoView({ block: 'start', behavior: 'smooth' });
-}
+
 
 
 
@@ -1227,38 +1260,23 @@ function render(){
     if (activeKey && key === activeKey) {
       wrapperEl.classList.add('is-active');
       activeWrapperEl = wrapperEl;
-      if (card){
-        card.classList.add('is-active');
-        activeListEl = card;
-      }
+      if (card) setActiveCard(card);
+
     }
 
     // Store
     markers.push({ marker, wrapperEl, el, ev, key, card });
 
     // -------- shared picker (marker OR card)
-    const pickThis = (e) => {
-      if (e && e.stopPropagation) e.stopPropagation();
-      if (e && e.preventDefault) e.preventDefault();
+const pickThis = (e) => {
+  if (e && e.stopPropagation) e.stopPropagation();
+  if (e && e.preventDefault) e.preventDefault();
 
-      // list highlight
-      if (activeListEl) activeListEl.classList.remove('is-active');
-      if (card){
-        card.classList.add('is-active');
-        activeListEl = card;
-      }
+  // marker highlight + map behavior
+  highlightMarker(wrapperEl, key);
+  selectEvent(ev); // this will call setActiveCard + scroll too (see next step)
+};
 
-      // marker highlight + pinned/map behavior
-      highlightMarker(wrapperEl, key);
-      selectEvent(ev);
-
-      // scroll inside list so the card starts BELOW the header
-      if (card){
-        requestAnimationFrame(() => scrollCardBelowHeader(card));
-        requestAnimationFrame(() => scrollCardIntoView(card));
-
-      }
-    };
 
     // Click on marker (wrapper + inner element)
     wrapperEl.addEventListener('click', pickThis, { passive: false });
@@ -1356,19 +1374,20 @@ function selectEvent(ev){
   }
 
   // highlight the corresponding marker + list card
-  const key   = makeKey(ev);
-  const found = markers.find(o => o.key === key);
-  if (found){
-    highlightMarker(found.wrapperEl, key);
-    if (activeListEl) activeListEl.classList.remove('is-active');
-    if (found.card){
-      found.card.classList.add('is-active');
-      activeListEl = found.card;
-      // keep the selected card aligned to the top of the list
-      const top = found.card.offsetTop;
-      eventList.scrollTo({ top, behavior: 'smooth' });
-    }
+// highlight the corresponding marker + list card
+const key   = makeKey(ev);
+const found = markers.find(o => o.key === key);
+
+if (found){
+  highlightMarker(found.wrapperEl, key);
+
+  if (found.card){
+    setActiveCard(found.card);
+
+    // wait a frame so "is-active" styles (expanded height) apply before scrolling
+    requestAnimationFrame(() => scrollCardBelowHeader(found.card));
   }
+}
 }
 
 
