@@ -540,6 +540,25 @@
   backdrop-filter: blur(6px);
 }
 
+/* Mobile layout: ensure the map has an explicit height */
+@media (max-width: 820px){
+  .widget{
+    grid-template-columns: 1fr;
+    /* give the widget a real height to work with */
+    height: 100vh;
+    min-height: 100vh;
+  }
+
+  #map{
+    height: 42vh;        /* adjust to taste */
+    min-height: 260px;   /* prevents tiny phones from collapsing it */
+  }
+
+  .panel{
+    height: 58vh;        /* remainder under the map */
+    min-height: 0;       /* allows list to scroll */
+  }
+}
 
 
 
