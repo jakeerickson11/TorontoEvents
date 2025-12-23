@@ -129,13 +129,14 @@
   }
 
   /* IMPORTANT: don't rely on height:100% on mobile */
-  #map{
-    height: 62vh;        /* bigger map */
-    min-height: 420px;   /* safety so it never collapses */
-  }
+#map{
+  position: relative;
+}
 
-  .panel{
-    min-height: 0;
+/* adjust this to match the overlay height */
+@media (max-width: 820px){
+  #map{
+    padding-bottom: 64px; /* space for pills overlay */
   }
 }
 
