@@ -811,32 +811,35 @@
   </style>
 </head>
 <body>
-  
   <div class="widget" id="widgetRoot">
-<div class="mapWrap">
-  <div id="map"></div>
 
-  <!-- Date overlay (top-left of map) -->
-  <button id="datePretty" class="btn dateBtnOnMap" type="button"></button>
-  <button id="datePretty" class="dateBtnOnMap btn" type="button"></button>
+    <div class="mapWrap">
+      <div id="map"></div>
 
-  <!-- Keep the real input hidden (used to open native picker) -->
-  <input id="dateFilter" class="dateFilter" type="date"
-         style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
-         aria-hidden="true" />
+      <!-- Date overlay (top-left of map) -->
+      <button id="datePretty" class="btn dateBtnOnMap glass" type="button">
+        Select date
+      </button>
 
-<div id="catPills" class="catPillsOnMap glass"></div>
-<div id="mapPills" class="mapPills"></div>
-  
-</div>
+      <!-- Hidden native date input (used by JS to open picker) -->
+      <input
+        id="dateFilter"
+        class="dateFilter"
+        type="date"
+        style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
+        aria-hidden="true"
+      />
 
-<aside class="panel">
-  <!-- remove date picker row from here -->
-  <div id="eventList" class="list"></div>
-</aside>
+      <!-- Category pills overlay (bottom of map) -->
+      <div id="catPills" class="catPillsOnMap glass"></div>
+    </div>
 
+    <aside class="panel">
+      <div id="eventList" class="list"></div>
+    </aside>
 
   </div>
+
 
   <script>
   /*****************************************************************
