@@ -727,32 +727,58 @@
   }
 }
 
+    .mapWrap{
+  position: relative;
+  width:100%;
+  height:100%;
+  border-radius: var(--radius);
+  overflow:hidden;
+}
+
+#map{
+  width:100%;
+  height:100%;
+}
+
+/* Date button overlay */
+.dateBtnOnMap{
+  position:absolute;
+  top:10px;
+  left:10px;
+  z-index: 5;
+  padding:8px 10px;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  background: rgba(15,15,15,.65);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+/* Make sure controls stay above map */
+.maplibregl-control-container{ z-index: 4; }
+
     
 
   </style>
 </head>
 <body>
   <div class="widget" id="widgetRoot">
- <div class="mapWrap">
+<div class="mapWrap">
   <div id="map"></div>
 
-  <!-- pills that should sit ON the map -->
-  <div id="mapPills" class="mapPills"></div>
+  <!-- Date overlay (top-left of map) -->
+  <button id="datePretty" class="dateBtnOnMap btn" type="button"></button>
+
+  <!-- Keep the real input hidden (used to open native picker) -->
+  <input id="dateFilter" class="dateFilter" type="date"
+         style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
+         aria-hidden="true" />
 </div>
 
-
 <aside class="panel">
-  <!-- Scrollable list -->
+  <!-- remove date picker row from here -->
   <div id="eventList" class="list"></div>
-
-  <!-- Footer overlay controls -->
-  <div class="listFooter" id="listFooter">
-    <button id="datePretty" class="btn" type="button" style="gap:6px;"></button>
-    <input id="dateFilter" class="dateFilter" type="date"
-      style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
-      aria-hidden="true" />
-  </div>
 </aside>
+
 
   </div>
 
