@@ -806,14 +806,83 @@
 }
 .pill.is-off{ opacity:.55; }
 
-    
+    /* --- Glass wrapper --- */
+.glassWrap{
+  background: rgba(18,18,18,.55);
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.dateGlass{
+  position:absolute;
+  top:12px;
+  left:12px;
+  z-index:5;
+}
+
+/* Button itself stays simple */
+.dateGlass .btn{
+  background:#181818;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;
+  padding:8px 12px;
+}
+
+.catPillsGlass{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  z-index:5;
+}
+
+/* Pills layout */
+#catPills{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+/* Smaller pills so they never run off screen */
+.pill{
+  padding:5px 8px;
+  font-size:11px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:#1b1b1b;
+}
+
+    @media (max-width: 820px){
+  .dateGlass{ top:8px; left:8px; }
+  .catPillsGlass{ left:8px; right:8px; bottom:8px; }
+  .pill{ font-size:10px; padding:4px 7px; }
+}
+
+
 
   </style>
 </head>
+
+  
 <body>
+
+  <div id="catPillsWrap" class="glassWrap catPillsGlass">
+  <div id="catPills"></div>
+</div>
+
+  
   <div class="widget" id="widgetRoot">
 <div class="mapWrap">
   <div id="map"></div>
+
+  <div class="glassWrap dateGlass">
+  <button id="datePretty" class="btn" type="button"></button>
+</div>
+
 
   <!-- Date overlay (top-left of map) -->
   <button id="datePretty" class="btn dateBtnOnMap" type="button"></button>
