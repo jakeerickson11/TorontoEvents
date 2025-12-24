@@ -777,7 +777,7 @@
 
 /* Make the date button itself look glassy (if you want the button = the glass) */
 .dateBtnOnMap.btn{
-  background: rgba(18,18,18,.55);
+  background: rgba(18,18,18,.35);
   border: 1px solid rgba(255,255,255,.10);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -810,38 +810,16 @@
 
   </style>
 </head>
-<body>
-  <div class="widget" id="widgetRoot">
-
-    <div class="mapWrap">
-      <div id="map"></div>
-
-      <!-- Date overlay (top-left of map) -->
-      <button id="datePretty" class="btn dateBtnOnMap glass" type="button">
-        Select date
-      </button>
-
-      <!-- Hidden native date input (used by JS to open picker) -->
-      <input
-        id="dateFilter"
-        class="dateFilter"
-        type="date"
-        style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
-        aria-hidden="true"
-      />
-
-      <!-- Category pills overlay (bottom of map) -->
-      <div id="catPills" class="catPillsOnMap glass"></div>
-    </div>
-
-    <aside class="panel">
-      <div id="eventList" class="list"></div>
-    </aside>
-
-</body>
-    
-  </div>
-
+<body> <div class="widget" id="widgetRoot"> 
+  <div class="mapWrap"> 
+    <div id="map"></div> <!-- Date overlay (top-left of map) --> 
+    <button id="datePretty" class="btn dateBtnOnMap" type="button"></button> 
+    <button id="datePretty" class="dateBtnOnMap btn" type="button"></button> <!-- Keep the real input hidden (used to open native picker) --> 
+    <input id="dateFilter" class="dateFilter" type="date" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;" aria-hidden="true" /> 
+    <div id="catPills" class="catPillsOnMap glass"></div> <div id="mapPills" class="mapPills"></div> </div> <aside class="panel"> <!-- remove date picker row from here --> 
+      <div id="eventList" class="list"></div> 
+    </aside> 
+</div>
 
   <script>
   /*****************************************************************
