@@ -756,6 +756,56 @@
 /* Make sure controls stay above map */
 .maplibregl-control-container{ z-index: 4; }
 
+    /* --- Glass UI --- */
+.glass {
+  background: rgba(18,18,18,.55);
+  border: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+/* Date button sitting on the map */
+.dateBtnOnMap{
+  position:absolute;
+  top:10px;
+  left:10px;
+  z-index:5;
+  padding:8px 10px;
+}
+
+/* Make the date button itself look glassy (if you want the button = the glass) */
+.dateBtnOnMap.btn{
+  background: rgba(18,18,18,.55);
+  border: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Pills container sits on bottom of map and has glass background */
+.catPillsOnMap{
+  position:absolute;
+  left:10px;
+  bottom:10px;
+  z-index:5;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  max-width: calc(100% - 20px);
+  padding:8px;
+}
+
+/* Pills smaller so they don’t run off-screen */
+.pill{
+  padding:5px 8px;
+  font-size:11px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.20);
+}
+.pill.is-off{ opacity:.55; }
+
     
 
   </style>
@@ -766,14 +816,14 @@
   <div id="map"></div>
 
   <!-- Date overlay (top-left of map) -->
-  <button id="datePretty" class="dateBtnOnMap btn" type="button"></button>
+  <button id="datePretty" class="btn dateBtnOnMap" type="button"></button>
 
   <!-- Keep the real input hidden (used to open native picker) -->
   <input id="dateFilter" class="dateFilter" type="date"
          style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"
          aria-hidden="true" />
 
-<div id="mapPills" class="mapPills"></div>
+<div id="catPills" class="catPillsOnMap glass"></div>
   
 </div>
 
