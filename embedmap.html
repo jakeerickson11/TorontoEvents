@@ -806,6 +806,72 @@
 }
 .pill.is-off{ opacity:.75; }
 
+    /* ===== MOBILE LAYOUT FIX ===== */
+@media (max-width: 820px){
+
+  html, body{
+    height: 100%;
+    margin: 0;
+  }
+
+  body{
+    overflow: hidden; /* prevent page scroll */
+  }
+
+  /* Widget fills the viewport */
+  .widget{
+    grid-template-columns: 1fr;
+    height: 100vh;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  /* Map = 40% of screen */
+  .mapWrap{
+    height: 40vh;
+    min-height: 40vh;
+  }
+
+  /* List panel = remaining 60% */
+  .panel{
+    height: calc(60vh - 8px); /* subtract gap */
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Only the list scrolls */
+  #eventList.list{
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Make cards more compact on mobile */
+  .list .card .body{
+    padding: 10px 12px;
+    gap: 4px;
+  }
+
+  .list .card .title{
+    font-size: 15px;
+  }
+
+  .list .card .muted{
+    font-size: 12px;
+  }
+
+  .list .card .desc{
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  /* Reduce image height so cards don’t feel huge */
+  .list .card .media{
+    aspect-ratio: 16 / 10;
+  }
+}
+
     
 
   </style>
