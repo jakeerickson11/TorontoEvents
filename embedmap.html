@@ -1102,7 +1102,7 @@ console.log('addProtocol exists?', !!(maplibregl && maplibregl.addProtocol));
 
 // Compute a ~km-based bounding box around [lng,lat]
 function kmBounds([lng, lat], km){
-  const R_LAT = 111.32;                  // km per degree latitude
+  const R_LAT = 120;                  // km per degree latitude
   const rad   = lat * Math.PI / 180;
   const dLat  = km / R_LAT;
   const dLng  = km / (R_LAT * Math.cos(rad));
