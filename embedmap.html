@@ -1532,6 +1532,11 @@ body.appendChild(titleRow);
   const actions = document.createElement('div');
   actions.className = 'actions';
 
+  actions.addEventListener('click', (e) => {
+  // prevent the card's click handler from firing when clicking buttons/links
+  e.stopPropagation();
+});
+
   const direct = normalizeLink(ev.link);
   if (direct){
     const more = document.createElement('a');
@@ -1658,15 +1663,35 @@ function render(){
     // Store
     markers.push({ marker, wrapperEl, el, ev, key, card });
 
-    // -------- shared picker (marker OR card)
+
+// -------- shared picker (marker OR card)
 const pickThis = (e) => {
+  // If user clicked a link or a button inside the card, let it work normally
+  const clickedLink = e && e.target && e.target.closest && e.target.closest('a');
+  const clickedButton = e && e.target && e.target.closest && e.target.closest('button');
+  if (clickedLink || clickedButton) return;
+
+  // otherwise, treat it like a "select this item" click
   if (e && e.stopPropagation) e.stopPropagation();
   if (e && e.preventDefault) e.preventDefault();
 
-  // marker highlight + map behavior
+  // list highlight
+  if (activeListEl) activeListEl.classList.remove('is-active');
+  if (card){
+    card.classList.add('is-active');
+    activeListEl = card;
+  }
+
+  // marker highlight + map center
   highlightMarker(wrapperEl, key);
-  selectEvent(ev); // this will call setActiveCard + scroll too (see next step)
+  selectEvent(ev);
+
+  // scroll inside list (your existing function)
+  if (card){
+    requestAnimationFrame(() => scrollCardBelowHeader(card));
+  }
 };
+
 
 
     // Click on marker (wrapper + inner element)
