@@ -1053,20 +1053,21 @@ function setActiveCard(card){
 function scrollCardBelowHeader(card){
   if (!eventList || !card) return;
 
-  const header = document.getElementById('listHeader'); // your date control container
-  const headerH = header ? header.offsetHeight : 0;
+  // ✅ tweak this if you want a little breathing room above the title
+  const EXTRA_PAD = 8;
 
-  // ✅ tweak this number to fine-tune the spacing
-  const EXTRA_PAD = 10;
+  const listRect = eventList.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
 
-  // compute desired scrollTop so card's top aligns under header
-  const target = card.offsetTop - headerH - EXTRA_PAD;
+  // How far the card's top is from the list's visible top
+  const delta = (cardRect.top - listRect.top) - EXTRA_PAD;
 
   eventList.scrollTo({
-    top: Math.max(0, target),
+    top: eventList.scrollTop + delta,
     behavior: 'smooth'
   });
 }
+
 
     
    
