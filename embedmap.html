@@ -39,7 +39,7 @@
       background: var(--panel);
       border-radius: var(--radius);
       padding: 12px; display:flex; flex-direction:column; gap:12px;
-      min-height:0; /* allow child scroll */
+      min-height:0; /* allow child  */
     }
 
     .row{ display:flex; gap:10px; align-items:center; }
@@ -1570,21 +1570,6 @@ body.appendChild(titleRow);
 }
 
 
-function scrollCardBelowHeader(card){
-  if (!eventList || !card) return;
-
-  // Header area ABOVE the list (date + pills)
-  const header = document.getElementById('filters') || document.getElementById('listHeader');
-  const headerH = header ? header.getBoundingClientRect().height : 0;
-
-  // Card top relative to the list scroll container
-  const cardTop = card.offsetTop;
-
-  // Scroll so the card's top sits just BELOW the header, with adjustable padding
-  const targetTop = Math.max(0, cardTop - headerH + SCROLL_PAD_PX);
-
-  eventList.scrollTo({ top: targetTop, behavior: 'smooth' });
-}
 
 
 
