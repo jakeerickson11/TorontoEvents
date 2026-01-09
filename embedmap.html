@@ -1053,20 +1053,18 @@ function setActiveCard(card){
 function scrollCardBelowHeader(card){
   if (!eventList || !card) return;
 
-  // ✅ tweak this if you want a little breathing room above the title
-  const EXTRA_PAD = 8;
-
-  const listRect = eventList.getBoundingClientRect();
-  const cardRect = card.getBoundingClientRect();
-
-  // How far the card's top is from the list's visible top
-  const delta = (cardRect.top - listRect.top) - EXTRA_PAD;
+  // Align the *title/body* to the top of the list (so the name is visible),
+  // even if the card has a big photo above it.
+  const PAD = 8; // tweak spacing if you want
+  const body = card.querySelector('.body') || card; // body sits below the image
+  const targetTop = (card.offsetTop + body.offsetTop) - PAD;
 
   eventList.scrollTo({
-    top: eventList.scrollTop + delta,
+    top: Math.max(0, targetTop),
     behavior: 'smooth'
   });
 }
+
 
 
     
