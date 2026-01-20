@@ -1140,7 +1140,7 @@ const map = new maplibregl.Map({
 
 // Lock panning to 5km around SoHo Hotel
 const hotelCenter = [CONFIG.HOTEL_ORIGIN.lng, CONFIG.HOTEL_ORIGIN.lat];
-const lockBounds  = kmBounds(hotelCenter, 5);
+const lockBounds  = kmBounds(hotelCenter, 30);
 map.setMaxBounds(lockBounds);
 
 
